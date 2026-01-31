@@ -6,16 +6,17 @@ export interface CommandResult {
 
 export class CommandExecutor {
   private readonly API_URL = 'http://localhost:8080/api/execute';
+  private readonly SELECT_DIR_URL = 'http://localhost:8080/api/select-directory';
 
   // Executes the command by calling the backend API
-  public async execute(command: string): Promise<CommandResult> {
+  public async execute(command: string, cwd?: string | null): Promise<CommandResult> {
     try {
       const response = await fetch(this.API_URL, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ command }),
+        body: JSON.stringify({ command, cwd }),
       });
 
       if (!response.ok) {
@@ -24,8 +25,6 @@ export class CommandExecutor {
 
       const data = await response.json();
       
-      // Assuming backend returns { output: string, success: boolean }
-      // If the backend structure is different, this needs adjustment.
       return {
         command,
         output: data.output || "No output returned.",
@@ -34,9 +33,21 @@ export class CommandExecutor {
 
     } catch (error) {
       console.error("Command execution failed:", error);
-      // In case of error, we throw it so the UI can handle it
       throw new Error(error instanceof Error ? error.message : "Unknown error occurred");
     }
+  }
+
+  public async selectDirectory(): Promise<string | null> {
+      try {
+          const response = await fetch(this.SELECT_DIR_URL, {
+              method: 'POST'
+          });
+          const data = await response.json();
+          return data.success ? data.path : null;
+      } catch (e) {
+          console.error("Failed to select directory", e);
+          return null;
+      }
   }
 }
 

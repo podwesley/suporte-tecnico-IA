@@ -19,6 +19,7 @@ const App: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
   const [inputValue, setInputValue] = useState('');
+  const [currentWorkingDirectory, setCurrentWorkingDirectory] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isFirstRender = useRef(true);
@@ -114,9 +115,16 @@ const App: React.FC = () => {
     }
   };
 
+  const handleSelectDirectory = async () => {
+    const path = await commandExecutor.selectDirectory();
+    if (path) {
+      setCurrentWorkingDirectory(path);
+    }
+  };
+
   const handleRunCommand = async (command: string): Promise<string> => {
     try {
-      const result = await commandExecutor.execute(command);
+      const result = await commandExecutor.execute(command, currentWorkingDirectory);
       return result.output;
     } catch (e) {
       return "Erro ao executar comando: " + e;
@@ -214,6 +222,17 @@ const App: React.FC = () => {
         </div>
         
         <div className="flex items-center gap-3">
+            <button
+                onClick={handleSelectDirectory}
+                className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-slate-300 bg-slate-800/50 hover:bg-slate-700 border border-slate-700/50 rounded-lg transition-all"
+                title={currentWorkingDirectory || "Selecionar pasta de trabalho"}
+            >
+                <svg className="w-4 h-4 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>
+                <span className="max-w-[150px] truncate hidden sm:inline">
+                    {currentWorkingDirectory ? currentWorkingDirectory.split('/').pop() : 'Abrir Pasta'}
+                </span>
+            </button>
+
             <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
                 <span className="relative flex h-2 w-2">
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
