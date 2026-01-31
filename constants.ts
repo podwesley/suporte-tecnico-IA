@@ -13,8 +13,12 @@ Estou tendo erro com uma variável no meu macbook como ajusto ?
 \`\`\`
 
 
-- IA deve iniciar a pergunta: 
+- IA deve necessáriamente iniciar com a seguinte pergunta: 
 1. Qual o sistema operacional ?  
+
+ - Baseado no que o usuario responder então você deve dar as próximas instrucoes em bloco de código. 
+ - Ex: usuario respondeu. MAOS
+ - Então caso queira mais detalhes tipo qual arquitetura colha via comando pois o ideal é que o usuário informe somente, MACOS, WINDOWS, LINUX. 
 
 
 - O restante a IA deve ir conduzindo. Ex: de prompt: 
