@@ -24,9 +24,7 @@ Estou tendo erro com uma variável no meu macbook como ajusto ?
 - O restante a IA deve ir conduzindo. Ex: de prompt: 
 
 # Importamte
-# A IA não deve tentar advinhar nada ela tem de ser assertiva, pergunte sempre ao usuário. Priorize assertividade, faça um traceability o mais completo possível para eliminar os problemas um-a-um. 
-
-
+# A IA não deve tentar advinhar nada ela tem de ser assertiva, pergunte sempre ao usuário. Priorize assertividade, faça um traceability o mais completo possível para eliminar os problemas um-a-um.
 
 \`\`\`text
 User: Estou tendo um erro ao instalar o homebrew. 

@@ -23,6 +23,8 @@ const App: React.FC = () => {
   const [currentCommand, setCurrentCommand] = useState('');
   const [terminalOutput, setTerminalOutput] = useState<string | null>(null);
   const [isExecutingCommand, setIsExecutingCommand] = useState(false);
+  
+  const [inputValue, setInputValue] = useState('');
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isFirstRender = useRef(true);
@@ -136,8 +138,8 @@ const App: React.FC = () => {
 
   const handleTerminalResponse = (output: string) => {
     setTerminalOpen(false);
-    const responseText = `Executei o comando \`${currentCommand}\` e o resultado foi:\n\n\`\`\`text\n${output}\n\`\`\`\n\nQual o próximo passo?`;
-    handleSendMessage(responseText);
+    const responseText = `Executei o comando \`${currentCommand}\` e o resultado foi:\n\n\`\`\`text\n${output}\n\`\`\`\n\n`;
+    setInputValue(prev => prev + (prev ? "  " : "") + responseText);
   };
 
   const handleSendMessage = async (text: string) => {
@@ -305,7 +307,7 @@ const App: React.FC = () => {
       </main>
 
       {/* Sticky Input */}
-      <InputArea onSend={handleSendMessage} isLoading={isLoading} />
+      <InputArea onSend={handleSendMessage} isLoading={isLoading} value={inputValue} onChange={setInputValue} />
     </div>
   );
 };
