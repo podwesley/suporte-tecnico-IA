@@ -280,15 +280,15 @@ const App: React.FC = () => {
             <div className="relative group">
                 <button
                     onClick={handleSelectDirectory}
-                    className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-slate-300 bg-slate-800/50 hover:bg-slate-700 border border-slate-700/50 rounded-lg transition-all"
+                    className="flex items-center gap-2 px-4 py-1.5 text-xs font-medium text-slate-300 bg-slate-800/50 hover:bg-slate-700 border border-slate-700/50 rounded-lg transition-all"
                     title={currentWorkingDirectory || "Selecionar pasta de trabalho"}
                 >
                     <svg className="w-4 h-4 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>
-                    <span className="max-w-[150px] truncate hidden sm:inline">
+                    <span className="px-1 hidden sm:inline whitespace-nowrap">
                         {currentWorkingDirectory ? (
                             <>
                                 <span className="opacity-50 mr-1">PWD:</span>
-                                {currentWorkingDirectory.split('/').pop()}
+                                {currentWorkingDirectory === '/' ? '/' : currentWorkingDirectory.replace(/\/$/, '').split('/').pop()}
                             </>
                         ) : 'Abrir Pasta'}
                     </span>
