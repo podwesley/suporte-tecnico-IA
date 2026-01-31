@@ -4,10 +4,12 @@ import MarkdownRenderer from './MarkdownRenderer';
 
 interface ChatBubbleProps {
   message: Message;
-  onRunCommand?: (command: string) => void;
+  onRunCommand?: (command: string) => Promise<string>;
+  onInputUpdate?: (text: string) => void;
+  onSendMessage?: (text: string) => void;
 }
 
-export const ChatBubble: React.FC<ChatBubbleProps> = ({ message, onRunCommand }) => {
+export const ChatBubble: React.FC<ChatBubbleProps> = ({ message, onRunCommand, onInputUpdate, onSendMessage }) => {
   const isUser = message.role === Role.USER;
 
   return (
@@ -39,7 +41,12 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({ message, onRunCommand })
             {isUser ? (
                 <p className="whitespace-pre-wrap font-medium">{message.text}</p>
             ) : (
-                <MarkdownRenderer content={message.text} onRunCommand={onRunCommand} />
+                <MarkdownRenderer 
+                    content={message.text} 
+                    onRunCommand={onRunCommand}
+                    onInputUpdate={onInputUpdate}
+                    onSendMessage={onSendMessage}
+                />
             )}
         </div>
       </div>

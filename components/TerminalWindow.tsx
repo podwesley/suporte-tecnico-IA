@@ -6,7 +6,8 @@ interface TerminalWindowProps {
   output: string | null;
   isExecuting: boolean;
   onClose: () => void;
-  onSendResponse: (output: string) => void;
+  onAddToChat: (output: string) => void;
+  onSendImmediately: (output: string) => void;
 }
 
 export const TerminalWindow: React.FC<TerminalWindowProps> = ({
@@ -15,7 +16,8 @@ export const TerminalWindow: React.FC<TerminalWindowProps> = ({
   output,
   isExecuting,
   onClose,
-  onSendResponse
+  onAddToChat,
+  onSendImmediately
 }) => {
   const contentRef = useRef<HTMLDivElement>(null);
 
@@ -84,12 +86,23 @@ export const TerminalWindow: React.FC<TerminalWindowProps> = ({
              >
                 Fechar
              </button>
+             
              <button 
-                onClick={() => onSendResponse(output)}
-                className="flex items-center gap-2 px-4 py-2 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded transition-colors shadow-lg shadow-green-900/20"
+                onClick={() => onAddToChat(output)}
+                className="flex items-center gap-2 px-4 py-2 text-xs font-bold text-slate-200 bg-slate-700 hover:bg-slate-600 rounded transition-colors border border-slate-600"
+                title="Adicionar ao chat para encadear comandos"
              >
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-                Responder Chat com Saída
+                Adicionar
+             </button>
+
+             <button 
+                onClick={() => onSendImmediately(output)}
+                className="flex items-center gap-2 px-4 py-2 text-xs font-bold text-white bg-green-600 hover:bg-green-700 rounded transition-colors shadow-lg shadow-green-900/20"
+                title="Enviar resposta imediatamente"
+             >
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                Enviar Agora
              </button>
           </div>
         )}

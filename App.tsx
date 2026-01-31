@@ -18,12 +18,6 @@ const App: React.FC = () => {
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   
-  // Terminal State
-  const [terminalOpen, setTerminalOpen] = useState(false);
-  const [currentCommand, setCurrentCommand] = useState('');
-  const [terminalOutput, setTerminalOutput] = useState<string | null>(null);
-  const [isExecutingCommand, setIsExecutingCommand] = useState(false);
-  
   const [inputValue, setInputValue] = useState('');
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -120,26 +114,17 @@ const App: React.FC = () => {
     }
   };
 
-  const handleRunCommand = async (command: string) => {
-    setTerminalOpen(true);
-    setCurrentCommand(command);
-    setTerminalOutput(null);
-    setIsExecutingCommand(true);
-
+  const handleRunCommand = async (command: string): Promise<string> => {
     try {
       const result = await commandExecutor.execute(command);
-      setTerminalOutput(result.output);
+      return result.output;
     } catch (e) {
-      setTerminalOutput("Erro ao executar comando: " + e);
-    } finally {
-      setIsExecutingCommand(false);
+      return "Erro ao executar comando: " + e;
     }
   };
 
-  const handleTerminalResponse = (output: string) => {
-    setTerminalOpen(false);
-    const responseText = `Executei o comando \`${currentCommand}\` e o resultado foi:\n\n\`\`\`text\n${output}\n\`\`\`\n\n`;
-    setInputValue(prev => prev + (prev ? "  " : "") + responseText);
+  const handleInputUpdate = (text: string) => {
+      setInputValue(prev => prev + (prev ? "\n\n" : "") + text);
   };
 
   const handleSendMessage = async (text: string) => {
@@ -204,15 +189,6 @@ const App: React.FC = () => {
         currentSessionId={currentSessionId}
         onSelectSession={handleSelectSession}
         onDeleteSession={handleDeleteSession}
-      />
-
-      <TerminalWindow 
-        isOpen={terminalOpen}
-        command={currentCommand}
-        output={terminalOutput}
-        isExecuting={isExecutingCommand}
-        onClose={() => setTerminalOpen(false)}
-        onSendResponse={handleTerminalResponse}
       />
 
       {/* Header */}
@@ -298,7 +274,13 @@ const App: React.FC = () => {
         ) : (
           <div className="space-y-6">
             {messages.map((msg) => (
-              <ChatBubble key={msg.id} message={msg} onRunCommand={handleRunCommand} />
+              <ChatBubble 
+                key={msg.id} 
+                message={msg} 
+                onRunCommand={handleRunCommand}
+                onInputUpdate={handleInputUpdate}
+                onSendMessage={handleSendMessage}
+              />
             ))}
             {/* Invisible element to scroll to */}
             <div ref={messagesEndRef} className="h-4" />
