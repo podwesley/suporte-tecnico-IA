@@ -131,7 +131,7 @@ const App: React.FC = () => {
 
   const handleOSSelect = (osId: string) => {
       setSelectedOS(osId);
-      handleSendMessage(`Alterar contexto para sistema operacional: ${osId.toUpperCase()}`);
+      handleSendMessage(`${osId.toUpperCase()}`);
   };
 
   const handleRunCommand = async (command: string): Promise<string> => {
@@ -290,7 +290,7 @@ const App: React.FC = () => {
                                 <span className="opacity-50 mr-1">PWD:</span>
                                 {currentWorkingDirectory === '/' ? '/' : currentWorkingDirectory.replace(/\/$/, '').split('/').pop()}
                             </>
-                        ) : 'Abrir Pasta'}
+                        ) : 'Abrir'}
                     </span>
                 </button>
                 {currentWorkingDirectory && (

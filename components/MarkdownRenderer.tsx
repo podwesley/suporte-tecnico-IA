@@ -33,7 +33,7 @@ const CodeBlock: React.FC<{
 
   const handleAddToChat = () => {
     if (output && onInputUpdate) {
-      const responseText = `Executei o comando \`${code.trim()}\` e o resultado foi:\n\n\`\`\`text\n${output}\n\`\`\`\n\n`;
+      const responseText = `\n\n\`\`\`text\n${output}\n\`\`\`\n\n`;
       onInputUpdate(responseText);
       setOutput(null); // Close terminal after action
     }
@@ -41,7 +41,7 @@ const CodeBlock: React.FC<{
 
   const handleSendImmediately = () => {
     if (output && onSendMessage) {
-      const responseText = `Executei o comando \`${code.trim()}\` e o resultado foi:\n\n\`\`\`text\n${output}\n\`\`\`\n\n`;
+      const responseText = `\n\n\`\`\`${output}\n\`\`\`\n\n`;
       onSendMessage(responseText); // This assumes the parent handles appending to current input if needed, or we send just this. 
       // Based on previous App.tsx logic, onSendMessage sends the text.
       // If we want to append to existing input first, we might need to read it, but here we just send the result.
