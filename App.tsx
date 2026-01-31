@@ -6,7 +6,7 @@ import { Message, Role, ChatSession } from './types';
 import { ChatBubble } from './components/ChatBubble';
 import { InputArea } from './components/InputArea';
 import { HistorySidebar } from './components/HistorySidebar';
-import { TerminalWindow } from './components/TerminalWindow';
+import { CommandSidebar, CommandHistoryItem } from './components/CommandSidebar';
 import { APP_NAME } from './constants';
 
 const STORAGE_KEY = 'techsupport_ai_sessions';
@@ -20,6 +20,8 @@ const App: React.FC = () => {
   
   const [inputValue, setInputValue] = useState('');
   const [currentWorkingDirectory, setCurrentWorkingDirectory] = useState<string | null>(null);
+  const [selectedOS, setSelectedOS] = useState<string | null>(null);
+  const [commandQueue, setCommandQueue] = useState<CommandHistoryItem[]>([]);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isFirstRender = useRef(true);
@@ -122,7 +124,24 @@ const App: React.FC = () => {
     }
   };
 
+  const handleClearDirectory = (e: React.MouseEvent) => {
+      e.stopPropagation();
+      setCurrentWorkingDirectory(null);
+  };
+
+  const handleOSSelect = (osId: string) => {
+      setSelectedOS(osId);
+      handleSendMessage(`Alterar contexto para sistema operacional: ${osId.toUpperCase()}`);
+  };
+
   const handleRunCommand = async (command: string): Promise<string> => {
+    // Add to queue
+    setCommandQueue(prev => [{
+        id: uuidv4(),
+        command,
+        timestamp: Date.now()
+    }, ...prev]);
+
     try {
       const result = await commandExecutor.execute(command, currentWorkingDirectory);
       return result.output;
@@ -133,6 +152,24 @@ const App: React.FC = () => {
 
   const handleInputUpdate = (text: string) => {
       setInputValue(prev => prev + (prev ? "\n\n" : "") + text);
+  };
+
+  const handleExecuteFromSidebar = (command: string) => {
+      // Logic: Appends to chat input to allow chaining, as per user's preference for consistency
+      // The user said "behavior... same as code block". Code block runs inline.
+      // But sidebar doesn't have an inline output area.
+      // We will append to input area with a "I ran this" context similar to the inline terminal action
+      // Or simply execute it and append the result.
+      // Let's implement: Run command -> Get Output -> Append formatted result to Input Area
+      
+      handleRunCommand(command).then(output => {
+          const responseText = `Executei o comando \`${command}\` e o resultado foi:\n\n\`\`\`text\n${output}\n\`\`\`\n\n`;
+          setInputValue(prev => prev + (prev ? "\n\n" : "") + responseText);
+      });
+  };
+
+  const handleDeleteCommands = (ids: string[]) => {
+      setCommandQueue(prev => prev.filter(c => !ids.includes(c.id)));
   };
 
   const handleSendMessage = async (text: string) => {
@@ -188,7 +225,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-[#0a0f1e] to-black flex flex-col font-sans text-slate-200">
+    <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-[#0a0f1e] to-black flex flex-col font-sans text-slate-200 overflow-hidden">
       
       <HistorySidebar 
         isOpen={isSidebarOpen} 
@@ -211,27 +248,61 @@ const App: React.FC = () => {
           </button>
           
           <div className="flex items-center gap-3">
-            <div className="relative group hidden sm:block">
-                <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 to-emerald-400 rounded-lg blur opacity-40 group-hover:opacity-75 transition duration-200"></div>
-                <div className="relative w-9 h-9 rounded-lg bg-slate-900 flex items-center justify-center border border-slate-700">
-                    <svg className="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" /></svg>
-                </div>
+            <h1 className="text-lg font-bold tracking-tight text-white hidden sm:block">{APP_NAME}</h1>
+            
+            {/* OS Buttons */}
+            <div className="flex items-center gap-1 ml-4 bg-slate-800/50 rounded-lg p-1 border border-slate-700/50">
+                {[ 
+                    { id: 'macos', label: 'MACOS', icon: '🍎' },
+                    { id: 'windows', label: 'WINDOWS', icon: '🪟' },
+                    { id: 'linux', label: 'LINUX', icon: '🐧' }
+                ].map(os => (
+                    <button
+                        key={os.id}
+                        onClick={() => handleOSSelect(os.id)}
+                        className={`
+                            px-3 py-1.5 rounded-md text-[10px] font-bold transition-all flex items-center gap-1.5
+                            ${selectedOS === os.id 
+                                ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' 
+                                : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+                            }
+                        `}
+                    >
+                        <span>{os.icon}</span>
+                        <span className="hidden lg:inline">{os.label}</span>
+                    </button>
+                ))}
             </div>
-            <h1 className="text-lg font-bold tracking-tight text-white">{APP_NAME}</h1>
           </div>
         </div>
         
         <div className="flex items-center gap-3">
-            <button
-                onClick={handleSelectDirectory}
-                className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-slate-300 bg-slate-800/50 hover:bg-slate-700 border border-slate-700/50 rounded-lg transition-all"
-                title={currentWorkingDirectory || "Selecionar pasta de trabalho"}
-            >
-                <svg className="w-4 h-4 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>
-                <span className="max-w-[150px] truncate hidden sm:inline">
-                    {currentWorkingDirectory ? currentWorkingDirectory.split('/').pop() : 'Abrir Pasta'}
-                </span>
-            </button>
+            <div className="relative group">
+                <button
+                    onClick={handleSelectDirectory}
+                    className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-slate-300 bg-slate-800/50 hover:bg-slate-700 border border-slate-700/50 rounded-lg transition-all"
+                    title={currentWorkingDirectory || "Selecionar pasta de trabalho"}
+                >
+                    <svg className="w-4 h-4 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>
+                    <span className="max-w-[150px] truncate hidden sm:inline">
+                        {currentWorkingDirectory ? (
+                            <>
+                                <span className="opacity-50 mr-1">PWD:</span>
+                                {currentWorkingDirectory.split('/').pop()}
+                            </>
+                        ) : 'Abrir Pasta'}
+                    </span>
+                </button>
+                {currentWorkingDirectory && (
+                    <button 
+                        onClick={handleClearDirectory}
+                        className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center text-[10px] opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 shadow-sm"
+                        title="Resetar diretório"
+                    >
+                        ✕
+                    </button>
+                )}
+            </div>
 
             <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
                 <span className="relative flex h-2 w-2">
@@ -247,68 +318,82 @@ const App: React.FC = () => {
                 title="Iniciar nova conversa"
             >
                 <svg className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-                <span className="hidden sm:inline">Nova Conversa</span>
+                <span className="hidden sm:inline">Nova</span>
             </button>
         </div>
       </header>
 
-      {/* Main Chat Area */}
-      <main className="flex-1 w-full max-w-4xl mx-auto pt-28 pb-40 px-4">
-        {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center mt-12 text-center opacity-0 animate-[fadeIn_0.8s_ease-out_forwards]">
-            
-            <div className="relative mb-8 group cursor-default">
-                <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 via-emerald-500 to-blue-600 rounded-full blur opacity-20 group-hover:opacity-40 transition duration-1000 animate-gradient-x"></div>
-                <div className="relative w-20 h-20 bg-slate-900 rounded-2xl flex items-center justify-center border border-slate-800 shadow-2xl">
-                    <svg className="w-10 h-10 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+      {/* Content Container (Two Columns) */}
+      <div className="flex flex-1 pt-16 overflow-hidden">
+          {/* Left Column: Command Queue */}
+          <CommandSidebar 
+            commands={commandQueue} 
+            onExecute={handleExecuteFromSidebar}
+            onDelete={handleDeleteCommands}
+          />
+
+          {/* Right Column: Chat Area */}
+          <div className="flex-1 flex flex-col relative min-w-0">
+            <main className="flex-1 w-full max-w-5xl mx-auto pb-40 px-4 overflow-y-auto custom-scrollbar">
+                {messages.length === 0 ? (
+                <div className="flex flex-col items-center justify-center mt-12 text-center opacity-0 animate-[fadeIn_0.8s_ease-out_forwards]">
+                    
+                    <div className="relative mb-8 group cursor-default">
+                        <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 via-emerald-500 to-blue-600 rounded-full blur opacity-20 group-hover:opacity-40 transition duration-1000 animate-gradient-x"></div>
+                        <div className="relative w-20 h-20 bg-slate-900 rounded-2xl flex items-center justify-center border border-slate-800 shadow-2xl">
+                            <svg className="w-10 h-10 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                        </div>
+                    </div>
+
+                    <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 tracking-tight">
+                        Como posso ajudar hoje?
+                    </h2>
+                    <p className="text-slate-400 max-w-lg text-sm md:text-base leading-relaxed mb-10">
+                    Sou seu agente especializado em suporte técnico. 
+                    Posso ajudar com Docker, Configurações de Ambiente, Debugging e Tutoriais passo-a-passo.
+                    </p>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl">
+                        {[ 
+                            { label: "Meu container Docker está falhando", icon: "🐳" },
+                            { label: "Como instalo MySQL no Ubuntu?", icon: "🐧" },
+                            { label: "Erro de variável de ambiente no Node", icon: "🟢" },
+                            { label: "Permissão negada na porta 80", icon: "🛡️" }
+                        ].map((item, i) => (
+                            <button 
+                                key={i}
+                                onClick={() => handleSendMessage(item.label)}
+                                className="group flex items-center gap-4 text-sm bg-slate-800/40 hover:bg-slate-800/80 border border-slate-700/50 hover:border-blue-500/50 text-slate-300 p-4 rounded-xl text-left transition-all hover:translate-x-1"
+                            >
+                                <span className="text-xl group-hover:scale-110 transition-transform">{item.icon}</span>
+                                <span className="font-medium group-hover:text-blue-200 transition-colors">{item.label}</span>
+                            </button>
+                        ))}
+                    </div>
                 </div>
-            </div>
+                ) : (
+                <div className="space-y-6 pt-6">
+                    {messages.map((msg) => (
+                    <ChatBubble 
+                        key={msg.id} 
+                        message={msg} 
+                        onRunCommand={handleRunCommand}
+                        onInputUpdate={handleInputUpdate}
+                        onSendMessage={handleSendMessage}
+                    />
+                    ))}
+                    {/* Invisible element to scroll to */}
+                    <div ref={messagesEndRef} className="h-4" />
+                </div>
+                )}
+            </main>
 
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 tracking-tight">
-                Como posso ajudar hoje?
-            </h2>
-            <p className="text-slate-400 max-w-lg text-sm md:text-base leading-relaxed mb-10">
-              Sou seu agente especializado em suporte técnico. 
-              Posso ajudar com Docker, Configurações de Ambiente, Debugging e Tutoriais passo-a-passo.
-            </p>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl">
-                {[
-                    { label: "Meu container Docker está falhando", icon: "🐳" },
-                    { label: "Como instalo MySQL no Ubuntu?", icon: "🐧" },
-                    { label: "Erro de variável de ambiente no Node", icon: "🟢" },
-                    { label: "Permissão negada na porta 80", icon: "🛡️" }
-                ].map((item, i) => (
-                    <button 
-                        key={i}
-                        onClick={() => handleSendMessage(item.label)}
-                        className="group flex items-center gap-4 text-sm bg-slate-800/40 hover:bg-slate-800/80 border border-slate-700/50 hover:border-blue-500/50 text-slate-300 p-4 rounded-xl text-left transition-all hover:translate-x-1"
-                    >
-                        <span className="text-xl group-hover:scale-110 transition-transform">{item.icon}</span>
-                        <span className="font-medium group-hover:text-blue-200 transition-colors">{item.label}</span>
-                    </button>
-                ))}
+            {/* Input Area (Restricted Width) */}
+            <div className="absolute bottom-0 left-0 right-0 z-10">
+                <InputArea onSend={handleSendMessage} isLoading={isLoading} value={inputValue} onChange={setInputValue} />
             </div>
           </div>
-        ) : (
-          <div className="space-y-6">
-            {messages.map((msg) => (
-              <ChatBubble 
-                key={msg.id} 
-                message={msg} 
-                onRunCommand={handleRunCommand}
-                onInputUpdate={handleInputUpdate}
-                onSendMessage={handleSendMessage}
-              />
-            ))}
-            {/* Invisible element to scroll to */}
-            <div ref={messagesEndRef} className="h-4" />
-          </div>
-        )}
-      </main>
-
-      {/* Sticky Input */}
-      <InputArea onSend={handleSendMessage} isLoading={isLoading} value={inputValue} onChange={setInputValue} />
+      </div>
     </div>
   );
 };

@@ -5,8 +5,8 @@ export interface CommandResult {
 }
 
 export class CommandExecutor {
-  private readonly API_URL = 'http://localhost:8080/api/execute';
-  private readonly SELECT_DIR_URL = 'http://localhost:8080/api/select-directory';
+  private readonly API_URL = 'http://localhost:8509/api/execute';
+  private readonly SELECT_DIR_URL = 'http://localhost:8509/api/select-directory';
 
   // Executes the command by calling the backend API
   public async execute(command: string, cwd?: string | null): Promise<CommandResult> {
