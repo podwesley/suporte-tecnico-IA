@@ -17,6 +17,8 @@ interface FavoritesSidebarProps {
   onResizeStart?: () => void;
 }
 
+type DropPosition = 'before' | 'after' | 'inside' | null;
+
 // Separate component to prevent re-renders/remounts causing flicker
 interface RecursiveItemProps {
     item: FavoriteItem;
@@ -28,12 +30,11 @@ interface RecursiveItemProps {
     onSaveEditing: () => void;
     setEditLabelValue: (val: string) => void;
     onDragStart: (e: React.DragEvent, id: string) => void;
-    onDragOver: (e: React.DragEvent) => void;
-    onDropOnFolder: (e: React.DragEvent, folderId: string) => void;
     onToggleFolder: (id: string) => void;
     onRemove: (id: string) => void;
     onExecute: (item: FavoriteCommand) => void;
     onAddChild: (folderId: string) => void;
+    onDropAtPosition: (draggedId: string, targetId: string, position: DropPosition) => void;
 }
 
 const RecursiveItem: React.FC<RecursiveItemProps> = ({ 
@@ -46,16 +47,65 @@ const RecursiveItem: React.FC<RecursiveItemProps> = ({
     onSaveEditing, 
     setEditLabelValue, 
     onDragStart, 
-    onDragOver, 
-    onDropOnFolder, 
     onToggleFolder, 
     onRemove, 
     onExecute,
-    onAddChild 
+    onAddChild,
+    onDropAtPosition
 }) => {
     const isFolder = item.type === 'folder';
     const isEditing = editingId === item.id;
-    const [isOutputVisible, setIsOutputVisible] = useState(true); // Default open if there is output? Maybe controlled by existence.
+    const [isOutputVisible, setIsOutputVisible] = useState(true);
+    const [dropIndicator, setDropIndicator] = useState<DropPosition>(null);
+
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (draggedItemId === item.id) return;
+
+        const rect = e.currentTarget.getBoundingClientRect();
+        const y = e.clientY - rect.top;
+        const threshold = rect.height / 4;
+
+        if (isFolder) {
+            if (y < threshold) setDropIndicator('before');
+            else if (y > rect.height - threshold) setDropIndicator('after');
+            else setDropIndicator('inside');
+        } else {
+            if (y < rect.height / 2) setDropIndicator('before');
+            else setDropIndicator('after');
+        }
+    };
+
+    const handleDragLeave = () => {
+        setDropIndicator(null);
+    };
+
+    const handleDrop = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const activeId = e.dataTransfer.getData('text/plain') || draggedItemId;
+        
+        if (activeId && activeId !== item.id && dropIndicator) {
+            onDropAtPosition(activeId, item.id, dropIndicator);
+        }
+        setDropIndicator(null);
+    };
+
+    const containerClasses = clsx(
+        "group relative border transition-all duration-200",
+        "bg-[#121214] border-white/5",
+        draggedItemId === item.id ? "opacity-40 border-dashed border-blue-500" : "hover:border-white/10 hover:bg-white/5",
+        dropIndicator === 'inside' && isFolder && "ring-1 ring-blue-500 bg-blue-500/10"
+    );
+
+    const indicatorLine = (pos: 'before' | 'after') => (
+        <div className={clsx(
+            "absolute left-0 right-0 h-0.5 bg-blue-500 z-20 pointer-events-none",
+            pos === 'before' ? "-top-[1px]" : "-bottom-[1px]"
+        )} />
+    );
 
     if (isFolder) {
         return (
@@ -68,69 +118,71 @@ const RecursiveItem: React.FC<RecursiveItemProps> = ({
                 style={{ marginLeft: level > 0 ? '12px' : '0' }}
                 draggable={!isEditing}
                 onDragStart={(e) => onDragStart(e, item.id)}
-                onDragOver={onDragOver}
-                onDrop={(e) => onDropOnFolder(e, item.id)}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
             >
                 <div 
-                    className={clsx(
-                        "group flex items-center justify-between p-2 border transition-all cursor-pointer",
-                        "bg-[#121214] border-white/5 hover:border-white/10 hover:bg-white/5",
-                        draggedItemId === item.id && "opacity-40 border-dashed border-blue-500"
-                    )}
+                    className={containerClasses}
                     onClick={() => onToggleFolder(item.id)}
                 >
-                     <div className="flex items-center gap-2 flex-1 overflow-hidden text-slate-300 group-hover:text-white transition-colors">
-                        <motion.div 
-                            initial={false}
-                            animate={{ rotate: item.isOpen ? 90 : 0 }}
-                            transition={{ type: "spring", bounce: 0, duration: 0.2 }}
-                        >
-                             <ChevronRight size={14} />
-                        </motion.div>
-                        <Folder size={14} className="text-yellow-500/80" />
-                        
-                        {isEditing ? (
-                            <input 
-                                autoFocus
-                                type="text"
-                                value={editLabelValue}
-                                onChange={(e) => setEditLabelValue(e.target.value)}
-                                onBlur={onSaveEditing}
-                                onKeyDown={(e) => e.key === 'Enter' && onSaveEditing()}
-                                onClick={(e) => e.stopPropagation()}
-                                className="bg-black/50 text-white text-xs px-1 py-0.5 w-full border border-blue-500 outline-none"
-                            />
-                        ) : (
-                            <span 
-                                className="text-xs font-medium truncate"
-                                onDoubleClick={(e) => { e.stopPropagation(); onStartEditing(item); }}
+                    {dropIndicator === 'before' && indicatorLine('before')}
+                    {dropIndicator === 'after' && indicatorLine('after')}
+                    
+                    <div className="flex items-center justify-between p-2 cursor-pointer">
+                        <div className="flex items-center gap-2 flex-1 overflow-hidden text-slate-300 group-hover:text-white transition-colors">
+                            <motion.div 
+                                initial={false}
+                                animate={{ rotate: item.isOpen ? 90 : 0 }}
+                                transition={{ type: "spring", bounce: 0, duration: 0.2 }}
                             >
-                                {item.name}
-                            </span>
-                        )}
-                     </div>
+                                <ChevronRight size={14} />
+                            </motion.div>
+                            <Folder size={14} className="text-yellow-500/80" />
+                            
+                            {isEditing ? (
+                                <input 
+                                    autoFocus
+                                    type="text"
+                                    value={editLabelValue}
+                                    onChange={(e) => setEditLabelValue(e.target.value)}
+                                    onBlur={onSaveEditing}
+                                    onKeyDown={(e) => e.key === 'Enter' && onSaveEditing()}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="bg-black/50 text-white text-xs px-1 py-0.5 w-full border border-blue-500 outline-none"
+                                />
+                            ) : (
+                                <span 
+                                    className="text-xs font-medium truncate"
+                                    onDoubleClick={(e) => { e.stopPropagation(); onStartEditing(item); }}
+                                >
+                                    {item.name}
+                                </span>
+                            )}
+                        </div>
 
-                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button 
-                            onClick={(e) => { e.stopPropagation(); onAddChild(item.id); }}
-                            className="p-1 hover:bg-white/10 text-slate-400 hover:text-white"
-                            title="Novo Comando"
-                        >
-                            <Plus size={12} />
-                        </button>
-                         <button 
-                            onClick={(e) => { e.stopPropagation(); onStartEditing(item); }}
-                            className="p-1 hover:bg-white/10 text-slate-400 hover:text-white"
-                        >
-                            <Edit2 size={12} />
-                        </button>
-                        <button 
-                            onClick={(e) => { e.stopPropagation(); onRemove(item.id); }}
-                            className="p-1 hover:bg-red-500/10 text-slate-400 hover:text-red-400"
-                        >
-                            <Trash2 size={12} />
-                        </button>
-                     </div>
+                        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button 
+                                onClick={(e) => { e.stopPropagation(); onAddChild(item.id); }}
+                                className="p-1 hover:bg-white/10 text-slate-400 hover:text-white"
+                                title="Novo Comando"
+                            >
+                                <Plus size={12} />
+                            </button>
+                            <button 
+                                onClick={(e) => { e.stopPropagation(); onStartEditing(item); }}
+                                className="p-1 hover:bg-white/10 text-slate-400 hover:text-white"
+                            >
+                                <Edit2 size={12} />
+                            </button>
+                            <button 
+                                onClick={(e) => { e.stopPropagation(); onRemove(item.id); }}
+                                className="p-1 hover:bg-red-500/10 text-slate-400 hover:text-red-400"
+                            >
+                                <Trash2 size={12} />
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 <AnimatePresence>
@@ -155,12 +207,11 @@ const RecursiveItem: React.FC<RecursiveItemProps> = ({
                                         onSaveEditing={onSaveEditing}
                                         setEditLabelValue={setEditLabelValue}
                                         onDragStart={onDragStart}
-                                        onDragOver={onDragOver}
-                                        onDropOnFolder={onDropOnFolder}
                                         onToggleFolder={onToggleFolder}
                                         onRemove={onRemove}
                                         onExecute={onExecute}
                                         onAddChild={onAddChild}
+                                        onDropAtPosition={onDropAtPosition}
                                     />
                                 ))
                             ) : (
@@ -184,16 +235,18 @@ const RecursiveItem: React.FC<RecursiveItemProps> = ({
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className={clsx(
-                "group relative p-3 border transition-all duration-200 mb-2",
-                "bg-[#121214] border-white/5 hover:border-white/10 hover:bg-white/5",
-                draggedItemId === item.id && "opacity-40 border-dashed border-blue-500"
-            )}
+            className={containerClasses}
             style={{ marginLeft: level > 0 ? '12px' : '0' }}
             draggable={!isEditing}
             onDragStart={(e) => onDragStart(e, item.id)}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
         >
-             <div className="flex-1 min-w-0">
+             {dropIndicator === 'before' && indicatorLine('before')}
+             {dropIndicator === 'after' && indicatorLine('after')}
+
+             <div className="p-3">
                 <div className="flex justify-between items-start mb-1">
                      {isEditing ? (
                             <input 
@@ -321,9 +374,6 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = React.memo(({
   const [targetFolderId, setTargetFolderId] = useState<string | null>(null);
 
   // --- Recursive Helpers ---
-  // Using useCallback for helpers isn't strictly necessary unless they are deps for other hooks, 
-  // but good for consistency. Since they are used inside handlers which we want stable...
-  
   const findItem = (items: FavoriteItem[], id: string): FavoriteItem | null => {
     for (const item of items) {
       if (item.id === id) return item;
@@ -335,19 +385,24 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = React.memo(({
     return null;
   };
 
-  const removeItem = (items: FavoriteItem[], id: string): FavoriteItem[] => {
-    return items.filter(i => i.id !== id).map(i => {
-      if (i.type === 'folder') {
-        return { ...i, items: removeItem(i.items, id) };
-      }
-      return i;
-    });
+  const removeItemRecursive = (items: FavoriteItem[], id: string): { cleaned: FavoriteItem[], removed: FavoriteItem | null } => {
+    let removed: FavoriteItem | null = null;
+    const clean = (list: FavoriteItem[]): FavoriteItem[] => {
+        return list.filter(i => {
+            if (i.id === id) {
+                removed = i;
+                return false;
+            }
+            return true;
+        }).map(i => i.type === 'folder' ? { ...i, items: clean(i.items) } : i);
+    };
+    return { cleaned: clean(items), removed };
   };
 
   const addItemToFolder = (items: FavoriteItem[], folderId: string, itemToAdd: FavoriteItem): FavoriteItem[] => {
     return items.map(i => {
       if (i.id === folderId && i.type === 'folder') {
-        return { ...i, items: [...i.items, itemToAdd] };
+        return { ...i, items: [...i.items, itemToAdd], isOpen: true };
       }
       if (i.type === 'folder') {
         return { ...i, items: addItemToFolder(i.items, folderId, itemToAdd) };
@@ -362,75 +417,53 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = React.memo(({
               if (i.type === 'folder') return { ...i, name: newLabel };
               return { ...i, label: newLabel };
           }
-          if (i.type === 'folder') {
-              return { ...i, items: updateItemLabel(i.items, id, newLabel) };
-          }
+          if (i.type === 'folder') return { ...i, items: updateItemLabel(i.items, id, newLabel) };
           return i;
       });
   };
   
   const toggleFolderOpen = (items: FavoriteItem[], id: string): FavoriteItem[] => {
       return items.map(i => {
-          if (i.id === id && i.type === 'folder') {
-              return { ...i, isOpen: !i.isOpen };
-          }
-          if (i.type === 'folder') {
-              return { ...i, items: toggleFolderOpen(i.items, id) };
-          }
+          if (i.id === id && i.type === 'folder') return { ...i, isOpen: !i.isOpen };
+          if (i.type === 'folder') return { ...i, items: toggleFolderOpen(i.items, id) };
           return i;
       });
   };
 
+  const moveItem = (activeId: string, overId: string, placement: DropPosition): FavoriteItem[] => {
+      if (!placement) return favorites;
+      
+      const { cleaned, removed } = removeItemRecursive(favorites, activeId);
+      if (!removed) return favorites;
+
+      // Special case for folders: prevent moving a folder into its own descendant
+      if (removed.type === 'folder') {
+          const isDescendant = (folder: FavoriteFolder, targetId: string): boolean => {
+              return folder.items.some(i => i.id === targetId || (i.type === 'folder' && isDescendant(i, targetId)));
+          };
+          if (overId === activeId || isDescendant(removed, overId)) return favorites;
+      }
+
+      const insert = (list: FavoriteItem[]): FavoriteItem[] => {
+          const index = list.findIndex(i => i.id === overId);
+          if (index !== -1) {
+              if (placement === 'inside' && list[index].type === 'folder') {
+                  const newList = [...list];
+                  const folder = newList[index] as FavoriteFolder;
+                  newList[index] = { ...folder, items: [...folder.items, removed!], isOpen: true };
+                  return newList;
+              }
+              const newList = [...list];
+              newList.splice(placement === 'before' ? index : index + 1, 0, removed!);
+              return newList;
+          }
+          return list.map(i => i.type === 'folder' ? { ...i, items: insert(i.items) } : i);
+      };
+
+      return insert(cleaned);
+  };
+
   // --- Handlers ---
-  const handleDragStart = useCallback((e: React.DragEvent, id: string) => {
-    e.stopPropagation();
-    setDraggedItemId(id);
-    e.dataTransfer.setData('text/plain', id);
-    e.dataTransfer.effectAllowed = 'move';
-  }, []);
-
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-  }, []);
-
-  const handleDropOnFolder = useCallback((e: React.DragEvent, folderId: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-    // We can't access state (draggedItemId) easily inside a memoized callback without ref or dependency
-    // But since draggedItemId changes often, we might not want to put it in dependency if we can avoid it.
-    // However, to be correct, we must include it or use dataTransfer fully.
-    
-    // NOTE: Accessing state directly inside useCallback requires it in deps.
-    // To solve this properly without re-creating functions all the time:
-    const id = e.dataTransfer.getData('text/plain'); // Fallback to dataTransfer if state is stale in closure
-    
-    // We need 'favorites' here. If we include 'favorites' in deps, this function changes every time tree updates.
-    // That is acceptable.
-    
-    // BUT for the specific issue of "typing in chat causes blink", 'favorites' DOES NOT change.
-    // So these functions will be stable during chat typing.
-    
-    if (!id || id === folderId) {
-        setDraggedItemId(null);
-        return;
-    }
-
-    // Logic requires access to 'favorites' state, so this closure must update when favorites update.
-    // This is fine, typing in chat does NOT update favorites.
-    
-    // We need to implement the logic here to call onReorder.
-    // Since we need to call findItem etc which are defined in scope, we just execute logic.
-    
-    // We can't easily memoize this deeply without refs for favorites, but that's over-optimization.
-    // The main issue was RecursiveItem re-definition.
-    
-    // Let's just define them normally. The key fix is RecursiveItem extraction.
-  }, []); 
-
-  // Re-implementing handlers simply without excessive useCallback complexity first,
-  // relying on the fact that 'favorites' prop is stable during chat typing.
-  
   const onDragStartHandler = (e: React.DragEvent, id: string) => {
     e.stopPropagation();
     setDraggedItemId(id);
@@ -438,68 +471,21 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = React.memo(({
     e.dataTransfer.effectAllowed = 'move';
   };
 
-  const onDragOverHandler = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-  };
-
-  const onDropOnFolderHandler = (e: React.DragEvent, folderId: string) => {
-      e.preventDefault();
-      e.stopPropagation();
-      const id = e.dataTransfer.getData('text/plain') || draggedItemId;
-      
-      if (!id || id === folderId) {
-          setDraggedItemId(null);
-          return;
-      }
-
-      const draggedItem = findItem(favorites, id);
-      if (!draggedItem) {
-          setDraggedItemId(null);
-          return;
-      }
-
-      // Check circular dependency for folders
-      if (draggedItem.type === 'folder') {
-        const isTargetDescendant = findItem(draggedItem.items, folderId);
-        if (isTargetDescendant) {
-            setDraggedItemId(null);
-            return;
-        }
-    }
-
-      const tempTree = removeItem(favorites, id);
-      const newTree = addItemToFolder(tempTree, folderId, draggedItem);
-      
-      onReorder(newTree);
+  const onDropAtPositionHandler = (draggedId: string, targetId: string, position: DropPosition) => {
+      onReorder(moveItem(draggedId, targetId, position));
       setDraggedItemId(null);
   };
 
   const handleDropOnRoot = (e: React.DragEvent) => {
       e.preventDefault();
       const id = e.dataTransfer.getData('text/plain') || draggedItemId;
+      if (!id) return setDraggedItemId(null);
 
-      if (!id) {
-          setDraggedItemId(null);
-          return;
+      // If it's already on root, we might want to move it to the end
+      const { cleaned, removed } = removeItemRecursive(favorites, id);
+      if (removed) {
+          onReorder([...cleaned, removed]);
       }
-
-      const isInRoot = favorites.some(i => i.id === id);
-      if (isInRoot) {
-          setDraggedItemId(null);
-          return;
-      }
-
-      const draggedItem = findItem(favorites, id);
-      if (!draggedItem) {
-          setDraggedItemId(null);
-          return;
-      }
-
-      const tempTree = removeItem(favorites, id);
-      const newTree = [...tempTree, draggedItem];
-
-      onReorder(newTree);
       setDraggedItemId(null);
   };
 
@@ -638,7 +624,7 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = React.memo(({
 
       <div 
         className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2"
-        onDragOver={onDragOverHandler}
+        onDragOver={(e) => e.preventDefault()}
         onDrop={handleDropOnRoot}
       >
         <AnimatePresence mode='popLayout'>
@@ -665,12 +651,11 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = React.memo(({
                         onSaveEditing={saveEditing}
                         setEditLabelValue={setEditLabelValue}
                         onDragStart={onDragStartHandler}
-                        onDragOver={onDragOverHandler}
-                        onDropOnFolder={onDropOnFolderHandler}
                         onToggleFolder={handleToggleFolder}
                         onRemove={onRemove}
                         onExecute={onExecute}
                         onAddChild={handleAddChild}
+                        onDropAtPosition={onDropAtPositionHandler}
                     />
                 ))
             )}
