@@ -38,9 +38,9 @@ export const CommandSidebar: React.FC<CommandSidebarProps> = ({ commands, favori
   };
 
   return (
-    <div className="w-[25vw] max-w-[448px] min-w-[250px] flex-shrink-0 h-full flex flex-col bg-[#09090b] border-r border-white/10">
+    <div className="w-[25vw] max-w-[448px] min-w-[250px] flex-shrink-0 h-full flex flex-col bg-bg-sidebar border-r border-border-main">
       {/* Header */}
-      <div className="h-14 px-4 flex items-center justify-between border-b border-white/10 bg-[#0c0c0e]">
+      <div className="h-14 px-4 flex items-center justify-between border-b border-border-main bg-bg-sidebar">
         <div className="flex items-center gap-2 text-xs font-bold font-mono tracking-wider text-slate-300 uppercase">
            <Terminal size={14} className="text-blue-500" />
            <span>FILA DE COMANDOS</span>
@@ -93,8 +93,8 @@ export const CommandSidebar: React.FC<CommandSidebarProps> = ({ commands, favori
                     className={clsx(
                         "group relative p-3 border-b border-white/5 transition-all duration-200",
                         selectedIds.has(item.id) 
-                            ? "bg-blue-500/5" 
-                            : "hover:bg-white/5 bg-[#09090b]"
+                            ? "bg-blue-500/10" 
+                            : "hover:bg-white/5 bg-bg-sidebar"
                     )}
                 >
                     {selectedIds.has(item.id) && (

@@ -72,7 +72,7 @@ export const HistorySidebar: React.FC<HistorySidebarProps> = ({
             animate={{ x: 0 }}
             exit={{ x: '-100%' }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="fixed top-0 left-0 h-full w-80 bg-[#09090b] border-r border-white/10 z-50 flex flex-col shadow-2xl"
+            className="fixed top-0 left-0 h-full w-80 bg-bg-sidebar border-r border-border-main z-50 flex flex-col shadow-2xl"
           >
             <div className="p-4 border-b border-white/5 flex items-center justify-between">
               <div className="flex items-center gap-2 text-slate-200">
@@ -119,7 +119,7 @@ export const HistorySidebar: React.FC<HistorySidebarProps> = ({
                                 onChange={(e) => setEditTitle(e.target.value)}
                                 onKeyDown={(e) => handleKeyDown(e, session.id)}
                                 onBlur={() => setEditingId(null)}
-                                className="w-full bg-[#121214] border border-blue-500/50 rounded px-1.5 py-0.5 text-xs text-white focus:outline-none"
+                                className="w-full bg-bg-main border border-blue-500/50 rounded px-1.5 py-0.5 text-xs text-white focus:outline-none"
                               />
                           </div>
                       ) : (
@@ -135,7 +135,7 @@ export const HistorySidebar: React.FC<HistorySidebarProps> = ({
                     </div>
                     
                     {editingId !== session.id && (
-                        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-[#09090b] shadow-[-10px_0_10px_#09090b]">
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-bg-sidebar shadow-[-10px_0_10px_rgba(34,34,41,1)]">
                             <button
                                 onClick={(e) => startEditing(e, session)}
                                 className="p-1.5 hover:bg-white/10 text-slate-500 hover:text-blue-400 rounded transition-all"

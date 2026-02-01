@@ -562,7 +562,6 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = React.memo(({
 
 
   return (
-  return (
     <div className="relative flex-shrink-0 h-full flex flex-col bg-bg-sidebar border-l border-border-main group/sidebar" style={{ width: `${width}px` }}>
       <div className="absolute left-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-blue-500/50 transition-colors z-50" onMouseDown={onResizeStart} />
 
@@ -589,14 +588,33 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = React.memo(({
                             className="fixed inset-0 z-40" 
                             onClick={() => setIsAddMenuOpen(false)} 
                         />
-                                                <motion.div initial={{ opacity: 0, y: 8, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 8, scale: 0.95 }} className="absolute right-0 mt-2 w-40 bg-bg-surface border border-border-main shadow-2xl z-50 py-1">
-                                                    <button onClick={() => { setTargetFolderId(null); setIsModalOpen(true); setIsAddMenuOpen(false); }} className="w-full px-3 py-2 text-left text-xs text-slate-300 hover:bg-white/5 hover:text-white flex items-center gap-2">
-                                                        <Terminal size={14} className="text-blue-500" /> Novo Comando
-                                                    </button>
-                                                    <button onClick={() => { setTargetFolderId(null); setIsFolderModalOpen(true); setIsAddMenuOpen(false); }} className="w-full px-3 py-2 text-left text-xs text-slate-300 hover:bg-white/5 hover:text-white flex items-center gap-2">
-                                                        <FolderPlus size={14} className="text-yellow-500" /> Nova Pasta
-                                                    </button>
-                                                </motion.div>
+                        <motion.div 
+                            initial={{ opacity: 0, y: 8, scale: 0.95 }} 
+                            animate={{ opacity: 1, y: 0, scale: 1 }} 
+                            exit={{ opacity: 0, y: 8, scale: 0.95 }} 
+                            className="absolute right-0 mt-2 w-40 bg-bg-surface border border-border-main shadow-2xl z-50 py-1"
+                        >
+                            <button 
+                                onClick={() => { 
+                                    setTargetFolderId(null); 
+                                    setIsModalOpen(true); 
+                                    setIsAddMenuOpen(false); 
+                                }} 
+                                className="w-full px-3 py-2 text-left text-xs text-slate-300 hover:bg-white/5 hover:text-white flex items-center gap-2"
+                            >
+                                <Terminal size={14} className="text-blue-500" /> Novo Comando
+                            </button>
+                            <button 
+                                onClick={() => { 
+                                    setTargetFolderId(null); 
+                                    setIsFolderModalOpen(true); 
+                                    setIsAddMenuOpen(false); 
+                                }} 
+                                className="w-full px-3 py-2 text-left text-xs text-slate-300 hover:bg-white/5 hover:text-white flex items-center gap-2"
+                            >
+                                <FolderPlus size={14} className="text-yellow-500" /> Nova Pasta
+                            </button>
+                        </motion.div>
                         
                     </>
                 )}
@@ -645,10 +663,17 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = React.memo(({
       </div>
 
       {/* Add Command Modal */}
-            <Modal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setTargetFolderId(null); }} title={targetFolderId ? `Adicionar à pasta "${(findItem(favorites, targetFolderId) as any)?.name}"` : "Adicionar Favorito"}>
-              <form onSubmit={handleAddCommand} className="space-y-4">
-                 <div>
-                   <label className="block text-xs font-medium text-slate-400 mb-1">Comando</label>
+      <Modal 
+        isOpen={isModalOpen} 
+        onClose={() => { 
+            setIsModalOpen(false); 
+            setTargetFolderId(null); 
+        }} 
+        title={targetFolderId ? `Adicionar à pasta "${(findItem(favorites, targetFolderId) as any)?.name}"` : "Adicionar Favorito"}
+      >
+        <form onSubmit={handleAddCommand} className="space-y-4">
+           <div>
+             <label className="block text-xs font-medium text-slate-400 mb-1">Comando</label>
                    <textarea value={newCommand} onChange={(e) => setNewCommand(e.target.value)} className="w-full bg-bg-main border border-border-main p-2 text-sm text-white focus:border-blue-500 outline-none font-mono" rows={3} placeholder="docker ps -a" required />
                  </div>
                  <div>
