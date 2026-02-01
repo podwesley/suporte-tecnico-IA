@@ -252,6 +252,13 @@ const RecursiveItem: React.FC<RecursiveItemProps> = ({
                 {/* Actions */}
                 <div className="flex justify-start gap-1 mt-2">
                      <button
+                        onClick={() => onExecute(favCommand)}
+                        className="p-1.5 bg-blue-600 hover:bg-blue-500 text-white transition-colors shadow-lg shadow-blue-900/20"
+                        title="Executar"
+                     >
+                        <Play size={10} fill="currentColor" />
+                     </button>
+                     <button
                         onClick={() => navigator.clipboard.writeText(item.command)}
                         className="p-1 text-slate-500 hover:text-white hover:bg-white/10"
                         title="Copiar"
@@ -271,13 +278,6 @@ const RecursiveItem: React.FC<RecursiveItemProps> = ({
                         title="Remover"
                      >
                         <Trash2 size={12} />
-                     </button>
-                     <button
-                        onClick={() => onExecute(favCommand)}
-                        className="flex items-center gap-1.5 px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold transition-colors ml-1 shadow-lg shadow-blue-900/20"
-                     >
-                        <Play size={10} fill="currentColor" />
-                        Run
                      </button>
                 </div>
             </div>
