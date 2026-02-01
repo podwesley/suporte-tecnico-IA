@@ -321,7 +321,7 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = ({
   };
 
   return (
-    <div className="w-[640px] bg-[#0d1117] border-l border-slate-800 flex flex-col h-full animate-[slideInLeft_0.3s_ease-out]">
+      <div className="w-[800px] bg-[#0d1117] border-l border-slate-800 flex flex-col h-full animate-[slideInLeft_0.3s_ease-out]">
       <div className="p-4 border-b border-slate-800 bg-[#161b22] flex items-center justify-between">
         <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wider">
             Favoritos
