@@ -6,11 +6,12 @@ import { clsx } from 'clsx';
 
 interface CommandSidebarProps {
   commands: CommandHistoryItem[];
+  favoriteCommands: Set<string>;
   onDelete: (ids: string[]) => void;
   onFavorite: (command: string) => void;
 }
 
-export const CommandSidebar: React.FC<CommandSidebarProps> = ({ commands, onDelete, onFavorite }) => {
+export const CommandSidebar: React.FC<CommandSidebarProps> = ({ commands, favoriteCommands, onDelete, onFavorite }) => {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const toggleSelect = (id: string) => {
@@ -135,10 +136,15 @@ export const CommandSidebar: React.FC<CommandSidebarProps> = ({ commands, onDele
                                 e.stopPropagation();
                                 onFavorite(item.command);
                             }}
-                            className="p-1 text-slate-500 hover:text-yellow-500 border border-transparent hover:border-yellow-500 bg-transparent rounded transition-colors"
-                            title="Favoritar"
+                            className={clsx(
+                                "p-1 transition-colors rounded border",
+                                favoriteCommands.has(item.command)
+                                    ? "text-yellow-500 border-yellow-500/20 bg-yellow-500/10 hover:bg-yellow-500/20"
+                                    : "text-slate-500 hover:text-yellow-500 border-transparent hover:border-yellow-500 bg-transparent"
+                            )}
+                            title={favoriteCommands.has(item.command) ? "Remover dos Favoritos" : "Favoritar"}
                          >
-                            <Star size={12} />
+                            <Star size={12} fill={favoriteCommands.has(item.command) ? "currentColor" : "none"} />
                          </button>
                     </div>
                 </motion.div>

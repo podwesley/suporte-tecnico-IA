@@ -256,6 +256,21 @@ const App: React.FC = () => {
   };
 
   // Favorites Handlers
+  const favoriteCommands = React.useMemo(() => {
+      const cmds = new Set<string>();
+      const traverse = (items: FavoriteItem[]) => {
+          items.forEach(item => {
+              if (item.type === 'folder') {
+                  traverse(item.items);
+              } else if (item.command) {
+                  cmds.add(item.command);
+              }
+          });
+      };
+      traverse(favorites);
+      return cmds;
+  }, [favorites]);
+
   const handleAddToFavorites = (command: string) => {
       setFavorites(prev => {
           const isCommandInFavorites = (items: FavoriteItem[], cmd: string): boolean => {
@@ -268,7 +283,21 @@ const App: React.FC = () => {
           };
 
           if (isCommandInFavorites(prev, command)) {
-              return prev;
+              // Remove if already exists (Toggle)
+              const removeRecursive = (items: FavoriteItem[], cmd: string): FavoriteItem[] => {
+                  return items
+                      .filter(item => {
+                          if (item.type === 'folder') return true;
+                          return (item as FavoriteCommand).command !== cmd;
+                      })
+                      .map(item => {
+                          if (item.type === 'folder') {
+                              return { ...item, items: removeRecursive(item.items, cmd) };
+                          }
+                          return item;
+                      });
+              };
+              return removeRecursive(prev, command);
           }
 
           return [{
@@ -477,6 +506,7 @@ const App: React.FC = () => {
                 >
                      <CommandSidebar 
                         commands={commandQueue} 
+                        favoriteCommands={favoriteCommands}
                         onDelete={handleDeleteCommands}
                         onFavorite={handleAddToFavorites}
                     />
