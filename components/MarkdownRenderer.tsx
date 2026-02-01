@@ -1,5 +1,18 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Play, Copy, Terminal, Plus, Send, X } from 'lucide-react';
+import Prism from 'prismjs';
+import 'prismjs/themes/prism-tomorrow.css';
+import 'prismjs/components/prism-bash';
+import 'prismjs/components/prism-javascript';
+import 'prismjs/components/prism-typescript';
+import 'prismjs/components/prism-json';
+import 'prismjs/components/prism-java';
+import 'prismjs/components/prism-docker';
+import 'prismjs/components/prism-css';
+import 'prismjs/components/prism-jsx';
+import 'prismjs/components/prism-tsx';
+import 'prismjs/components/prism-yaml';
+import 'prismjs/components/prism-markdown';
 
 interface MarkdownRendererProps {
   content: string;
@@ -51,6 +64,12 @@ const CodeBlock: React.FC<{
   const isExecutable = ['bash', 'sh', 'shell', 'zsh', 'docker'].includes(language.toLowerCase()) || 
                        (language === 'text' && (code.trim().startsWith('docker') || code.trim().startsWith('npm')));
 
+  const highlightedCode = useMemo(() => {
+    const grammar = Prism.languages[language] || Prism.languages.text || Prism.languages.javascript;
+    if (!grammar) return code.trim();
+    return Prism.highlight(code.trim(), grammar, language);
+  }, [code, language]);
+
   return (
     <div className="my-3 rounded-lg overflow-hidden border border-white/5 bg-[#09090b] shadow-sm group ring-1 ring-white/5">
       <div className="bg-[#121214] px-3 py-2 text-xs text-slate-400 border-b border-white/5 flex justify-between items-center">
@@ -83,7 +102,10 @@ const CodeBlock: React.FC<{
       </div>
       <div className="bg-[#09090b] relative group-hover:bg-[#0c0c0e] transition-colors">
         <pre className="p-3 overflow-x-auto custom-scrollbar">
-            <code className="font-mono text-slate-200 text-xs whitespace-pre leading-5">{code.trim()}</code>
+            <code 
+              className={`font-mono text-slate-200 text-xs whitespace-pre leading-5 language-${language}`}
+              dangerouslySetInnerHTML={{ __html: highlightedCode }}
+            />
         </pre>
       </div>
 
