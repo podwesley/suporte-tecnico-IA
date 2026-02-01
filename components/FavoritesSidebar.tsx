@@ -33,8 +33,7 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = ({
 
   const [draggedItemId, setDraggedItemId] = useState<string | null>(null);
 
-  // --- Recursive Helpers (Keeping logic same, just updating rendering) ---
-  // (Helper functions omitted for brevity in thought process, but included in code)
+  // --- Recursive Helpers ---
   const findItem = (items: FavoriteItem[], id: string): FavoriteItem | null => {
     for (const item of items) {
       if (item.id === id) return item;
@@ -223,6 +222,9 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = ({
         return (
             <motion.div 
                 layout
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
                 className="mb-1 select-none"
                 style={{ marginLeft: level > 0 ? '12px' : '0' }}
                 draggable={!isEditing}
@@ -242,6 +244,7 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = ({
                         <motion.div 
                             initial={false}
                             animate={{ rotate: item.isOpen ? 90 : 0 }}
+                            transition={{ type: "spring", bounce: 0, duration: 0.2 }}
                         >
                              <ChevronRight size={14} />
                         </motion.div>
@@ -290,6 +293,7 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = ({
                             initial={{ height: 0, opacity: 0 }}
                             animate={{ height: 'auto', opacity: 1 }}
                             exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2, ease: "easeInOut" }}
                             className="overflow-hidden pl-2 border-l border-white/5 ml-2 mt-1"
                         >
                             {item.items.length > 0 ? (
@@ -312,6 +316,9 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = ({
     return (
         <motion.div 
             layout
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
             className={clsx(
                 "group relative p-3 rounded-lg border transition-all duration-200 mb-2",
                 "bg-[#121214] border-white/5 hover:border-white/10 hover:bg-white/5",
@@ -385,7 +392,7 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = ({
   };
 
   return (
-    <div className="w-80 h-full flex flex-col bg-[#09090b] border-l border-white/5">
+    <div className="w-[672px] flex-shrink-0 h-full flex flex-col bg-[#09090b] border-l border-white/5">
       {/* Header */}
       <div className="h-14 px-4 flex items-center justify-between border-b border-white/5 bg-[#09090b]">
         <div className="flex items-center gap-2 text-sm font-medium text-slate-200">
@@ -415,11 +422,12 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = ({
         onDragOver={handleDragOver}
         onDrop={handleDropOnRoot}
       >
-        <AnimatePresence>
+        <AnimatePresence mode='popLayout'>
             {favorites.length === 0 ? (
             <motion.div 
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
                 className="flex flex-col items-center justify-center h-40 text-slate-500 text-xs text-center px-6"
             >
                 <Star size={24} className="mb-2 opacity-20" />

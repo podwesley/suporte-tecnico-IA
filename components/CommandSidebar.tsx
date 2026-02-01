@@ -38,7 +38,7 @@ export const CommandSidebar: React.FC<CommandSidebarProps> = ({ commands, onExec
   };
 
   return (
-    <div className="w-80 h-full flex flex-col bg-[#09090b] border-r border-white/10">
+    <div className="w-[448px] flex-shrink-0 h-full flex flex-col bg-[#09090b] border-r border-white/10">
       {/* Header */}
       <div className="h-14 px-4 flex items-center justify-between border-b border-white/10 bg-[#0c0c0e]">
         <div className="flex items-center gap-2 text-xs font-bold font-mono tracking-wider text-slate-300 uppercase">
@@ -70,11 +70,12 @@ export const CommandSidebar: React.FC<CommandSidebarProps> = ({ commands, onExec
 
       {/* List */}
       <div className="flex-1 overflow-y-auto custom-scrollbar p-0 space-y-0">
-        <AnimatePresence initial={false}>
+        <AnimatePresence initial={false} mode="popLayout">
             {commands.length === 0 ? (
                 <motion.div 
                     initial={{ opacity: 0 }} 
                     animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
                     className="flex flex-col items-center justify-center h-40 text-slate-600 text-[10px] font-mono text-center px-6"
                 >
                     <Terminal size={24} className="mb-3 opacity-20" />
@@ -88,6 +89,7 @@ export const CommandSidebar: React.FC<CommandSidebarProps> = ({ commands, onExec
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: -10, height: 0 }}
+                    transition={{ duration: 0.2 }}
                     className={clsx(
                         "group relative p-3 border-b border-white/5 transition-all duration-200",
                         selectedIds.has(item.id) 
