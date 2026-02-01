@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, CornerDownRight, Send, Terminal } from 'lucide-react';
+import { SyntaxHighlighter } from './SyntaxHighlighter';
 
 interface TerminalWindowProps {
   isOpen: boolean;
@@ -79,8 +80,10 @@ export const TerminalWindow: React.FC<TerminalWindowProps> = ({
                 </div>
               ) : (
                 output && (
-                  <div className="mt-2 whitespace-pre-wrap text-gray-300 leading-relaxed">
-                    {output}
+                  <div className="mt-2 rounded p-2 border border-white/5 shadow-inner bg-[#2d2d2d]">
+                    <pre className="whitespace-pre-wrap font-mono text-gray-300 m-0 bg-transparent">
+                         <SyntaxHighlighter code={output} />
+                    </pre>
                   </div>
                 )
               )}

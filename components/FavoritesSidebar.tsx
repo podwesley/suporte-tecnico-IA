@@ -2,6 +2,7 @@ import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FavoriteItem, FavoriteCommand } from '../types';
 import { Modal } from './Modal';
+import { SyntaxHighlighter } from './SyntaxHighlighter';
 import { v4 as uuidv4 } from 'uuid';
 import { Folder, FolderPlus, Plus, Play, Trash2, Edit2, Copy, ChevronRight, Star, Terminal, ChevronDown } from 'lucide-react';
 import { clsx } from 'clsx';
@@ -203,9 +204,13 @@ const RecursiveItem: React.FC<RecursiveItemProps> = ({
                         )}
                 </div>
 
-                <code className="block text-xs font-mono text-emerald-400 break-all mb-2 bg-black/20 p-1.5 rounded border border-white/5">
-                    {item.command}
-                </code>
+                <div className="mb-2 rounded border border-white/5 overflow-hidden bg-[#2d2d2d]">
+                    <SyntaxHighlighter 
+                        code={item.command} 
+                        language="bash" 
+                        className="block text-xs font-mono p-1.5 break-all text-slate-300"
+                    />
+                </div>
                 
                 {hasOutput && (
                     <div className="mt-2">
@@ -230,8 +235,10 @@ const RecursiveItem: React.FC<RecursiveItemProps> = ({
                                     exit={{ height: 0, opacity: 0 }}
                                     className="overflow-hidden"
                                 >
-                                    <div className="bg-black/40 border border-white/5 rounded p-2 text-xs font-mono text-slate-400 whitespace-pre-wrap max-h-60 overflow-y-auto custom-scrollbar shadow-inner">
-                                        {favCommand.output}
+                                    <div className="bg-[#2d2d2d] border border-white/5 rounded p-0 text-xs font-mono text-slate-300 max-h-60 overflow-y-auto custom-scrollbar shadow-inner mt-1">
+                                         <pre className="p-2 m-0 whitespace-pre-wrap font-mono bg-transparent">
+                                            <SyntaxHighlighter code={favCommand.output} />
+                                         </pre>
                                     </div>
                                     <div className="text-[10px] text-slate-600 mt-1 text-right">
                                         {favCommand.timestamp && new Date(favCommand.timestamp).toLocaleTimeString()}
