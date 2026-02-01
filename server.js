@@ -56,6 +56,7 @@ app.post('/api/select-directory', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Command server running on http://localhost:${PORT}`);
+  const now = new Date();
+  console.log(`[${now.toLocaleDateString()} ${now.toLocaleTimeString()}] Command server running on http://localhost:${PORT}`);
 });
 

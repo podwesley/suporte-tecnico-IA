@@ -236,10 +236,6 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = ({
                              <svg className={`w-3 h-3 transition-transform ${item.isOpen ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                         </button>
                     )}
-                    
-                    <span className="shrink-0">
-                        {isFolder ? (item.isOpen ? <FolderOpenIcon /> : <FolderIcon />) : <CommandIcon />}
-                    </span>
 
                     {isEditing ? (
                         <input 

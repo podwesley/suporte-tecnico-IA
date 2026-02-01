@@ -238,7 +238,9 @@ const App: React.FC = () => {
 
     try {
       const result = await commandExecutor.execute(command, currentWorkingDirectory);
-      return result.output;
+      const now = new Date();
+      const timestamp = `[${now.toLocaleDateString()} ${now.toLocaleTimeString()}]\n`;
+      return timestamp + result.output;
     } catch (e) {
       return "Erro ao executar comando: " + e;
     }
