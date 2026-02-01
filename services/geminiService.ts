@@ -1,5 +1,5 @@
 import { GoogleGenAI, Chat, GenerateContentResponse } from "@google/genai";
-import { SYSTEM_PROMPT } from "../constants";
+import { SYSTEM_PROMPT_AGENT_SUPPORT } from "../agents";
 import { Message, Role } from "../types";
 
 export class GeminiService {
@@ -20,7 +20,7 @@ export class GeminiService {
       this.chatSession = this.ai.chats.create({
         model: 'gemini-3-flash-preview',
         config: {
-          systemInstruction: SYSTEM_PROMPT,
+          systemInstruction: SYSTEM_PROMPT_AGENT_SUPPORT,
           temperature: 0.2, 
         },
       });
@@ -49,7 +49,7 @@ export class GeminiService {
       this.chatSession = this.ai.chats.create({
         model: 'gemini-3-flash-preview',
         config: {
-            systemInstruction: SYSTEM_PROMPT,
+            systemInstruction: SYSTEM_PROMPT_AGENT_SUPPORT,
             temperature: 0.2,
         },
         history: history as any // Type assertion needed sometimes depending on exact SDK version types

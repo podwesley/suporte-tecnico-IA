@@ -9,7 +9,7 @@ import { HistorySidebar } from './components/HistorySidebar';
 import { CommandSidebar } from './components/CommandSidebar';
 import { FavoritesSidebar } from './components/FavoritesSidebar';
 import { Modal } from './components/Modal';
-import { APP_NAME } from './constants';
+import { APP_NAME } from './agents';
 import { motion, AnimatePresence } from 'framer-motion';
 import { History, FolderOpen, Plus, X, Server, Terminal, Box, Shield, Cpu, PanelLeft } from 'lucide-react';
 
