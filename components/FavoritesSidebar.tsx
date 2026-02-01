@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FavoriteItem, FavoriteCommand } from '../types';
 import { Modal } from './Modal';
 import { v4 as uuidv4 } from 'uuid';
-import { Folder, FolderPlus, Plus, Play, Trash2, Edit2, Copy, ChevronRight, Star } from 'lucide-react';
+import { Folder, FolderPlus, Plus, Play, Trash2, Edit2, Copy, ChevronRight, Star, Terminal, ChevronDown } from 'lucide-react';
 import { clsx } from 'clsx';
 
 interface FavoritesSidebarProps {
@@ -14,7 +14,272 @@ interface FavoritesSidebarProps {
   onAdd: (item: FavoriteItem) => void;
 }
 
-export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = ({ 
+// Separate component to prevent re-renders/remounts causing flicker
+interface RecursiveItemProps {
+    item: FavoriteItem;
+    level: number;
+    editingId: string | null;
+    editLabelValue: string;
+    draggedItemId: string | null;
+    onStartEditing: (item: FavoriteItem) => void;
+    onSaveEditing: () => void;
+    setEditLabelValue: (val: string) => void;
+    onDragStart: (e: React.DragEvent, id: string) => void;
+    onDragOver: (e: React.DragEvent) => void;
+    onDropOnFolder: (e: React.DragEvent, folderId: string) => void;
+    onToggleFolder: (id: string) => void;
+    onRemove: (id: string) => void;
+    onExecute: (item: FavoriteCommand) => void;
+}
+
+const RecursiveItem: React.FC<RecursiveItemProps> = ({ 
+    item, 
+    level, 
+    editingId, 
+    editLabelValue, 
+    draggedItemId, 
+    onStartEditing, 
+    onSaveEditing, 
+    setEditLabelValue, 
+    onDragStart, 
+    onDragOver, 
+    onDropOnFolder, 
+    onToggleFolder, 
+    onRemove, 
+    onExecute 
+}) => {
+    const isFolder = item.type === 'folder';
+    const isEditing = editingId === item.id;
+    const [isOutputVisible, setIsOutputVisible] = useState(true); // Default open if there is output? Maybe controlled by existence.
+
+    if (isFolder) {
+        return (
+            <motion.div 
+                layout
+                initial={{ opacity: 0, y: 5 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="mb-1 select-none"
+                style={{ marginLeft: level > 0 ? '12px' : '0' }}
+                draggable={!isEditing}
+                onDragStart={(e) => onDragStart(e, item.id)}
+                onDragOver={onDragOver}
+                onDrop={(e) => onDropOnFolder(e, item.id)}
+            >
+                <div 
+                    className={clsx(
+                        "group flex items-center justify-between p-2 rounded-lg border transition-all cursor-pointer",
+                        "bg-[#121214] border-white/5 hover:border-white/10 hover:bg-white/5",
+                        draggedItemId === item.id && "opacity-40 border-dashed border-blue-500"
+                    )}
+                    onClick={() => onToggleFolder(item.id)}
+                >
+                     <div className="flex items-center gap-2 flex-1 overflow-hidden text-slate-300 group-hover:text-white transition-colors">
+                        <motion.div 
+                            initial={false}
+                            animate={{ rotate: item.isOpen ? 90 : 0 }}
+                            transition={{ type: "spring", bounce: 0, duration: 0.2 }}
+                        >
+                             <ChevronRight size={14} />
+                        </motion.div>
+                        <Folder size={14} className="text-yellow-500/80" />
+                        
+                        {isEditing ? (
+                            <input 
+                                autoFocus
+                                type="text"
+                                value={editLabelValue}
+                                onChange={(e) => setEditLabelValue(e.target.value)}
+                                onBlur={onSaveEditing}
+                                onKeyDown={(e) => e.key === 'Enter' && onSaveEditing()}
+                                onClick={(e) => e.stopPropagation()}
+                                className="bg-black/50 text-white text-xs px-1 py-0.5 rounded w-full border border-blue-500 outline-none"
+                            />
+                        ) : (
+                            <span 
+                                className="text-xs font-medium truncate"
+                                onDoubleClick={(e) => { e.stopPropagation(); onStartEditing(item); }}
+                            >
+                                {item.name}
+                            </span>
+                        )}
+                     </div>
+
+                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                         <button 
+                            onClick={(e) => { e.stopPropagation(); onStartEditing(item); }}
+                            className="p-1 hover:bg-white/10 text-slate-400 hover:text-white rounded"
+                        >
+                            <Edit2 size={12} />
+                        </button>
+                        <button 
+                            onClick={(e) => { e.stopPropagation(); onRemove(item.id); }}
+                            className="p-1 hover:bg-red-500/10 text-slate-400 hover:text-red-400 rounded"
+                        >
+                            <Trash2 size={12} />
+                        </button>
+                     </div>
+                </div>
+
+                <AnimatePresence>
+                    {item.isOpen && (
+                        <motion.div 
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2, ease: "easeInOut" }}
+                            className="overflow-hidden pl-2 border-l border-white/5 ml-2 mt-1"
+                        >
+                            {item.items.length > 0 ? (
+                                 item.items.map(subItem => (
+                                    <RecursiveItem 
+                                        key={subItem.id} 
+                                        item={subItem} 
+                                        level={level + 1}
+                                        editingId={editingId}
+                                        editLabelValue={editLabelValue}
+                                        draggedItemId={draggedItemId}
+                                        onStartEditing={onStartEditing}
+                                        onSaveEditing={onSaveEditing}
+                                        setEditLabelValue={setEditLabelValue}
+                                        onDragStart={onDragStart}
+                                        onDragOver={onDragOver}
+                                        onDropOnFolder={onDropOnFolder}
+                                        onToggleFolder={onToggleFolder}
+                                        onRemove={onRemove}
+                                        onExecute={onExecute}
+                                    />
+                                ))
+                            ) : (
+                                 <div className="text-[10px] text-slate-600 ml-6 py-2 italic">
+                                    Pasta vazia
+                                </div>
+                            )}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </motion.div>
+        );
+    }
+
+    const favCommand = item as FavoriteCommand;
+    const hasOutput = !!favCommand.output;
+
+    return (
+        <motion.div 
+            layout
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className={clsx(
+                "group relative p-3 rounded-lg border transition-all duration-200 mb-2",
+                "bg-[#121214] border-white/5 hover:border-white/10 hover:bg-white/5",
+                draggedItemId === item.id && "opacity-40 border-dashed border-blue-500"
+            )}
+            style={{ marginLeft: level > 0 ? '12px' : '0' }}
+            draggable={!isEditing}
+            onDragStart={(e) => onDragStart(e, item.id)}
+        >
+             <div className="flex-1 min-w-0">
+                <div className="flex justify-between items-start mb-1">
+                     {isEditing ? (
+                            <input 
+                                autoFocus
+                                type="text"
+                                value={editLabelValue}
+                                onChange={(e) => setEditLabelValue(e.target.value)}
+                                onBlur={onSaveEditing}
+                                onKeyDown={(e) => e.key === 'Enter' && onSaveEditing()}
+                                className="bg-black/50 text-white text-xs px-1 py-0.5 rounded w-full border border-blue-500 outline-none mb-2"
+                            />
+                        ) : (
+                            <span 
+                                className="text-xs font-medium text-slate-200 truncate cursor-pointer hover:text-white flex items-center gap-1.5"
+                                onDoubleClick={() => onStartEditing(item)}
+                            >
+                                <Star size={10} className="text-yellow-500" fill="currentColor" />
+                                {item.label}
+                            </span>
+                        )}
+                </div>
+
+                <code className="block text-xs font-mono text-emerald-400 break-all mb-2 bg-black/20 p-1.5 rounded border border-white/5">
+                    {item.command}
+                </code>
+                
+                {hasOutput && (
+                    <div className="mt-2">
+                        <button 
+                            onClick={() => setIsOutputVisible(!isOutputVisible)}
+                            className="flex items-center gap-1 text-[10px] text-slate-500 hover:text-slate-300 mb-1"
+                        >
+                             <Terminal size={10} />
+                             <span>Output</span>
+                             <motion.div 
+                                animate={{ rotate: isOutputVisible ? 180 : 0 }}
+                                transition={{ duration: 0.2 }}
+                             >
+                                 <ChevronDown size={10} />
+                             </motion.div>
+                        </button>
+                        <AnimatePresence>
+                            {isOutputVisible && (
+                                <motion.div 
+                                    initial={{ height: 0, opacity: 0 }}
+                                    animate={{ height: 'auto', opacity: 1 }}
+                                    exit={{ height: 0, opacity: 0 }}
+                                    className="overflow-hidden"
+                                >
+                                    <div className="bg-black/40 border border-white/5 rounded p-2 text-xs font-mono text-slate-400 whitespace-pre-wrap max-h-60 overflow-y-auto custom-scrollbar shadow-inner">
+                                        {favCommand.output}
+                                    </div>
+                                    <div className="text-[10px] text-slate-600 mt-1 text-right">
+                                        {favCommand.timestamp && new Date(favCommand.timestamp).toLocaleTimeString()}
+                                    </div>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
+                )}
+
+                {/* Actions */}
+                <div className="flex justify-end gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity mt-2">
+                     <button
+                        onClick={() => navigator.clipboard.writeText(item.command)}
+                        className="p-1 text-slate-500 hover:text-white hover:bg-white/10 rounded"
+                        title="Copiar"
+                     >
+                        <Copy size={12} />
+                     </button>
+                     <button
+                        onClick={() => onStartEditing(item)}
+                        className="p-1 text-slate-500 hover:text-white hover:bg-white/10 rounded"
+                        title="Editar"
+                     >
+                        <Edit2 size={12} />
+                     </button>
+                     <button
+                        onClick={() => onRemove(item.id)}
+                        className="p-1 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded"
+                        title="Remover"
+                     >
+                        <Trash2 size={12} />
+                     </button>
+                     <button
+                        onClick={() => onExecute(favCommand)}
+                        className="flex items-center gap-1.5 px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold rounded transition-colors ml-1 shadow-lg shadow-blue-900/20"
+                     >
+                        <Play size={10} fill="currentColor" />
+                        Run
+                     </button>
+                </div>
+            </div>
+        </motion.div>
+    );
+};
+
+
+export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = React.memo(({ 
   favorites, 
   onExecute, 
   onRemove, 
@@ -34,6 +299,9 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = ({
   const [draggedItemId, setDraggedItemId] = useState<string | null>(null);
 
   // --- Recursive Helpers ---
+  // Using useCallback for helpers isn't strictly necessary unless they are deps for other hooks, 
+  // but good for consistency. Since they are used inside handlers which we want stable...
+  
   const findItem = (items: FavoriteItem[], id: string): FavoriteItem | null => {
     for (const item of items) {
       if (item.id === id) return item;
@@ -92,35 +360,85 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = ({
   };
 
   // --- Handlers ---
-  const handleDragStart = (e: React.DragEvent, id: string) => {
+  const handleDragStart = useCallback((e: React.DragEvent, id: string) => {
     e.stopPropagation();
     setDraggedItemId(id);
     e.dataTransfer.setData('text/plain', id);
     e.dataTransfer.effectAllowed = 'move';
-  };
+  }, []);
 
-  const handleDragOver = (e: React.DragEvent) => {
+  const handleDragOver = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
-  };
+  }, []);
 
-  const handleDropOnFolder = (e: React.DragEvent, folderId: string) => {
+  const handleDropOnFolder = useCallback((e: React.DragEvent, folderId: string) => {
     e.preventDefault();
     e.stopPropagation();
-    const id = e.dataTransfer.getData('text/plain') || draggedItemId; 
+    // We can't access state (draggedItemId) easily inside a memoized callback without ref or dependency
+    // But since draggedItemId changes often, we might not want to put it in dependency if we can avoid it.
+    // However, to be correct, we must include it or use dataTransfer fully.
+    
+    // NOTE: Accessing state directly inside useCallback requires it in deps.
+    // To solve this properly without re-creating functions all the time:
+    const id = e.dataTransfer.getData('text/plain'); // Fallback to dataTransfer if state is stale in closure
+    
+    // We need 'favorites' here. If we include 'favorites' in deps, this function changes every time tree updates.
+    // That is acceptable.
+    
+    // BUT for the specific issue of "typing in chat causes blink", 'favorites' DOES NOT change.
+    // So these functions will be stable during chat typing.
     
     if (!id || id === folderId) {
         setDraggedItemId(null);
         return;
     }
 
-    const draggedItem = findItem(favorites, id);
-    if (!draggedItem) {
-        setDraggedItemId(null);
-        return;
-    }
+    // Logic requires access to 'favorites' state, so this closure must update when favorites update.
+    // This is fine, typing in chat does NOT update favorites.
+    
+    // We need to implement the logic here to call onReorder.
+    // Since we need to call findItem etc which are defined in scope, we just execute logic.
+    
+    // We can't easily memoize this deeply without refs for favorites, but that's over-optimization.
+    // The main issue was RecursiveItem re-definition.
+    
+    // Let's just define them normally. The key fix is RecursiveItem extraction.
+  }, []); 
 
-    if (draggedItem.type === 'folder') {
+  // Re-implementing handlers simply without excessive useCallback complexity first,
+  // relying on the fact that 'favorites' prop is stable during chat typing.
+  
+  const onDragStartHandler = (e: React.DragEvent, id: string) => {
+    e.stopPropagation();
+    setDraggedItemId(id);
+    e.dataTransfer.setData('text/plain', id);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const onDragOverHandler = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+  };
+
+  const onDropOnFolderHandler = (e: React.DragEvent, folderId: string) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const id = e.dataTransfer.getData('text/plain') || draggedItemId;
+      
+      if (!id || id === folderId) {
+          setDraggedItemId(null);
+          return;
+      }
+
+      const draggedItem = findItem(favorites, id);
+      if (!draggedItem) {
+          setDraggedItemId(null);
+          return;
+      }
+
+      // Check circular dependency for folders
+      if (draggedItem.type === 'folder') {
         const isTargetDescendant = findItem(draggedItem.items, folderId);
         if (isTargetDescendant) {
             setDraggedItemId(null);
@@ -128,11 +446,11 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = ({
         }
     }
 
-    const tempTree = removeItem(favorites, id);
-    const newTree = addItemToFolder(tempTree, folderId, draggedItem);
-    
-    onReorder(newTree);
-    setDraggedItemId(null);
+      const tempTree = removeItem(favorites, id);
+      const newTree = addItemToFolder(tempTree, folderId, draggedItem);
+      
+      onReorder(newTree);
+      setDraggedItemId(null);
   };
 
   const handleDropOnRoot = (e: React.DragEvent) => {
@@ -212,185 +530,6 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = ({
   };
 
 
-  // --- Render Component ---
-
-  const RecursiveItem: React.FC<{ item: FavoriteItem; level: number }> = ({ item, level }) => {
-    const isFolder = item.type === 'folder';
-    const isEditing = editingId === item.id;
-    
-    if (isFolder) {
-        return (
-            <motion.div 
-                layout
-                initial={{ opacity: 0, y: 5 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                className="mb-1 select-none"
-                style={{ marginLeft: level > 0 ? '12px' : '0' }}
-                draggable={!isEditing}
-                onDragStart={(e) => handleDragStart(e, item.id)}
-                onDragOver={handleDragOver}
-                onDrop={(e) => handleDropOnFolder(e, item.id)}
-            >
-                <div 
-                    className={clsx(
-                        "group flex items-center justify-between p-2 rounded-lg border transition-all cursor-pointer",
-                        "bg-[#121214] border-white/5 hover:border-white/10 hover:bg-white/5",
-                        draggedItemId === item.id && "opacity-40 border-dashed border-blue-500"
-                    )}
-                    onClick={() => handleToggleFolder(item.id)}
-                >
-                     <div className="flex items-center gap-2 flex-1 overflow-hidden text-slate-300 group-hover:text-white transition-colors">
-                        <motion.div 
-                            initial={false}
-                            animate={{ rotate: item.isOpen ? 90 : 0 }}
-                            transition={{ type: "spring", bounce: 0, duration: 0.2 }}
-                        >
-                             <ChevronRight size={14} />
-                        </motion.div>
-                        <Folder size={14} className="text-yellow-500/80" />
-                        
-                        {isEditing ? (
-                            <input 
-                                autoFocus
-                                type="text"
-                                value={editLabelValue}
-                                onChange={(e) => setEditLabelValue(e.target.value)}
-                                onBlur={saveEditing}
-                                onKeyDown={(e) => e.key === 'Enter' && saveEditing()}
-                                onClick={(e) => e.stopPropagation()}
-                                className="bg-black/50 text-white text-xs px-1 py-0.5 rounded w-full border border-blue-500 outline-none"
-                            />
-                        ) : (
-                            <span 
-                                className="text-xs font-medium truncate"
-                                onDoubleClick={(e) => { e.stopPropagation(); startEditing(item); }}
-                            >
-                                {item.name}
-                            </span>
-                        )}
-                     </div>
-
-                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                         <button 
-                            onClick={(e) => { e.stopPropagation(); startEditing(item); }}
-                            className="p-1 hover:bg-white/10 text-slate-400 hover:text-white rounded"
-                        >
-                            <Edit2 size={12} />
-                        </button>
-                        <button 
-                            onClick={(e) => { e.stopPropagation(); onRemove(item.id); }}
-                            className="p-1 hover:bg-red-500/10 text-slate-400 hover:text-red-400 rounded"
-                        >
-                            <Trash2 size={12} />
-                        </button>
-                     </div>
-                </div>
-
-                <AnimatePresence>
-                    {item.isOpen && (
-                        <motion.div 
-                            initial={{ height: 0, opacity: 0 }}
-                            animate={{ height: 'auto', opacity: 1 }}
-                            exit={{ height: 0, opacity: 0 }}
-                            transition={{ duration: 0.2, ease: "easeInOut" }}
-                            className="overflow-hidden pl-2 border-l border-white/5 ml-2 mt-1"
-                        >
-                            {item.items.length > 0 ? (
-                                 item.items.map(subItem => (
-                                    <RecursiveItem key={subItem.id} item={subItem} level={level + 1} />
-                                ))
-                            ) : (
-                                 <div className="text-[10px] text-slate-600 ml-6 py-2 italic">
-                                    Pasta vazia
-                                </div>
-                            )}
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-            </motion.div>
-        );
-    }
-
-    const favCommand = item as FavoriteCommand;
-    return (
-        <motion.div 
-            layout
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className={clsx(
-                "group relative p-3 rounded-lg border transition-all duration-200 mb-2",
-                "bg-[#121214] border-white/5 hover:border-white/10 hover:bg-white/5",
-                draggedItemId === item.id && "opacity-40 border-dashed border-blue-500"
-            )}
-            style={{ marginLeft: level > 0 ? '12px' : '0' }}
-            draggable={!isEditing}
-            onDragStart={(e) => handleDragStart(e, item.id)}
-        >
-             <div className="flex-1 min-w-0">
-                <div className="flex justify-between items-start mb-1">
-                     {isEditing ? (
-                            <input 
-                                autoFocus
-                                type="text"
-                                value={editLabelValue}
-                                onChange={(e) => setEditLabelValue(e.target.value)}
-                                onBlur={saveEditing}
-                                onKeyDown={(e) => e.key === 'Enter' && saveEditing()}
-                                className="bg-black/50 text-white text-xs px-1 py-0.5 rounded w-full border border-blue-500 outline-none mb-2"
-                            />
-                        ) : (
-                            <span 
-                                className="text-xs font-medium text-slate-200 truncate cursor-pointer hover:text-white flex items-center gap-1.5"
-                                onDoubleClick={() => startEditing(item)}
-                            >
-                                <Star size={10} className="text-yellow-500" fill="currentColor" />
-                                {item.label}
-                            </span>
-                        )}
-                </div>
-
-                <code className="block text-xs font-mono text-emerald-400 break-all mb-2 bg-black/20 p-1.5 rounded border border-white/5">
-                    {item.command}
-                </code>
-                
-                {/* Actions */}
-                <div className="flex justify-end gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
-                     <button
-                        onClick={() => navigator.clipboard.writeText(item.command)}
-                        className="p-1 text-slate-500 hover:text-white hover:bg-white/10 rounded"
-                        title="Copiar"
-                     >
-                        <Copy size={12} />
-                     </button>
-                     <button
-                        onClick={() => startEditing(item)}
-                        className="p-1 text-slate-500 hover:text-white hover:bg-white/10 rounded"
-                        title="Editar"
-                     >
-                        <Edit2 size={12} />
-                     </button>
-                     <button
-                        onClick={() => onRemove(item.id)}
-                        className="p-1 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded"
-                        title="Remover"
-                     >
-                        <Trash2 size={12} />
-                     </button>
-                     <button
-                        onClick={() => onExecute(favCommand)}
-                        className="flex items-center gap-1.5 px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold rounded transition-colors ml-1 shadow-lg shadow-blue-900/20"
-                     >
-                        <Play size={10} fill="currentColor" />
-                        Run
-                     </button>
-                </div>
-            </div>
-        </motion.div>
-    );
-  };
-
   return (
     <div className="w-[672px] flex-shrink-0 h-full flex flex-col bg-[#09090b] border-l border-white/5">
       {/* Header */}
@@ -419,7 +558,7 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = ({
 
       <div 
         className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2"
-        onDragOver={handleDragOver}
+        onDragOver={onDragOverHandler}
         onDrop={handleDropOnRoot}
       >
         <AnimatePresence mode='popLayout'>
@@ -435,7 +574,23 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = ({
             </motion.div>
             ) : (
                 favorites.map((fav) => (
-                    <RecursiveItem key={fav.id} item={fav} level={0} />
+                    <RecursiveItem 
+                        key={fav.id} 
+                        item={fav} 
+                        level={0}
+                        editingId={editingId}
+                        editLabelValue={editLabelValue}
+                        draggedItemId={draggedItemId}
+                        onStartEditing={startEditing}
+                        onSaveEditing={saveEditing}
+                        setEditLabelValue={setEditLabelValue}
+                        onDragStart={onDragStartHandler}
+                        onDragOver={onDragOverHandler}
+                        onDropOnFolder={onDropOnFolderHandler}
+                        onToggleFolder={handleToggleFolder}
+                        onRemove={onRemove}
+                        onExecute={onExecute}
+                    />
                 ))
             )}
         </AnimatePresence>
@@ -496,4 +651,4 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = ({
       </Modal>
     </div>
   );
-};
+});
