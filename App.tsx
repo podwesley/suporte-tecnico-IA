@@ -70,6 +70,11 @@ const App: React.FC = () => {
   const [selectedOS, setSelectedOS] = useState<string | null>(null);
   const [commandQueue, setCommandQueue] = useState<CommandHistoryItem[]>([]);
   const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
+  const [favoritesWidth, setFavoritesWidth] = useState(() => {
+    const saved = localStorage.getItem('techsupport_ai_favorites_width');
+    return saved ? parseInt(saved, 10) : 450; // Default to ~35vw equivalent in px
+  });
+  const [isResizing, setIsResizing] = useState(false);
   const [isBackendOnline, setIsBackendOnline] = useState(true);
   const [errorModalOpen, setErrorModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -354,6 +359,42 @@ const App: React.FC = () => {
       setFavorites(prev => [...prev, fav]);
   };
 
+  const startResizing = React.useCallback(() => {
+    setIsResizing(true);
+    document.body.style.cursor = 'col-resize';
+    document.body.style.userSelect = 'none';
+  }, []);
+
+  const stopResizing = React.useCallback(() => {
+    setIsResizing(false);
+    document.body.style.cursor = 'default';
+    document.body.style.userSelect = 'auto';
+  }, []);
+
+  const resize = React.useCallback((e: MouseEvent) => {
+    if (isResizing) {
+      const newWidth = window.innerWidth - e.clientX;
+      if (newWidth > 300 && newWidth < window.innerWidth * 0.6) {
+        setFavoritesWidth(newWidth);
+        localStorage.setItem('techsupport_ai_favorites_width', newWidth.toString());
+      }
+    }
+  }, [isResizing]);
+
+  useEffect(() => {
+    if (isResizing) {
+      window.addEventListener('mousemove', resize);
+      window.addEventListener('mouseup', stopResizing);
+    } else {
+      window.removeEventListener('mousemove', resize);
+      window.removeEventListener('mouseup', stopResizing);
+    }
+    return () => {
+      window.removeEventListener('mousemove', resize);
+      window.removeEventListener('mouseup', stopResizing);
+    };
+  }, [isResizing, resize, stopResizing]);
+
   const handleSendMessage = async (text: string) => {
     if (!currentSessionId) {
         setCurrentSessionId(uuidv4());
@@ -606,6 +647,8 @@ const App: React.FC = () => {
             onRemove={handleRemoveFavorite}
             onReorder={handleReorderFavorites}
             onAdd={handleManualAddFavorite}
+            width={favoritesWidth}
+            onResizeStart={startResizing}
           />
       </div>
       

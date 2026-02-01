@@ -13,6 +13,8 @@ interface FavoritesSidebarProps {
   onRemove: (id: string) => void;
   onReorder: (newOrder: FavoriteItem[]) => void;
   onAdd: (item: FavoriteItem) => void;
+  width?: number;
+  onResizeStart?: () => void;
 }
 
 // Separate component to prevent re-renders/remounts causing flicker
@@ -299,7 +301,9 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = React.memo(({
   onExecute, 
   onRemove, 
   onReorder,
-  onAdd 
+  onAdd,
+  width = 450,
+  onResizeStart
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newCommand, setNewCommand] = useState('');
@@ -563,7 +567,16 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = React.memo(({
 
 
   return (
-    <div className="w-[35vw] max-w-[672px] min-w-[300px] flex-shrink-0 h-full flex flex-col bg-[#09090b] border-l border-white/5">
+    <div 
+        className="relative flex-shrink-0 h-full flex flex-col bg-[#09090b] border-l border-white/5"
+        style={{ width: `${width}px` }}
+    >
+      {/* Resize Handle */}
+      <div 
+        className="absolute left-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-blue-500/50 transition-colors z-50"
+        onMouseDown={onResizeStart}
+      />
+
       {/* Header */}
       <div className="h-14 px-4 flex items-center justify-between border-b border-white/5 bg-[#09090b]">
         <div className="flex items-center gap-2 text-sm font-medium text-slate-200">
