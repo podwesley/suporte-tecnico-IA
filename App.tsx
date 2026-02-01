@@ -11,7 +11,7 @@ import { FavoritesSidebar } from './components/FavoritesSidebar';
 import { Modal } from './components/Modal';
 import { APP_NAME } from './constants';
 import { motion, AnimatePresence } from 'framer-motion';
-import { History, FolderOpen, Plus, X, Server, Terminal, Box, Shield, Zap, PanelLeft } from 'lucide-react';
+import { History, FolderOpen, Plus, X, Server, Terminal, Box, Shield, Cpu, PanelLeft } from 'lucide-react';
 
 const STORAGE_KEY = 'techsupport_ai_sessions';
 const FAVORITES_KEY = 'techsupport_ai_favorites';
@@ -443,7 +443,7 @@ const App: React.FC = () => {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
                 <div className="w-8 h-8 bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-900/20">
-                    <Zap size={18} fill="currentColor" />
+                    <Cpu size={18} fill="currentColor" />
                 </div>
                 <h1 className="text-sm font-bold tracking-tight text-white hidden sm:block">{APP_NAME}</h1>
             </div>
@@ -534,7 +534,7 @@ const App: React.FC = () => {
                     >
                         <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 via-emerald-500 to-blue-600 rounded-full blur-xl opacity-20 animate-pulse"></div>
                         <div className="relative w-24 h-24 bg-[#121214] rounded-3xl flex items-center justify-center border border-white/10 shadow-2xl">
-                            <Zap size={48} className="text-blue-500" fill="currentColor" />
+                            <Cpu size={48} className="text-blue-500" fill="currentColor" />
                         </div>
                     </motion.div>
 

@@ -195,21 +195,19 @@ const RecursiveItem: React.FC<RecursiveItemProps> = ({
                             />
                         ) : (
                             <span 
-                                className="text-xs font-medium text-slate-200 truncate cursor-pointer hover:text-white flex items-center gap-1.5"
+                                className="text-xs font-medium text-slate-400 truncate cursor-pointer hover:text-white flex items-center gap-1.5"
                                 onDoubleClick={() => onStartEditing(item)}
                             >
-                                <Star size={10} className="text-yellow-500" fill="currentColor" />
+                                <Terminal size={10} className="text-blue-500" />
                                 {item.label}
                             </span>
                         )}
                 </div>
 
-                <div className="mb-2 border border-white/5 overflow-hidden bg-[#2d2d2d]">
-                    <SyntaxHighlighter 
-                        code={item.command} 
-                        language="bash" 
-                        className="block !text-[0.75rem] font-mono p-1.5 break-all text-slate-300"
-                    />
+                <div className="mb-2 border border-white/5 overflow-hidden bg-[#09090b]">
+                    <code className="block text-[0.75rem] font-mono p-1.5 break-all text-emerald-500/90">
+                        {item.command}
+                    </code>
                 </div>
                 
                 {hasOutput && (
@@ -235,7 +233,7 @@ const RecursiveItem: React.FC<RecursiveItemProps> = ({
                                     exit={{ height: 0, opacity: 0 }}
                                     className="overflow-hidden"
                                 >
-                                    <div className="bg-[#2d2d2d] border border-white/5 p-0 text-xs font-mono text-slate-300 max-h-60 overflow-y-auto custom-scrollbar shadow-inner mt-1">
+                                    <div className="bg-[#121214] border border-white/5 p-0 text-xs font-mono text-slate-300 max-h-60 overflow-y-auto custom-scrollbar shadow-inner mt-1">
                                          <pre className="p-2 m-0 whitespace-pre-wrap font-mono bg-transparent">
                                             <SyntaxHighlighter code={favCommand.output} />
                                          </pre>
@@ -542,7 +540,7 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = React.memo(({
       {/* Header */}
       <div className="h-14 px-4 flex items-center justify-between border-b border-white/5 bg-[#09090b]">
         <div className="flex items-center gap-2 text-sm font-medium text-slate-200">
-           <Star size={16} className="text-yellow-500" fill="currentColor" />
+           <Star size={16} className="text-yellow-500" />
            <span>Favoritos</span>
         </div>
         <div className="flex gap-1">
