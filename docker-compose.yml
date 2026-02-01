@@ -4,14 +4,15 @@ services:
   tech-support-ui:
     build: .
     ports:
-      - "3000:80"
+      - "8509:8509"
+      - "8508:8508"
     environment:
       - NODE_ENV=production
     # To pass the API key during build time if using Vite/React Envs:
     # args:
-    #   API_KEY: ${API_KEY} 
-    # Note: Client-side apps usually need the key at build time 
-    # OR a runtime configuration file injection. 
+    #   API_KEY: ${API_KEY}
+    # Note: Client-side apps usually need the key at build time
+    # OR a runtime configuration file injection.
     # For simplicity, ensure .env is present during build.
-    
+
     restart: always
