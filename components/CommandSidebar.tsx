@@ -6,12 +6,11 @@ import { clsx } from 'clsx';
 
 interface CommandSidebarProps {
   commands: CommandHistoryItem[];
-  onExecute: (item: CommandHistoryItem) => void;
   onDelete: (ids: string[]) => void;
   onFavorite: (command: string) => void;
 }
 
-export const CommandSidebar: React.FC<CommandSidebarProps> = ({ commands, onExecute, onDelete, onFavorite }) => {
+export const CommandSidebar: React.FC<CommandSidebarProps> = ({ commands, onDelete, onFavorite }) => {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
 
   const toggleSelect = (id: string) => {
@@ -132,18 +131,14 @@ export const CommandSidebar: React.FC<CommandSidebarProps> = ({ commands, onExec
                             <Copy size={12} />
                          </button>
                          <button
-                            onClick={() => onFavorite(item.command)}
-                            className="p-1 text-slate-500 hover:text-yellow-500 transition-colors"
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                onFavorite(item.command);
+                            }}
+                            className="p-1 text-slate-500 hover:text-yellow-500 border border-transparent hover:border-yellow-500 bg-transparent rounded transition-colors"
                             title="Favoritar"
                          >
                             <Star size={12} />
-                         </button>
-                         <button
-                            onClick={() => onExecute(item)}
-                            className="flex items-center gap-1 px-2 py-0.5 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold font-mono uppercase tracking-wider transition-colors ml-2"
-                         >
-                            <Play size={8} fill="currentColor" />
-                            Run
                          </button>
                     </div>
                 </motion.div>

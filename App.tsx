@@ -251,32 +251,33 @@ const App: React.FC = () => {
       setInputValue(prev => prev + (prev ? "\n\n" : "") + text);
   };
 
-  const handleExecuteFromSidebar = async (item: CommandHistoryItem) => {
-      const output = await handleRunCommand(item.command, false);
-      
-      setCommandQueue(prev => prev.map(c => 
-          c.id === item.id 
-              ? { ...c, output: output, timestamp: Date.now() } 
-              : c
-      ));
-  };
-
   const handleDeleteCommands = (ids: string[]) => {
       setCommandQueue(prev => prev.filter(c => !ids.includes(c.id)));
   };
 
   // Favorites Handlers
   const handleAddToFavorites = (command: string) => {
-      const exists = favorites.some(f => f.type === 'command' && f.command === command);
-      if (!exists) {
-          const newFav: FavoriteCommand = {
+      setFavorites(prev => {
+          const isCommandInFavorites = (items: FavoriteItem[], cmd: string): boolean => {
+              return items.some(item => {
+                  if (item.type === 'folder') {
+                      return isCommandInFavorites(item.items, cmd);
+                  }
+                  return (item as FavoriteCommand).command === cmd;
+              });
+          };
+
+          if (isCommandInFavorites(prev, command)) {
+              return prev;
+          }
+
+          return [{
               id: uuidv4(),
               type: 'command',
               command,
               label: command
-          };
-          setFavorites(prev => [newFav, ...prev]);
-      }
+          }, ...prev];
+      });
   };
 
   const handleExecuteFavorite = async (item: FavoriteCommand) => {
@@ -476,7 +477,6 @@ const App: React.FC = () => {
                 >
                      <CommandSidebar 
                         commands={commandQueue} 
-                        onExecute={handleExecuteFromSidebar}
                         onDelete={handleDeleteCommands}
                         onFavorite={handleAddToFavorites}
                     />
