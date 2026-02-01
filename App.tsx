@@ -85,7 +85,6 @@ const App: React.FC = () => {
                 if (res.success && res.output) {
                     const home = res.output.trim();
                     setDefaultDirectory(home);
-                    setCurrentWorkingDirectory(prev => prev === null ? home : prev);
                 }
             })
             .catch(console.error);
@@ -237,7 +236,7 @@ const App: React.FC = () => {
 
   const handleClearDirectory = (e: React.MouseEvent) => {
       e.stopPropagation();
-      setCurrentWorkingDirectory(defaultDirectory);
+      setCurrentWorkingDirectory(null);
   };
 
   const handleOSSelect = (osId: string) => {
@@ -256,7 +255,7 @@ const App: React.FC = () => {
     }
 
     try {
-      const result = await commandExecutor.execute(command, currentWorkingDirectory);
+      const result = await commandExecutor.execute(command, currentWorkingDirectory ?? defaultDirectory ?? null);
       return result.output;
     } catch (e) {
       return "Erro ao executar comando: " + e;
@@ -466,12 +465,12 @@ const App: React.FC = () => {
                 <button
                     onClick={handleSelectDirectory}
                     className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-slate-300 bg-[#121214] hover:bg-white/5 border border-white/5 transition-all"
-                    title={currentWorkingDirectory || "Selecionar pasta de trabalho"}
+                    title={currentWorkingDirectory || defaultDirectory || "Selecionar pasta de trabalho"}
                 >
                     <FolderOpen size={14} className="text-yellow-500" />
                     <span className="hidden sm:inline whitespace-nowrap max-w-[150px] truncate">
-                        {currentWorkingDirectory ? (
-                            currentWorkingDirectory === '/' ? '/' : currentWorkingDirectory.replace(/\/$/, '').split('/').pop()
+                        {(currentWorkingDirectory || defaultDirectory) ? (
+                            (currentWorkingDirectory || defaultDirectory) === '/' ? '/' : (currentWorkingDirectory || defaultDirectory)?.replace(/\/$/, '').split('/').pop()
                         ) : 'Abrir Pasta'}
                     </span>
                 </button>

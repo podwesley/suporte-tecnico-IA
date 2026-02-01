@@ -22,12 +22,13 @@ app.post('/api/execute', async (req, res) => {
     return res.status(400).json({ success: false, output: 'No command provided' });
   }
 
-  console.log(`${cwd}${command}`);
+  const effectiveCwd = cwd || os.homedir();
+  console.log(`# ${effectiveCwd}${command}`);
 
   try {
     // Executa o comando. Note que isso executa no host onde o node está rodando.
     // CUIDADO: Isso permite execução arbitrária de código.
-    const { stdout, stderr } = await execAsync(command, { cwd: cwd || os.homedir() });
+    const { stdout, stderr } = await execAsync(command, { cwd: effectiveCwd });
     
     // Combina stdout e stderr para o output
     const output = stdout + (stderr ? `\nSTDERR:\n${stderr}` : '');
