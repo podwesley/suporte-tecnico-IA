@@ -2,14 +2,17 @@ import React, { useState, useRef, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { geminiService } from './services/geminiService';
 import { commandExecutor } from './services/commandExecutor';
-import { Message, Role, ChatSession } from './types';
+import { Message, Role, ChatSession, CommandHistoryItem, FavoriteCommand } from './types';
 import { ChatBubble } from './components/ChatBubble';
 import { InputArea } from './components/InputArea';
 import { HistorySidebar } from './components/HistorySidebar';
-import { CommandSidebar, CommandHistoryItem } from './components/CommandSidebar';
+import { CommandSidebar } from './components/CommandSidebar';
+import { FavoritesSidebar } from './components/FavoritesSidebar';
+import { Modal } from './components/Modal';
 import { APP_NAME } from './constants';
 
 const STORAGE_KEY = 'techsupport_ai_sessions';
+const FAVORITES_KEY = 'techsupport_ai_favorites';
 
 const App: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -22,11 +25,15 @@ const App: React.FC = () => {
   const [currentWorkingDirectory, setCurrentWorkingDirectory] = useState<string | null>(null);
   const [selectedOS, setSelectedOS] = useState<string | null>(null);
   const [commandQueue, setCommandQueue] = useState<CommandHistoryItem[]>([]);
+  const [favorites, setFavorites] = useState<FavoriteCommand[]>([]);
+  const [isBackendOnline, setIsBackendOnline] = useState(true);
+  const [errorModalOpen, setErrorModalOpen] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isFirstRender = useRef(true);
 
-  // Load sessions from local storage on mount
+  // Load data on mount
   useEffect(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
@@ -34,8 +41,14 @@ const App: React.FC = () => {
         const parsedSessions: ChatSession[] = JSON.parse(saved);
         setSessions(parsedSessions);
       }
+      
+      const savedFavs = localStorage.getItem(FAVORITES_KEY);
+      if (savedFavs) {
+          setFavorites(JSON.parse(savedFavs));
+      }
+
     } catch (e) {
-      console.error("Failed to load history", e);
+      console.error("Failed to load local storage data", e);
     }
     // Initialize default service
     try {
@@ -44,6 +57,13 @@ const App: React.FC = () => {
         console.error("Service init failed", e);
     }
   }, []);
+
+  // Save favorites when changed
+  useEffect(() => {
+     if (!isFirstRender.current) {
+        localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
+     }
+  }, [favorites]);
 
   // Save current session whenever messages change
   useEffect(() => {
@@ -66,7 +86,8 @@ const App: React.FC = () => {
           id: currentSessionId,
           title: existingIndex !== -1 ? prevSessions[existingIndex].title || title : title,
           timestamp: Date.now(),
-          messages: messages
+          messages: messages,
+          commandQueue: commandQueue // Save queue
         };
 
         let newSessions;
@@ -81,17 +102,34 @@ const App: React.FC = () => {
         return newSessions;
       });
     }
-  }, [messages, currentSessionId]);
+  }, [messages, currentSessionId, commandQueue]);
 
   // Auto-scroll
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Backend Ping
+  useEffect(() => {
+    const checkStatus = async () => {
+      try {
+        const res = await fetch('http://localhost:8509/health');
+        setIsBackendOnline(res.ok);
+      } catch (e) {
+        setIsBackendOnline(false);
+      }
+    };
+    
+    const interval = setInterval(checkStatus, 5000);
+    checkStatus(); // Initial check
+    return () => clearInterval(interval);
+  }, []);
+
   const handleNewChat = () => {
     setMessages([]);
     setCurrentSessionId(uuidv4());
     setIsLoading(false);
+    setCommandQueue([]); // Clear queue
     geminiService.resetSession();
     setIsSidebarOpen(false);
   };
@@ -99,6 +137,7 @@ const App: React.FC = () => {
   const handleSelectSession = async (session: ChatSession) => {
     setCurrentSessionId(session.id);
     setMessages(session.messages);
+    setCommandQueue(session.commandQueue || []); // Restore queue
     setIsLoading(false);
     setIsSidebarOpen(false);
     
@@ -118,9 +157,20 @@ const App: React.FC = () => {
   };
 
   const handleSelectDirectory = async () => {
-    const path = await commandExecutor.selectDirectory();
-    if (path) {
-      setCurrentWorkingDirectory(path);
+    if (!isBackendOnline) {
+      setErrorMessage("Não é possível selecionar diretório: O servidor backend está OFFLINE.");
+      setErrorModalOpen(true);
+      return;
+    }
+    
+    try {
+        const path = await commandExecutor.selectDirectory();
+        if (path) {
+          setCurrentWorkingDirectory(path);
+        }
+    } catch (e) {
+        setErrorMessage("Falha ao abrir seletor de diretório. Verifique se o backend está rodando.");
+        setErrorModalOpen(true);
     }
   };
 
@@ -134,13 +184,15 @@ const App: React.FC = () => {
       handleSendMessage(`${osId.toUpperCase()}`);
   };
 
-  const handleRunCommand = async (command: string): Promise<string> => {
-    // Add to queue
-    setCommandQueue(prev => [{
-        id: uuidv4(),
-        command,
-        timestamp: Date.now()
-    }, ...prev]);
+  const handleRunCommand = async (command: string, addToQueue = true): Promise<string> => {
+    // Add to queue only if requested
+    if (addToQueue) {
+        setCommandQueue(prev => [{
+            id: uuidv4(),
+            command,
+            timestamp: Date.now()
+        }, ...prev]);
+    }
 
     try {
       const result = await commandExecutor.execute(command, currentWorkingDirectory);
@@ -154,22 +206,53 @@ const App: React.FC = () => {
       setInputValue(prev => prev + (prev ? "\n\n" : "") + text);
   };
 
-  const handleExecuteFromSidebar = (command: string) => {
-      // Logic: Appends to chat input to allow chaining, as per user's preference for consistency
-      // The user said "behavior... same as code block". Code block runs inline.
-      // But sidebar doesn't have an inline output area.
-      // We will append to input area with a "I ran this" context similar to the inline terminal action
-      // Or simply execute it and append the result.
-      // Let's implement: Run command -> Get Output -> Append formatted result to Input Area
+  const handleExecuteFromSidebar = async (item: CommandHistoryItem) => {
+      const output = await handleRunCommand(item.command, false);
       
-      handleRunCommand(command).then(output => {
-          const responseText = `Executei o comando \`${command}\` e o resultado foi:\n\n\`\`\`text\n${output}\n\`\`\`\n\n`;
-          setInputValue(prev => prev + (prev ? "\n\n" : "") + responseText);
-      });
+      setCommandQueue(prev => prev.map(c => 
+          c.id === item.id 
+              ? { ...c, output: output, timestamp: Date.now() } 
+              : c
+      ));
   };
 
   const handleDeleteCommands = (ids: string[]) => {
       setCommandQueue(prev => prev.filter(c => !ids.includes(c.id)));
+  };
+
+  // Favorites Handlers
+  const handleAddToFavorites = (command: string) => {
+      const exists = favorites.find(f => f.command === command);
+      if (!exists) {
+          const newFav: FavoriteCommand = {
+              id: uuidv4(),
+              command,
+              label: command
+          };
+          setFavorites(prev => [...prev, newFav]);
+      }
+  };
+
+  const handleExecuteFavorite = async (item: FavoriteCommand) => {
+      const output = await handleRunCommand(item.command, false);
+      
+      setFavorites(prev => prev.map(f => 
+          f.id === item.id 
+              ? { ...f, output: output } 
+              : f
+      ));
+  };
+
+  const handleRemoveFavorite = (id: string) => {
+      setFavorites(prev => prev.filter(f => f.id !== id));
+  };
+
+  const handleReorderFavorites = (newOrder: FavoriteCommand[]) => {
+      setFavorites(newOrder);
+  };
+  
+  const handleManualAddFavorite = (fav: FavoriteCommand) => {
+      setFavorites(prev => [...prev, fav]);
   };
 
   const handleSendMessage = async (text: string) => {
@@ -304,12 +387,14 @@ const App: React.FC = () => {
                 )}
             </div>
 
-            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+            <div className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full border ${isBackendOnline ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
                 <span className="relative flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                  {isBackendOnline && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>}
+                  <span className={`relative inline-flex rounded-full h-2 w-2 ${isBackendOnline ? 'bg-emerald-500' : 'bg-red-500'}`}></span>
                 </span>
-                <span className="text-emerald-400 text-xs font-medium tracking-wide">ONLINE</span>
+                <span className={`${isBackendOnline ? 'text-emerald-400' : 'text-red-400'} text-xs font-medium tracking-wide`}>
+                    {isBackendOnline ? 'ONLINE' : 'OFFLINE'}
+                </span>
             </div>
             
             <button 
@@ -323,16 +408,17 @@ const App: React.FC = () => {
         </div>
       </header>
 
-      {/* Content Container (Two Columns) */}
+      {/* Content Container (Three Columns) */}
       <div className="flex flex-1 pt-16 overflow-hidden">
           {/* Left Column: Command Queue */}
           <CommandSidebar 
             commands={commandQueue} 
             onExecute={handleExecuteFromSidebar}
             onDelete={handleDeleteCommands}
+            onFavorite={handleAddToFavorites}
           />
 
-          {/* Right Column: Chat Area */}
+          {/* Middle Column: Chat Area */}
           <div className="flex-1 flex flex-col relative min-w-0">
             <main className="flex-1 w-full max-w-5xl mx-auto pb-40 px-4 overflow-y-auto custom-scrollbar">
                 {messages.length === 0 ? (
@@ -393,7 +479,25 @@ const App: React.FC = () => {
                 <InputArea onSend={handleSendMessage} isLoading={isLoading} value={inputValue} onChange={setInputValue} />
             </div>
           </div>
+          
+          {/* Right Column: Favorites */}
+          <FavoritesSidebar 
+            favorites={favorites}
+            onExecute={handleExecuteFavorite}
+            onRemove={handleRemoveFavorite}
+            onReorder={handleReorderFavorites}
+            onAdd={handleManualAddFavorite}
+          />
       </div>
+      
+      <Modal 
+          isOpen={errorModalOpen} 
+          onClose={() => setErrorModalOpen(false)} 
+          title="Erro de Conexão" 
+          type="error"
+      >
+          <p>{errorMessage}</p>
+      </Modal>
     </div>
   );
 };

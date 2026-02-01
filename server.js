@@ -10,6 +10,10 @@ const PORT = 8509;
 app.use(cors());
 app.use(express.json());
 
+app.get('/health', (req, res) => {
+  res.json({ status: 'online' });
+});
+
 app.post('/api/execute', async (req, res) => {
   const { command, cwd } = req.body;
 

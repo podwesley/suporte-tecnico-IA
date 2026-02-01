@@ -10,11 +10,26 @@ export interface Message {
   isStreaming?: boolean;
 }
 
+export interface CommandHistoryItem {
+  id: string;
+  command: string;
+  timestamp: number;
+  output?: string;
+}
+
+export interface FavoriteCommand {
+  id: string;
+  command: string;
+  label: string;
+  output?: string;
+}
+
 export interface ChatSession {
   id: string;
   title: string;
   timestamp: number;
   messages: Message[];
+  commandQueue?: CommandHistoryItem[];
 }
 
 export interface ChatState {
