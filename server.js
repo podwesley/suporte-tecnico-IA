@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { exec } from 'child_process';
 import { promisify } from 'util';
+import os from 'os';
 
 const execAsync = promisify(exec);
 const app = express();
@@ -21,12 +22,12 @@ app.post('/api/execute', async (req, res) => {
     return res.status(400).json({ success: false, output: 'No command provided' });
   }
 
-  console.log(`Executing: ${command} in ${cwd || 'default dir'}`);
+  console.log(`${cwd}${command}`);
 
   try {
     // Executa o comando. Note que isso executa no host onde o node está rodando.
     // CUIDADO: Isso permite execução arbitrária de código.
-    const { stdout, stderr } = await execAsync(command, { cwd: cwd || undefined });
+    const { stdout, stderr } = await execAsync(command, { cwd: cwd || os.homedir() });
     
     // Combina stdout e stderr para o output
     const output = stdout + (stderr ? `\nSTDERR:\n${stderr}` : '');

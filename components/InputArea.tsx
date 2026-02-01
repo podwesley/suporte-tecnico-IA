@@ -39,7 +39,7 @@ export const InputArea: React.FC<InputAreaProps> = ({ onSend, isLoading, value, 
   }, [value]);
 
   return (
-    <div className="fixed bottom-6 left-0 right-0 px-4 z-50 flex justify-center pointer-events-none">
+    <div className="w-full px-4 pb-6 flex justify-center pointer-events-none">
       <motion.div 
         initial={{ y: 50, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
