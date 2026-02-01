@@ -83,7 +83,9 @@ const App: React.FC = () => {
           commandExecutor.execute("echo $HOME")
             .then(res => {
                 if (res.success && res.output) {
-                    setDefaultDirectory(res.output.trim());
+                    const home = res.output.trim();
+                    setDefaultDirectory(home);
+                    setCurrentWorkingDirectory(prev => prev === null ? home : prev);
                 }
             })
             .catch(console.error);
