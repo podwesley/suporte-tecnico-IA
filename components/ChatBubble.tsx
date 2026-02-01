@@ -47,19 +47,21 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
 
         {/* Bubble Content */}
         <div className={clsx(
-          "relative px-6 py-4 rounded-2xl shadow-sm border",
+          "relative rounded-2xl shadow-sm border",
           isUser 
-            ? "bg-blue-600 text-white border-blue-500 rounded-tr-sm" 
-            : "bg-slate-900/50 backdrop-blur-sm text-slate-200 border-white/10 rounded-tl-sm"
+            ? "bg-blue-600 text-white border-blue-500 rounded-tr-sm px-2.5 py-1.5" 
+            : "bg-slate-900/50 backdrop-blur-sm text-slate-200 border-white/10 rounded-tl-sm px-6 py-4"
         )}>
           {/* Header (Role Name) */}
-          <div className="flex items-center gap-2 mb-2 opacity-50 text-[10px] font-bold tracking-widest uppercase">
+          <div className={clsx(
+            "flex items-center gap-2 opacity-50 text-[9px] font-bold tracking-widest uppercase",
+            isUser ? "mb-0.5" : "mb-2"
+          )}>
             {isUser ? "Você" : "Tech Support AI"}
           </div>
           
           <div className={clsx(
-            "leading-7 text-sm md:text-base",
-            isUser ? "text-blue-50 font-medium" : "text-slate-300"
+            isUser ? "leading-tight text-[11px] md:text-xs text-blue-50 font-medium" : "leading-7 text-sm md:text-base text-slate-300"
           )}>
               {isUser ? (
                   <p className="whitespace-pre-wrap">{message.text}</p>
