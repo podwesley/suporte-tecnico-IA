@@ -208,7 +208,7 @@ const RecursiveItem: React.FC<RecursiveItemProps> = ({
                     <SyntaxHighlighter 
                         code={item.command} 
                         language="bash" 
-                        className="block text-xs font-mono p-1.5 break-all text-slate-300"
+                        className="block !text-[0.75rem] font-mono p-1.5 break-all text-slate-300"
                     />
                 </div>
                 
