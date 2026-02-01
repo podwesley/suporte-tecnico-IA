@@ -107,7 +107,8 @@ export const CommandSidebar: React.FC<CommandSidebarProps> = ({ commands, onExec
                     </div>
                 </div>
 
-                <div className="flex justify-end gap-2 mt-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+            {/* Action Buttons (Always Visible) */}
+            <div className="flex justify-end gap-2 mt-2">
                      <button
                         onClick={() => {
                             navigator.clipboard.writeText(item.command);

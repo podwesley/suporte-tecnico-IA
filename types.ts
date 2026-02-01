@@ -23,6 +23,7 @@ export interface FavoriteCommand {
   command: string;
   label: string;
   output?: string;
+  timestamp?: number;
 }
 
 export interface FavoriteFolder {

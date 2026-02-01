@@ -1,5 +1,5 @@
-import React, { useState, useRef } from 'react';
-import { FavoriteItem, FavoriteCommand, FavoriteFolder } from '../types';
+import React, { useState } from 'react';
+import { FavoriteItem, FavoriteCommand } from '../types';
 import { Modal } from './Modal';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -109,7 +109,7 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = ({
   const handleDropOnFolder = (e: React.DragEvent, folderId: string) => {
     e.preventDefault();
     e.stopPropagation();
-    const id = e.dataTransfer.getData('text/plain') || draggedItemId; // Fallback to state if dataTransfer is empty (some browsers)
+    const id = e.dataTransfer.getData('text/plain') || draggedItemId; 
     
     if (!id || id === folderId) {
         setDraggedItemId(null);
@@ -139,6 +139,40 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = ({
     
     onReorder(newTree);
     setDraggedItemId(null);
+  };
+
+  // Handle drop on the main list area (Root)
+  const handleDropOnRoot = (e: React.DragEvent) => {
+      e.preventDefault();
+      const id = e.dataTransfer.getData('text/plain') || draggedItemId;
+
+      if (!id) {
+          setDraggedItemId(null);
+          return;
+      }
+
+      // Check if item is already in root
+      const isInRoot = favorites.some(i => i.id === id);
+      if (isInRoot) {
+          // If already in root, do nothing (reordering root not implemented yet, just folder extraction)
+          setDraggedItemId(null);
+          return;
+      }
+
+      const draggedItem = findItem(favorites, id);
+      if (!draggedItem) {
+          setDraggedItemId(null);
+          return;
+      }
+
+      // Remove from old location (nested)
+      const tempTree = removeItem(favorites, id);
+
+      // Add to root (append to end)
+      const newTree = [...tempTree, draggedItem];
+
+      onReorder(newTree);
+      setDraggedItemId(null);
   };
 
   const handleAddCommand = (e: React.FormEvent) => {
@@ -196,132 +230,183 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = ({
     const isFolder = item.type === 'folder';
     const isEditing = editingId === item.id;
     
-    // Icons
-    const FolderIcon = () => (
-        <svg className="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>
-    );
-    const FolderOpenIcon = () => (
-        <svg className="w-4 h-4 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 19a2 2 0 01-2-2V7a2 2 0 012-2h4l2 2h4a2 2 0 012 2v1M5 19h14a2 2 0 002-2v-5a2 2 0 00-2-2H9a2 2 0 00-2 2v5a2 2 0 01-2 2z" /></svg>
-    );
-    const CommandIcon = () => (
-        <svg className="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 9l3 3-3 3m5 0h3M5 20h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-    );
+    if (isFolder) {
+        // Folder Rendering
+        return (
+            <div 
+                className="mb-1 select-none"
+                style={{ marginLeft: level > 0 ? '12px' : '0' }}
+                draggable={!isEditing}
+                onDragStart={(e) => handleDragStart(e, item.id)}
+                onDragOver={handleDragOver}
+                onDrop={(e) => handleDropOnFolder(e, item.id)}
+            >
+                <div 
+                    className={`
+                        group flex items-center justify-between p-2 rounded-lg border transition-all cursor-pointer
+                        bg-slate-800/60 border-slate-700 hover:border-slate-500
+                        ${draggedItemId === item.id ? 'opacity-40 border-dashed border-blue-500' : ''}
+                    `}
+                    onClick={() => handleToggleFolder(item.id)}
+                >
+                     <div className="flex items-center gap-2 flex-1 overflow-hidden">
+                        <svg className={`w-3 h-3 text-slate-400 transition-transform ${item.isOpen ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                        
+                        {isEditing ? (
+                            <input 
+                                autoFocus
+                                type="text"
+                                value={editLabelValue}
+                                onChange={(e) => setEditLabelValue(e.target.value)}
+                                onBlur={saveEditing}
+                                onKeyDown={(e) => e.key === 'Enter' && saveEditing()}
+                                onClick={(e) => e.stopPropagation()}
+                                className="bg-black/50 text-white text-xs px-1 py-0.5 rounded w-full border border-blue-500 outline-none"
+                            />
+                        ) : (
+                            <span 
+                                className="text-xs font-medium text-slate-200 truncate"
+                                onDoubleClick={(e) => { e.stopPropagation(); startEditing(item); }}
+                                title="Double click to rename"
+                            >
+                                {item.name}
+                            </span>
+                        )}
+                     </div>
 
+                     <div className="flex items-center gap-1">
+                         <button 
+                            onClick={(e) => { e.stopPropagation(); startEditing(item); }}
+                            className="p-1 hover:bg-blue-600/20 text-blue-400 rounded"
+                            title="Renomear"
+                        >
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                        </button>
+                        <button 
+                            onClick={(e) => { e.stopPropagation(); onRemove(item.id); }}
+                            className="p-1 hover:bg-red-600/20 text-red-400 rounded"
+                            title="Remover"
+                        >
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                     </div>
+                </div>
+
+                {item.isOpen && (
+                    <div className="mt-1 pl-2 border-l border-slate-700 ml-2">
+                        {item.items.length > 0 ? (
+                             item.items.map(subItem => (
+                                <RecursiveItem key={subItem.id} item={subItem} level={level + 1} />
+                            ))
+                        ) : (
+                             <div className="text-[10px] text-slate-600 ml-6 py-1 italic">
+                                (Vazio - arraste itens para cá)
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
+        );
+    }
+
+    // Command Rendering (Matching CommandSidebar Card Style)
+    const favCommand = item as FavoriteCommand;
     return (
         <div 
             className={`
-                relative
-                ${isFolder ? 'mb-1' : 'mb-2'}
+                group relative p-3 rounded-lg border transition-all duration-200 mb-2
+                bg-slate-800/40 border-slate-700/50 hover:bg-slate-800 hover:border-slate-600
+                ${draggedItemId === item.id ? 'opacity-40 border-dashed border-blue-500' : ''}
             `}
+            style={{ marginLeft: level > 0 ? '12px' : '0' }}
             draggable={!isEditing}
             onDragStart={(e) => handleDragStart(e, item.id)}
-            onDragOver={isFolder ? handleDragOver : undefined}
-            onDrop={isFolder ? (e) => handleDropOnFolder(e, item.id) : undefined}
         >
-            <div 
-                className={`
-                    group flex items-center justify-between p-2 rounded-lg border transition-all
-                    ${isFolder 
-                        ? 'bg-slate-800/60 border-slate-700 hover:border-slate-500' 
-                        : 'bg-slate-800/40 border-slate-700/50 hover:bg-slate-800 hover:border-slate-600'
-                    }
-                    ${draggedItemId === item.id ? 'opacity-40 border-dashed border-blue-500' : ''}
-                `}
-                style={{ marginLeft: level > 0 ? '12px' : '0' }}
-            >
-                {/* Left Side: Icon & Name/Input */}
-                <div className="flex items-center gap-2 flex-1 overflow-hidden">
-                    {isFolder && (
-                        <button onClick={() => handleToggleFolder(item.id)} className="text-slate-400 hover:text-white transition-transform">
-                             <svg className={`w-3 h-3 transition-transform ${item.isOpen ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
-                        </button>
-                    )}
-
-                    {isEditing ? (
-                        <input 
-                            autoFocus
-                            type="text"
-                            value={editLabelValue}
-                            onChange={(e) => setEditLabelValue(e.target.value)}
-                            onBlur={saveEditing}
-                            onKeyDown={(e) => e.key === 'Enter' && saveEditing()}
-                            className="bg-black/50 text-white text-xs px-1 py-0.5 rounded w-full border border-blue-500 outline-none"
-                        />
-                    ) : (
-                        <div className="flex flex-col overflow-hidden w-full">
-                             <span 
-                                className={`text-xs font-medium truncate cursor-pointer hover:text-blue-300 ${isFolder ? 'text-slate-200' : 'text-blue-200'}`}
+             <div className="flex-1 min-w-0">
+                <div className="flex justify-between items-start mb-1">
+                     {isEditing ? (
+                            <input 
+                                autoFocus
+                                type="text"
+                                value={editLabelValue}
+                                onChange={(e) => setEditLabelValue(e.target.value)}
+                                onBlur={saveEditing}
+                                onKeyDown={(e) => e.key === 'Enter' && saveEditing()}
+                                className="bg-black/50 text-white text-xs px-1 py-0.5 rounded w-full border border-blue-500 outline-none mb-2"
+                            />
+                        ) : (
+                            <span 
+                                className="text-xs font-bold text-slate-300 truncate cursor-pointer hover:text-white"
                                 onDoubleClick={() => startEditing(item)}
-                                title="Double click to rename"
-                             >
-                                {isFolder ? item.name : item.label}
-                             </span>
-                             {!isFolder && (item.type === 'command' || !item.type) && (
-                                 <code className="text-[9px] text-slate-500 truncate font-mono">
-                                     {item.command}
-                                 </code>
-                             )}
-                        </div>
-                    )}
+                                title={item.label}
+                            >
+                                {item.label}
+                            </span>
+                        )}
                 </div>
 
-                {/* Right Side: Actions */}
-                <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    {!isFolder && (
-                         <button 
-                            onClick={() => onExecute(item as FavoriteCommand)}
-                            className="p-1 hover:bg-green-600/20 text-green-400 rounded"
-                            title="Executar"
-                        >
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                        </button>
-                    )}
-                     <button 
-                        onClick={() => startEditing(item)}
-                        className="p-1 hover:bg-blue-600/20 text-blue-400 rounded"
-                        title="Renomear"
-                    >
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                    </button>
-                    <button 
-                        onClick={() => onRemove(item.id)}
-                        className="p-1 hover:bg-red-600/20 text-red-400 rounded"
-                        title="Remover"
-                    >
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-                    </button>
+                <code className="block text-xs font-mono text-emerald-400 break-all mb-1 bg-black/30 p-2 rounded" title={item.command}>
+                    {item.command}
+                </code>
+                
+                <div className="text-[10px] text-slate-500 flex justify-between">
+                     <span>
+                         {favCommand.timestamp 
+                             ? new Date(favCommand.timestamp).toLocaleTimeString() 
+                             : "Não executado"}
+                     </span>
                 </div>
+
+                {/* Output Display */}
+                {favCommand.output && (
+                    <div className="mt-3 bg-black/50 rounded p-2 border border-slate-700 overflow-x-auto">
+                        <pre className="text-[10px] font-mono text-slate-300 whitespace-pre-wrap">
+                            {favCommand.output}
+                        </pre>
+                    </div>
+                )}
             </div>
 
-            {/* Folder Contents */}
-            {isFolder && item.isOpen && item.items.length > 0 && (
-                <div className="mt-1 pl-2 border-l border-slate-700 ml-2">
-                    {item.items.map(subItem => (
-                        <RecursiveItem key={subItem.id} item={subItem} level={level + 1} />
-                    ))}
-                </div>
-            )}
-            
-             {isFolder && item.isOpen && item.items.length === 0 && (
-                <div className="text-[10px] text-slate-600 ml-6 py-1 italic">
-                    (Vazio - arraste itens para cá)
-                </div>
-            )}
-            
-             {/* Output Display for Commands */}
-             {!isFolder && (item as FavoriteCommand).output && (
-                  <div className="mt-1 bg-black/50 rounded p-2 border border-slate-700 overflow-x-auto mb-2 ml-2">
-                      <pre className="text-[10px] font-mono text-slate-300 whitespace-pre-wrap">
-                          {(item as FavoriteCommand).output}
-                      </pre>
-                  </div>
-              )}
+            {/* Action Buttons (Similar to CommandSidebar) */}
+            <div className="flex justify-start gap-2 mt-2">
+                 <button
+                    onClick={() => navigator.clipboard.writeText(item.command)}
+                    className="p-1 text-slate-500 hover:text-blue-400 transition-colors"
+                    title="Copiar"
+                 >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
+                 </button>
+                 <button
+                    onClick={() => startEditing(item)}
+                    className="p-1 text-slate-500 hover:text-yellow-400 transition-colors"
+                    title="Editar"
+                 >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                 </button>
+                 <button
+                    onClick={() => onRemove(item.id)}
+                    className="p-1 text-slate-500 hover:text-red-400 transition-colors"
+                    title="Remover"
+                 >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                 </button>
+                 <button
+                    onClick={() => onExecute(favCommand)}
+                    className="flex items-center gap-1 px-2 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold rounded shadow-lg shadow-emerald-900/20 transition-all active:scale-95"
+                    title="Executar"
+                 >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    Executar
+                 </button>
+            </div>
         </div>
     );
   };
 
   return (
-      <div className="w-[800px] bg-[#0d1117] border-l border-slate-800 flex flex-col h-full animate-[slideInLeft_0.3s_ease-out]">
+    <div 
+        className="w-[800px] bg-[#0d1117] border-l border-slate-800 flex flex-col h-full animate-[slideInLeft_0.3s_ease-out]"
+    >
       <div className="p-4 border-b border-slate-800 bg-[#161b22] flex items-center justify-between">
         <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wider">
             Favoritos
@@ -344,7 +429,11 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = ({
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-2 space-y-2 custom-scrollbar">
+      <div 
+        className="flex-1 overflow-y-auto p-2 space-y-2 custom-scrollbar"
+        onDragOver={handleDragOver}
+        onDrop={handleDropOnRoot}
+      >
         {favorites.length === 0 ? (
            <div className="text-center mt-10 text-slate-600 text-xs px-4">
               Crie pastas ou adicione comandos.<br/>

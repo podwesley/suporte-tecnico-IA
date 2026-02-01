@@ -22,7 +22,7 @@ const clearOutputsRecursive = (items: FavoriteItem[]): FavoriteItem[] => {
         }
         // It's a command
         if ('output' in item) {
-             const { output, ...rest } = item as FavoriteCommand;
+             const { output, timestamp, ...rest } = item as FavoriteCommand;
              return rest as FavoriteCommand;
         }
         return item;
@@ -35,11 +35,11 @@ const updateCommandInTree = (items: FavoriteItem[], commandId: string, output: s
           return { ...item, items: updateCommandInTree(item.items, commandId, output) };
       }
       if (item.id === commandId && item.type === 'command') {
-          return { ...item, output };
+          return { ...item, output, timestamp: Date.now() };
       }
       // Handle legacy items without type
       if (item.id === commandId && !item.type) {
-         return { ...item, output };
+         return { ...item, output, timestamp: Date.now() };
       }
       return item;
   });
@@ -238,9 +238,7 @@ const App: React.FC = () => {
 
     try {
       const result = await commandExecutor.execute(command, currentWorkingDirectory);
-      const now = new Date();
-      const timestamp = `[${now.toLocaleDateString()} ${now.toLocaleTimeString()}]\n`;
-      return timestamp + result.output;
+      return result.output;
     } catch (e) {
       return "Erro ao executar comando: " + e;
     }
@@ -274,7 +272,7 @@ const App: React.FC = () => {
               command,
               label: command
           };
-          setFavorites(prev => [...prev, newFav]);
+          setFavorites(prev => [newFav, ...prev]);
       }
   };
 
