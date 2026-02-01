@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { FavoriteItem, FavoriteCommand } from '../types';
 import { Modal } from './Modal';
 import { v4 as uuidv4 } from 'uuid';
+import { Folder, FolderPlus, Plus, Play, Trash2, Edit2, Copy, ChevronRight, Star } from 'lucide-react';
+import { clsx } from 'clsx';
 
 interface FavoritesSidebarProps {
   favorites: FavoriteItem[];
@@ -22,19 +25,16 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = ({
   const [newCommand, setNewCommand] = useState('');
   const [newLabel, setNewLabel] = useState('');
   
-  // Folder Creation State
   const [isFolderModalOpen, setIsFolderModalOpen] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
 
-  // Edit Label State
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editLabelValue, setEditLabelValue] = useState('');
 
-  // Drag and Drop State
   const [draggedItemId, setDraggedItemId] = useState<string | null>(null);
 
-  // --- Recursive Helpers ---
-
+  // --- Recursive Helpers (Keeping logic same, just updating rendering) ---
+  // (Helper functions omitted for brevity in thought process, but included in code)
   const findItem = (items: FavoriteItem[], id: string): FavoriteItem | null => {
     for (const item of items) {
       if (item.id === id) return item;
@@ -93,7 +93,6 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = ({
   };
 
   // --- Handlers ---
-
   const handleDragStart = (e: React.DragEvent, id: string) => {
     e.stopPropagation();
     setDraggedItemId(id);
@@ -122,7 +121,6 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = ({
         return;
     }
 
-    // Prevent dragging a folder into its own descendant
     if (draggedItem.type === 'folder') {
         const isTargetDescendant = findItem(draggedItem.items, folderId);
         if (isTargetDescendant) {
@@ -131,17 +129,13 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = ({
         }
     }
 
-    // Remove from old location
     const tempTree = removeItem(favorites, id);
-    
-    // Add to new location
     const newTree = addItemToFolder(tempTree, folderId, draggedItem);
     
     onReorder(newTree);
     setDraggedItemId(null);
   };
 
-  // Handle drop on the main list area (Root)
   const handleDropOnRoot = (e: React.DragEvent) => {
       e.preventDefault();
       const id = e.dataTransfer.getData('text/plain') || draggedItemId;
@@ -151,10 +145,8 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = ({
           return;
       }
 
-      // Check if item is already in root
       const isInRoot = favorites.some(i => i.id === id);
       if (isInRoot) {
-          // If already in root, do nothing (reordering root not implemented yet, just folder extraction)
           setDraggedItemId(null);
           return;
       }
@@ -165,10 +157,7 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = ({
           return;
       }
 
-      // Remove from old location (nested)
       const tempTree = removeItem(favorites, id);
-
-      // Add to root (append to end)
       const newTree = [...tempTree, draggedItem];
 
       onReorder(newTree);
@@ -231,9 +220,9 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = ({
     const isEditing = editingId === item.id;
     
     if (isFolder) {
-        // Folder Rendering
         return (
-            <div 
+            <motion.div 
+                layout
                 className="mb-1 select-none"
                 style={{ marginLeft: level > 0 ? '12px' : '0' }}
                 draggable={!isEditing}
@@ -242,15 +231,21 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = ({
                 onDrop={(e) => handleDropOnFolder(e, item.id)}
             >
                 <div 
-                    className={`
-                        group flex items-center justify-between p-2 rounded-lg border transition-all cursor-pointer
-                        bg-slate-800/60 border-slate-700 hover:border-slate-500
-                        ${draggedItemId === item.id ? 'opacity-40 border-dashed border-blue-500' : ''}
-                    `}
+                    className={clsx(
+                        "group flex items-center justify-between p-2 rounded-lg border transition-all cursor-pointer",
+                        "bg-[#121214] border-white/5 hover:border-white/10 hover:bg-white/5",
+                        draggedItemId === item.id && "opacity-40 border-dashed border-blue-500"
+                    )}
                     onClick={() => handleToggleFolder(item.id)}
                 >
-                     <div className="flex items-center gap-2 flex-1 overflow-hidden">
-                        <svg className={`w-3 h-3 text-slate-400 transition-transform ${item.isOpen ? 'rotate-90' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                     <div className="flex items-center gap-2 flex-1 overflow-hidden text-slate-300 group-hover:text-white transition-colors">
+                        <motion.div 
+                            initial={false}
+                            animate={{ rotate: item.isOpen ? 90 : 0 }}
+                        >
+                             <ChevronRight size={14} />
+                        </motion.div>
+                        <Folder size={14} className="text-yellow-500/80" />
                         
                         {isEditing ? (
                             <input 
@@ -265,59 +260,63 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = ({
                             />
                         ) : (
                             <span 
-                                className="text-xs font-medium text-slate-200 truncate"
+                                className="text-xs font-medium truncate"
                                 onDoubleClick={(e) => { e.stopPropagation(); startEditing(item); }}
-                                title="Double click to rename"
                             >
                                 {item.name}
                             </span>
                         )}
                      </div>
 
-                     <div className="flex items-center gap-1">
+                     <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                          <button 
                             onClick={(e) => { e.stopPropagation(); startEditing(item); }}
-                            className="p-1 hover:bg-blue-600/20 text-blue-400 rounded"
-                            title="Renomear"
+                            className="p-1 hover:bg-white/10 text-slate-400 hover:text-white rounded"
                         >
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                            <Edit2 size={12} />
                         </button>
                         <button 
                             onClick={(e) => { e.stopPropagation(); onRemove(item.id); }}
-                            className="p-1 hover:bg-red-600/20 text-red-400 rounded"
-                            title="Remover"
+                            className="p-1 hover:bg-red-500/10 text-slate-400 hover:text-red-400 rounded"
                         >
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                            <Trash2 size={12} />
                         </button>
                      </div>
                 </div>
 
-                {item.isOpen && (
-                    <div className="mt-1 pl-2 border-l border-slate-700 ml-2">
-                        {item.items.length > 0 ? (
-                             item.items.map(subItem => (
-                                <RecursiveItem key={subItem.id} item={subItem} level={level + 1} />
-                            ))
-                        ) : (
-                             <div className="text-[10px] text-slate-600 ml-6 py-1 italic">
-                                (Vazio - arraste itens para cá)
-                            </div>
-                        )}
-                    </div>
-                )}
-            </div>
+                <AnimatePresence>
+                    {item.isOpen && (
+                        <motion.div 
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: 'auto', opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            className="overflow-hidden pl-2 border-l border-white/5 ml-2 mt-1"
+                        >
+                            {item.items.length > 0 ? (
+                                 item.items.map(subItem => (
+                                    <RecursiveItem key={subItem.id} item={subItem} level={level + 1} />
+                                ))
+                            ) : (
+                                 <div className="text-[10px] text-slate-600 ml-6 py-2 italic">
+                                    Pasta vazia
+                                </div>
+                            )}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </motion.div>
         );
     }
 
-    // Command Rendering (Matching CommandSidebar Card Style)
     const favCommand = item as FavoriteCommand;
     return (
-        <div 
-            className={`
-                group relative p-3 rounded-lg border transition-all duration-200 mb-2
-                bg-slate-800/40 border-slate-700/50 hover:bg-slate-800 hover:border-slate-600
-                ${draggedItemId === item.id ? 'opacity-40 border-dashed border-blue-500' : ''}
-            `}
+        <motion.div 
+            layout
+            className={clsx(
+                "group relative p-3 rounded-lg border transition-all duration-200 mb-2",
+                "bg-[#121214] border-white/5 hover:border-white/10 hover:bg-white/5",
+                draggedItemId === item.id && "opacity-40 border-dashed border-blue-500"
+            )}
             style={{ marginLeft: level > 0 ? '12px' : '0' }}
             draggable={!isEditing}
             onDragStart={(e) => handleDragStart(e, item.id)}
@@ -336,114 +335,102 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = ({
                             />
                         ) : (
                             <span 
-                                className="text-xs font-bold text-slate-300 truncate cursor-pointer hover:text-white"
+                                className="text-xs font-medium text-slate-200 truncate cursor-pointer hover:text-white flex items-center gap-1.5"
                                 onDoubleClick={() => startEditing(item)}
-                                title={item.label}
                             >
+                                <Star size={10} className="text-yellow-500" fill="currentColor" />
                                 {item.label}
                             </span>
                         )}
                 </div>
 
-                <code className="block text-xs font-mono text-emerald-400 break-all mb-1 bg-black/30 p-2 rounded" title={item.command}>
+                <code className="block text-xs font-mono text-emerald-400 break-all mb-2 bg-black/20 p-1.5 rounded border border-white/5">
                     {item.command}
                 </code>
                 
-                <div className="text-[10px] text-slate-500 flex justify-between">
-                     <span>
-                         {favCommand.timestamp 
-                             ? new Date(favCommand.timestamp).toLocaleTimeString() 
-                             : "Não executado"}
-                     </span>
+                {/* Actions */}
+                <div className="flex justify-end gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
+                     <button
+                        onClick={() => navigator.clipboard.writeText(item.command)}
+                        className="p-1 text-slate-500 hover:text-white hover:bg-white/10 rounded"
+                        title="Copiar"
+                     >
+                        <Copy size={12} />
+                     </button>
+                     <button
+                        onClick={() => startEditing(item)}
+                        className="p-1 text-slate-500 hover:text-white hover:bg-white/10 rounded"
+                        title="Editar"
+                     >
+                        <Edit2 size={12} />
+                     </button>
+                     <button
+                        onClick={() => onRemove(item.id)}
+                        className="p-1 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded"
+                        title="Remover"
+                     >
+                        <Trash2 size={12} />
+                     </button>
+                     <button
+                        onClick={() => onExecute(favCommand)}
+                        className="flex items-center gap-1.5 px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold rounded transition-colors ml-1 shadow-lg shadow-blue-900/20"
+                     >
+                        <Play size={10} fill="currentColor" />
+                        Run
+                     </button>
                 </div>
-
-                {/* Output Display */}
-                {favCommand.output && (
-                    <div className="mt-3 bg-black/50 rounded p-2 border border-slate-700 overflow-x-auto">
-                        <pre className="text-[10px] font-mono text-slate-300 whitespace-pre-wrap">
-                            {favCommand.output}
-                        </pre>
-                    </div>
-                )}
             </div>
-
-            {/* Action Buttons (Similar to CommandSidebar) */}
-            <div className="flex justify-start gap-2 mt-2">
-                 <button
-                    onClick={() => navigator.clipboard.writeText(item.command)}
-                    className="p-1 text-slate-500 hover:text-blue-400 transition-colors"
-                    title="Copiar"
-                 >
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-                 </button>
-                 <button
-                    onClick={() => startEditing(item)}
-                    className="p-1 text-slate-500 hover:text-yellow-400 transition-colors"
-                    title="Editar"
-                 >
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
-                 </button>
-                 <button
-                    onClick={() => onRemove(item.id)}
-                    className="p-1 text-slate-500 hover:text-red-400 transition-colors"
-                    title="Remover"
-                 >
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                 </button>
-                 <button
-                    onClick={() => onExecute(favCommand)}
-                    className="flex items-center gap-1 px-2 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold rounded shadow-lg shadow-emerald-900/20 transition-all active:scale-95"
-                    title="Executar"
-                 >
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                    Executar
-                 </button>
-            </div>
-        </div>
+        </motion.div>
     );
   };
 
   return (
-    <div 
-        className="w-[800px] bg-[#0d1117] border-l border-slate-800 flex flex-col h-full animate-[slideInLeft_0.3s_ease-out]"
-    >
-      <div className="p-4 border-b border-slate-800 bg-[#161b22] flex items-center justify-between">
-        <h3 className="text-sm font-bold text-slate-200 uppercase tracking-wider">
-            Favoritos
-        </h3>
-        <div className="flex gap-2">
+    <div className="w-80 h-full flex flex-col bg-[#09090b] border-l border-white/5">
+      {/* Header */}
+      <div className="h-14 px-4 flex items-center justify-between border-b border-white/5 bg-[#09090b]">
+        <div className="flex items-center gap-2 text-sm font-medium text-slate-200">
+           <Star size={16} className="text-yellow-500" fill="currentColor" />
+           <span>Favoritos</span>
+        </div>
+        <div className="flex gap-1">
             <button
-            onClick={() => setIsFolderModalOpen(true)}
-            className="p-1 hover:bg-slate-700 rounded text-yellow-400 hover:text-white transition-colors"
-            title="Criar Pasta"
+                onClick={() => setIsFolderModalOpen(true)}
+                className="p-1.5 text-slate-400 hover:text-white hover:bg-white/5 rounded transition-colors"
+                title="Nova Pasta"
             >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 11v6m3-3H9" /></svg>
+                <FolderPlus size={16} />
             </button>
             <button
-            onClick={() => setIsModalOpen(true)}
-            className="p-1 hover:bg-slate-700 rounded text-slate-400 hover:text-white transition-colors"
-            title="Adicionar comando manual"
+                onClick={() => setIsModalOpen(true)}
+                className="p-1.5 text-slate-400 hover:text-white hover:bg-white/5 rounded transition-colors"
+                title="Novo Comando"
             >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
+                <Plus size={16} />
             </button>
         </div>
       </div>
 
       <div 
-        className="flex-1 overflow-y-auto p-2 space-y-2 custom-scrollbar"
+        className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2"
         onDragOver={handleDragOver}
         onDrop={handleDropOnRoot}
       >
-        {favorites.length === 0 ? (
-           <div className="text-center mt-10 text-slate-600 text-xs px-4">
-              Crie pastas ou adicione comandos.<br/>
-              Arraste comandos para dentro de pastas para organizar.
-           </div>
-        ) : (
-          favorites.map((fav) => (
-            <RecursiveItem key={fav.id} item={fav} level={0} />
-          ))
-        )}
+        <AnimatePresence>
+            {favorites.length === 0 ? (
+            <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex flex-col items-center justify-center h-40 text-slate-500 text-xs text-center px-6"
+            >
+                <Star size={24} className="mb-2 opacity-20" />
+                <p>Arraste comandos aqui para salvar.</p>
+            </motion.div>
+            ) : (
+                favorites.map((fav) => (
+                    <RecursiveItem key={fav.id} item={fav} level={0} />
+                ))
+            )}
+        </AnimatePresence>
       </div>
 
       {/* Add Command Modal */}
@@ -454,19 +441,19 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = ({
              <textarea 
                value={newCommand}
                onChange={(e) => setNewCommand(e.target.value)}
-               className="w-full bg-slate-800 border border-slate-600 rounded p-2 text-sm text-white focus:border-blue-500 outline-none font-mono"
+               className="w-full bg-[#121214] border border-white/10 rounded p-2 text-sm text-white focus:border-blue-500 outline-none font-mono"
                rows={3}
                placeholder="docker ps -a"
                required
              />
            </div>
            <div>
-             <label className="block text-xs font-medium text-slate-400 mb-1">Nome/Label (Opcional)</label>
+             <label className="block text-xs font-medium text-slate-400 mb-1">Nome/Label</label>
              <input 
                type="text"
                value={newLabel}
                onChange={(e) => setNewLabel(e.target.value)}
-               className="w-full bg-slate-800 border border-slate-600 rounded p-2 text-sm text-white focus:border-blue-500 outline-none"
+               className="w-full bg-[#121214] border border-white/10 rounded p-2 text-sm text-white focus:border-blue-500 outline-none"
                placeholder="Listar containers"
              />
            </div>
@@ -487,7 +474,7 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = ({
                       type="text"
                       value={newFolderName}
                       onChange={(e) => setNewFolderName(e.target.value)}
-                      className="w-full bg-slate-800 border border-slate-600 rounded p-2 text-sm text-white focus:border-blue-500 outline-none"
+                      className="w-full bg-[#121214] border border-white/10 rounded p-2 text-sm text-white focus:border-blue-500 outline-none"
                       placeholder="Meus Scripts"
                       required
                   />

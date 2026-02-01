@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Play, Copy, Terminal, Plus, Send, X } from 'lucide-react';
 
 interface MarkdownRendererProps {
   content: string;
@@ -35,93 +36,87 @@ const CodeBlock: React.FC<{
     if (output && onInputUpdate) {
       const responseText = `\n\n\`\`\`text\n${output}\n\`\`\`\n\n`;
       onInputUpdate(responseText);
-      setOutput(null); // Close terminal after action
+      setOutput(null);
     }
   };
 
   const handleSendImmediately = () => {
     if (output && onSendMessage) {
-      const responseText = `\n\n\`\`\`${output}\n\`\`\`\n\n`;
-      onSendMessage(responseText); // This assumes the parent handles appending to current input if needed, or we send just this. 
-      // Based on previous App.tsx logic, onSendMessage sends the text.
-      // If we want to append to existing input first, we might need to read it, but here we just send the result.
-      // Ideally, the user wants to "append to chat input AND send".
-      // Since we don't have access to current input value here easily without prop drilling it, 
-      // we will rely on onSendMessage sending what we give it. 
-      // NOTE: App.tsx handleSendTerminalOutput logic did: fullText = inputValue + ... + responseText.
-      // We only have onSendMessage. Let's assume onSendMessage sends the text provided.
-      // To replicate "Submit Automatically" which includes pending input, we might need a way to get pending input.
-      // However, usually "Submit Automatically" implies sending the current context.
-      // For now, we will send the response text directly.
+      const responseText = `\`\`\`text\n${output}\n\`\`\``;
       onSendMessage(responseText);
       setOutput(null);
     }
   };
 
-  // Check if the language suggests an executable command
   const isExecutable = ['bash', 'sh', 'shell', 'zsh', 'docker'].includes(language.toLowerCase()) || 
                        (language === 'text' && (code.trim().startsWith('docker') || code.trim().startsWith('npm')));
 
   return (
-    <div className="my-3 rounded-lg overflow-hidden border border-slate-700 bg-slate-900 shadow-sm group">
-      <div className="bg-slate-800 px-3 py-1.5 text-xs text-slate-400 border-b border-slate-700 flex justify-between items-center">
-        <span className="font-mono lowercase text-blue-300 font-semibold">{language}</span>
+    <div className="my-3 rounded-lg overflow-hidden border border-white/5 bg-[#09090b] shadow-sm group ring-1 ring-white/5">
+      <div className="bg-[#121214] px-3 py-2 text-xs text-slate-400 border-b border-white/5 flex justify-between items-center">
+        <span className="font-mono lowercase text-blue-300 font-semibold flex items-center gap-1.5">
+           <Terminal size={12} className="opacity-50" />
+           {language}
+        </span>
         
         <div className="flex items-center gap-2">
-            {/* Run Button */}
             {isExecutable && onRunCommand && !output && !isExecuting && (
                 <button
                     onClick={handleRun}
-                    className="flex items-center gap-1 px-2 py-0.5 rounded bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 transition-all hover:scale-105"
+                    className="flex items-center gap-1 px-2 py-1 rounded bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/20 transition-all hover:scale-105"
                     title="Executar no terminal"
                 >
-                    <svg className="w-3 h-3 fill-current" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
-                    <span className="font-semibold">Executar</span>
+                    <Play size={10} fill="currentColor" />
+                    <span className="font-semibold text-[10px] uppercase tracking-wide">Executar</span>
                 </button>
             )}
 
             <button 
                 onClick={() => navigator.clipboard.writeText(code.trim())}
-                className="hover:text-white transition-colors cursor-pointer flex items-center gap-1"
+                className="hover:text-white transition-colors cursor-pointer flex items-center gap-1 p-1 hover:bg-white/5 rounded"
                 title="Copiar código"
             >
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>
-                <span>Copiar</span>
+                <Copy size={12} />
+                <span className="text-[10px]">Copiar</span>
             </button>
         </div>
       </div>
-      <pre className="p-3 overflow-x-auto">
-        <code className="font-mono text-slate-200 text-xs whitespace-pre">{code.trim()}</code>
-      </pre>
+      <div className="bg-[#09090b] relative group-hover:bg-[#0c0c0e] transition-colors">
+        <pre className="p-3 overflow-x-auto custom-scrollbar">
+            <code className="font-mono text-slate-200 text-xs whitespace-pre leading-5">{code.trim()}</code>
+        </pre>
+      </div>
 
       {/* Inline Terminal Output */}
       {(output || isExecuting) && (
-        <div className="border-t border-slate-700 bg-black/50 p-3 animate-fadeIn">
-          <div className="flex items-center gap-2 mb-2 text-xs text-slate-400 font-mono border-b border-slate-800 pb-2">
-             <span className="text-green-500">➜</span>
-             <span className="text-blue-400">~</span>
-             <span className="opacity-75">Output do Terminal</span>
-             <button onClick={() => setOutput(null)} className="ml-auto hover:text-white">✕</button>
+        <div className="border-t border-white/10 bg-black/40 p-3 animate-in fade-in slide-in-from-top-2 duration-200">
+          <div className="flex items-center gap-2 mb-2 text-xs text-slate-400 font-mono border-b border-white/5 pb-2">
+             <span className="text-emerald-500 font-bold">➜</span>
+             <span className="text-blue-400 font-bold">~</span>
+             <span className="opacity-75">Console Output</span>
+             <button onClick={() => setOutput(null)} className="ml-auto hover:text-white p-1 rounded hover:bg-white/10">
+                <X size={12} />
+             </button>
           </div>
           
-          <div className="font-mono text-xs text-gray-300 whitespace-pre-wrap max-h-[200px] overflow-y-auto mb-3">
-             {isExecuting ? <span className="animate-pulse">Executando comando...</span> : output}
+          <div className="font-mono text-xs text-slate-300 whitespace-pre-wrap max-h-[200px] overflow-y-auto custom-scrollbar mb-3 select-text selection:bg-blue-500/30">
+             {isExecuting ? <span className="animate-pulse text-slate-500">Executando comando...</span> : output}
           </div>
 
           {!isExecuting && output && (
-             <div className="flex justify-end gap-2 pt-2 border-t border-slate-800">
+             <div className="flex justify-end gap-2 pt-2 border-t border-white/5">
                 <button 
                    onClick={handleAddToChat}
-                   className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold text-slate-200 bg-slate-700 hover:bg-slate-600 rounded transition-colors border border-slate-600"
+                   className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold text-slate-200 bg-[#1e1e20] hover:bg-[#27272a] rounded transition-colors border border-white/10"
                 >
-                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-                   Adicionar (+2 linhas)
+                   <Plus size={12} />
+                   Adicionar ao Prompt
                 </button>
                 <button 
                    onClick={handleSendImmediately}
-                   className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold text-white bg-green-600 hover:bg-green-700 rounded transition-colors shadow-lg shadow-green-900/20"
+                   className="flex items-center gap-1.5 px-3 py-1.5 text-[10px] font-bold text-white bg-blue-600 hover:bg-blue-500 rounded transition-colors shadow-lg shadow-blue-900/20"
                 >
-                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                   <Send size={12} />
                    Enviar Agora
                 </button>
              </div>
@@ -133,16 +128,12 @@ const CodeBlock: React.FC<{
 };
 
 const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, onRunCommand, onInputUpdate, onSendMessage }) => {
-  // Simple parser to separate code blocks from text
-  // This splits by ``` to find code blocks
   const parts = content.split(/```/);
 
   return (
-    <div className="text-sm leading-relaxed space-y-2">
+    <div className="text-sm leading-7 space-y-4">
       {parts.map((part, index) => {
         if (index % 2 === 1) {
-          // This is a code block
-          // Extract language if present (e.g. "bash\n...")
           const firstLineBreak = part.indexOf('\n');
           let language = "text";
           let code = part;
@@ -166,14 +157,18 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, onRunComma
             />
           );
         } else {
-          // Normal text
           return (
-            <div key={index} className="whitespace-pre-wrap">
-                {part.split('\n').map((line, i) => (
-                    <p key={i} className={`min-h-[1em] ${line.trim().startsWith('#') ? 'font-bold text-lg mt-2 mb-1 text-blue-200' : ''}`}>
-                         {line}
-                    </p>
-                ))}
+            <div key={index} className="whitespace-pre-wrap text-slate-300">
+                {part.split('\n').filter(line => line.trim() !== '').map((line, i) => {
+                    const isHeader = line.trim().startsWith('#');
+                    return (
+                        <p key={i} className={`
+                            ${isHeader ? 'font-bold text-base text-white mt-4 mb-2' : 'mb-2'}
+                        `}>
+                            {line}
+                        </p>
+                    );
+                })}
             </div>
           );
         }

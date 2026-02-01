@@ -10,6 +10,8 @@ import { CommandSidebar } from './components/CommandSidebar';
 import { FavoritesSidebar } from './components/FavoritesSidebar';
 import { Modal } from './components/Modal';
 import { APP_NAME } from './constants';
+import { motion, AnimatePresence } from 'framer-motion';
+import { History, FolderOpen, RefreshCw, Plus, X, Server, Terminal, Box, Shield, Zap } from 'lucide-react';
 
 const STORAGE_KEY = 'techsupport_ai_sessions';
 const FAVORITES_KEY = 'techsupport_ai_favorites';
@@ -346,7 +348,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-[#0a0f1e] to-black flex flex-col font-sans text-slate-200 overflow-hidden">
+    <div className="min-h-screen bg-[#09090b] flex flex-col font-sans text-slate-200 overflow-hidden">
       
       <HistorySidebar 
         isOpen={isSidebarOpen} 
@@ -358,21 +360,26 @@ const App: React.FC = () => {
       />
 
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 h-16 bg-slate-900/70 backdrop-blur-xl border-b border-white/5 z-20 flex items-center justify-between px-4 md:px-8">
+      <header className="fixed top-0 left-0 right-0 h-16 bg-[#09090b]/80 backdrop-blur-xl border-b border-white/5 z-20 flex items-center justify-between px-4">
         <div className="flex items-center gap-4">
           <button 
             onClick={() => setIsSidebarOpen(true)}
             className="p-2 -ml-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
             title="Histórico"
           >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" /></svg>
+            <History size={20} />
           </button>
           
-          <div className="flex items-center gap-3">
-            <h1 className="text-lg font-bold tracking-tight text-white hidden sm:block">{APP_NAME}</h1>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-blue-900/20">
+                    <Zap size={18} fill="currentColor" />
+                </div>
+                <h1 className="text-sm font-bold tracking-tight text-white hidden sm:block">{APP_NAME}</h1>
+            </div>
             
             {/* OS Buttons */}
-            <div className="flex items-center gap-1 ml-4 bg-slate-800/50 rounded-lg p-1 border border-slate-700/50">
+            <div className="hidden md:flex items-center gap-1 bg-[#121214] rounded-lg p-1 border border-white/5">
                 {[ 
                     { id: 'macos', label: 'MACOS', icon: '🍎' },
                     { id: 'windows', label: 'WINDOWS', icon: '🪟' },
@@ -384,8 +391,8 @@ const App: React.FC = () => {
                         className={`
                             px-3 py-1.5 rounded-md text-[10px] font-bold transition-all flex items-center gap-1.5
                             ${selectedOS === os.id 
-                                ? 'bg-blue-600 text-white shadow-lg shadow-blue-900/20' 
-                                : 'text-slate-400 hover:text-white hover:bg-slate-700/50'
+                                ? 'bg-blue-600 text-white shadow-md' 
+                                : 'text-slate-400 hover:text-white hover:bg-white/5'
                             }
                         `}
                     >
@@ -401,26 +408,23 @@ const App: React.FC = () => {
             <div className="relative group">
                 <button
                     onClick={handleSelectDirectory}
-                    className="flex items-center gap-2 px-4 py-1.5 text-xs font-medium text-slate-300 bg-slate-800/50 hover:bg-slate-700 border border-slate-700/50 rounded-lg transition-all"
+                    className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-slate-300 bg-[#121214] hover:bg-white/5 border border-white/5 rounded-lg transition-all"
                     title={currentWorkingDirectory || "Selecionar pasta de trabalho"}
                 >
-                    <svg className="w-4 h-4 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>
-                    <span className="px-1 hidden sm:inline whitespace-nowrap">
+                    <FolderOpen size={14} className="text-yellow-500" />
+                    <span className="hidden sm:inline whitespace-nowrap max-w-[150px] truncate">
                         {currentWorkingDirectory ? (
-                            <>
-                                <span className="opacity-50 mr-1">PWD:</span>
-                                {currentWorkingDirectory === '/' ? '/' : currentWorkingDirectory.replace(/\/$/, '').split('/').pop()}
-                            </>
-                        ) : 'Abrir'}
+                            currentWorkingDirectory === '/' ? '/' : currentWorkingDirectory.replace(/\/$/, '').split('/').pop()
+                        ) : 'Abrir Pasta'}
                     </span>
                 </button>
                 {currentWorkingDirectory && (
                     <button 
                         onClick={handleClearDirectory}
-                        className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center text-[10px] opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 shadow-sm"
+                        className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 shadow-sm"
                         title="Resetar diretório"
                     >
-                        ✕
+                        <X size={10} />
                     </button>
                 )}
             </div>
@@ -430,23 +434,23 @@ const App: React.FC = () => {
                   {isBackendOnline && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>}
                   <span className={`relative inline-flex rounded-full h-2 w-2 ${isBackendOnline ? 'bg-emerald-500' : 'bg-red-500'}`}></span>
                 </span>
-                <span className={`${isBackendOnline ? 'text-emerald-400' : 'text-red-400'} text-xs font-medium tracking-wide`}>
-                    {isBackendOnline ? 'ONLINE' : 'OFFLINE'}
+                <span className={`${isBackendOnline ? 'text-emerald-400' : 'text-red-400'} text-[10px] font-bold tracking-wide uppercase`}>
+                    {isBackendOnline ? 'Online' : 'Offline'}
                 </span>
             </div>
             
             <button 
                 onClick={handleNewChat}
-                className="group flex items-center gap-2 px-4 py-2 text-xs font-semibold text-slate-300 bg-slate-800 hover:bg-slate-700 hover:text-white border border-slate-700 rounded-lg transition-all active:scale-95"
+                className="group flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 rounded-lg transition-all active:scale-95 shadow-lg shadow-blue-900/20"
                 title="Iniciar nova conversa"
             >
-                <svg className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
-                <span className="hidden sm:inline">Nova</span>
+                <Plus size={16} className="group-hover:rotate-90 transition-transform duration-300" />
+                <span className="hidden sm:inline">Novo</span>
             </button>
         </div>
       </header>
 
-      {/* Content Container (Three Columns) */}
+      {/* Content Container */}
       <div className="flex flex-1 pt-16 overflow-hidden">
           {/* Left Column: Command Queue */}
           <CommandSidebar 
@@ -457,46 +461,56 @@ const App: React.FC = () => {
           />
 
           {/* Middle Column: Chat Area */}
-          <div className="flex-1 flex flex-col relative min-w-0">
-            <main className="flex-1 w-full max-w-5xl mx-auto pb-40 px-4 overflow-y-auto custom-scrollbar">
+          <div className="flex-1 flex flex-col relative min-w-0 bg-gradient-to-b from-[#09090b] to-black">
+            <main className="flex-1 w-full max-w-4xl mx-auto pb-40 px-6 overflow-y-auto custom-scrollbar pt-6">
                 {messages.length === 0 ? (
-                <div className="flex flex-col items-center justify-center mt-12 text-center opacity-0 animate-[fadeIn_0.8s_ease-out_forwards]">
+                <div className="flex flex-col items-center justify-center mt-20 text-center opacity-0 animate-[fadeIn_0.8s_ease-out_forwards]">
                     
-                    <div className="relative mb-8 group cursor-default">
-                        <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 via-emerald-500 to-blue-600 rounded-full blur opacity-20 group-hover:opacity-40 transition duration-1000 animate-gradient-x"></div>
-                        <div className="relative w-20 h-20 bg-slate-900 rounded-2xl flex items-center justify-center border border-slate-800 shadow-2xl">
-                            <svg className="w-10 h-10 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                    <motion.div 
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ delay: 0.2 }}
+                        className="relative mb-8"
+                    >
+                        <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 via-emerald-500 to-blue-600 rounded-full blur-xl opacity-20 animate-pulse"></div>
+                        <div className="relative w-24 h-24 bg-[#121214] rounded-3xl flex items-center justify-center border border-white/10 shadow-2xl">
+                            <Zap size={48} className="text-blue-500" fill="currentColor" />
                         </div>
-                    </div>
+                    </motion.div>
 
-                    <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 tracking-tight">
-                        Como posso ajudar hoje?
+                    <h2 className="text-3xl font-bold text-white mb-3 tracking-tight">
+                        Como posso ajudar?
                     </h2>
-                    <p className="text-slate-400 max-w-lg text-sm md:text-base leading-relaxed mb-10">
-                    Sou seu agente especializado em suporte técnico. 
-                    Posso ajudar com Docker, Configurações de Ambiente, Debugging e Tutoriais passo-a-passo.
+                    <p className="text-slate-500 max-w-md text-sm leading-relaxed mb-12">
+                        Especialista em Docker, Kubernetes, Linux e Debugging.
+                        Selecione uma opção abaixo ou descreva seu problema.
                     </p>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full max-w-2xl">
                         {[ 
-                            { label: "Meu container Docker está falhando", icon: "🐳" },
-                            { label: "Como instalo MySQL no Ubuntu?", icon: "🐧" },
-                            { label: "Erro de variável de ambiente no Node", icon: "🟢" },
-                            { label: "Permissão negada na porta 80", icon: "🛡️" }
+                            { label: "Erro no Docker Container", icon: <Box size={18} className="text-blue-400" /> },
+                            { label: "Instalar MySQL no Ubuntu", icon: <Server size={18} className="text-emerald-400" /> },
+                            { label: "Variaveis de Ambiente Node", icon: <Terminal size={18} className="text-yellow-400" /> },
+                            { label: "Permissão Negada (Porta 80)", icon: <Shield size={18} className="text-red-400" /> }
                         ].map((item, i) => (
-                            <button 
+                            <motion.button 
                                 key={i}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: 0.3 + (i * 0.1) }}
                                 onClick={() => handleSendMessage(item.label)}
-                                className="group flex items-center gap-4 text-sm bg-slate-800/40 hover:bg-slate-800/80 border border-slate-700/50 hover:border-blue-500/50 text-slate-300 p-4 rounded-xl text-left transition-all hover:translate-x-1"
+                                className="group flex items-center gap-4 text-sm bg-[#121214] hover:bg-[#1a1a1e] border border-white/5 hover:border-blue-500/30 text-slate-300 p-4 rounded-xl text-left transition-all"
                             >
-                                <span className="text-xl group-hover:scale-110 transition-transform">{item.icon}</span>
+                                <div className="p-2 bg-black/50 rounded-lg group-hover:scale-110 transition-transform">
+                                    {item.icon}
+                                </div>
                                 <span className="font-medium group-hover:text-blue-200 transition-colors">{item.label}</span>
-                            </button>
+                            </motion.button>
                         ))}
                     </div>
                 </div>
                 ) : (
-                <div className="space-y-6 pt-6">
+                <div className="space-y-2">
                     {messages.map((msg) => (
                     <ChatBubble 
                         key={msg.id} 
@@ -513,7 +527,7 @@ const App: React.FC = () => {
             </main>
 
             {/* Input Area (Restricted Width) */}
-            <div className="absolute bottom-0 left-0 right-0 z-10">
+            <div className="absolute bottom-0 left-0 right-0 z-30 pointer-events-none">
                 <InputArea onSend={handleSendMessage} isLoading={isLoading} value={inputValue} onChange={setInputValue} />
             </div>
           </div>
