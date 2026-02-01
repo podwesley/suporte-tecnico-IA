@@ -69,7 +69,7 @@ const RecursiveItem: React.FC<RecursiveItemProps> = ({
             >
                 <div 
                     className={clsx(
-                        "group flex items-center justify-between p-2 rounded-lg border transition-all cursor-pointer",
+                        "group flex items-center justify-between p-2 border transition-all cursor-pointer",
                         "bg-[#121214] border-white/5 hover:border-white/10 hover:bg-white/5",
                         draggedItemId === item.id && "opacity-40 border-dashed border-blue-500"
                     )}
@@ -94,7 +94,7 @@ const RecursiveItem: React.FC<RecursiveItemProps> = ({
                                 onBlur={onSaveEditing}
                                 onKeyDown={(e) => e.key === 'Enter' && onSaveEditing()}
                                 onClick={(e) => e.stopPropagation()}
-                                className="bg-black/50 text-white text-xs px-1 py-0.5 rounded w-full border border-blue-500 outline-none"
+                                className="bg-black/50 text-white text-xs px-1 py-0.5 w-full border border-blue-500 outline-none"
                             />
                         ) : (
                             <span 
@@ -109,13 +109,13 @@ const RecursiveItem: React.FC<RecursiveItemProps> = ({
                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                          <button 
                             onClick={(e) => { e.stopPropagation(); onStartEditing(item); }}
-                            className="p-1 hover:bg-white/10 text-slate-400 hover:text-white rounded"
+                            className="p-1 hover:bg-white/10 text-slate-400 hover:text-white"
                         >
                             <Edit2 size={12} />
                         </button>
                         <button 
                             onClick={(e) => { e.stopPropagation(); onRemove(item.id); }}
-                            className="p-1 hover:bg-red-500/10 text-slate-400 hover:text-red-400 rounded"
+                            className="p-1 hover:bg-red-500/10 text-slate-400 hover:text-red-400"
                         >
                             <Trash2 size={12} />
                         </button>
@@ -173,7 +173,7 @@ const RecursiveItem: React.FC<RecursiveItemProps> = ({
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
             className={clsx(
-                "group relative p-3 rounded-lg border transition-all duration-200 mb-2",
+                "group relative p-3 border transition-all duration-200 mb-2",
                 "bg-[#121214] border-white/5 hover:border-white/10 hover:bg-white/5",
                 draggedItemId === item.id && "opacity-40 border-dashed border-blue-500"
             )}
@@ -191,7 +191,7 @@ const RecursiveItem: React.FC<RecursiveItemProps> = ({
                                 onChange={(e) => setEditLabelValue(e.target.value)}
                                 onBlur={onSaveEditing}
                                 onKeyDown={(e) => e.key === 'Enter' && onSaveEditing()}
-                                className="bg-black/50 text-white text-xs px-1 py-0.5 rounded w-full border border-blue-500 outline-none mb-2"
+                                className="bg-black/50 text-white text-xs px-1 py-0.5 w-full border border-blue-500 outline-none mb-2"
                             />
                         ) : (
                             <span 
@@ -204,7 +204,7 @@ const RecursiveItem: React.FC<RecursiveItemProps> = ({
                         )}
                 </div>
 
-                <div className="mb-2 rounded border border-white/5 overflow-hidden bg-[#2d2d2d]">
+                <div className="mb-2 border border-white/5 overflow-hidden bg-[#2d2d2d]">
                     <SyntaxHighlighter 
                         code={item.command} 
                         language="bash" 
@@ -235,7 +235,7 @@ const RecursiveItem: React.FC<RecursiveItemProps> = ({
                                     exit={{ height: 0, opacity: 0 }}
                                     className="overflow-hidden"
                                 >
-                                    <div className="bg-[#2d2d2d] border border-white/5 rounded p-0 text-xs font-mono text-slate-300 max-h-60 overflow-y-auto custom-scrollbar shadow-inner mt-1">
+                                    <div className="bg-[#2d2d2d] border border-white/5 p-0 text-xs font-mono text-slate-300 max-h-60 overflow-y-auto custom-scrollbar shadow-inner mt-1">
                                          <pre className="p-2 m-0 whitespace-pre-wrap font-mono bg-transparent">
                                             <SyntaxHighlighter code={favCommand.output} />
                                          </pre>
@@ -250,31 +250,31 @@ const RecursiveItem: React.FC<RecursiveItemProps> = ({
                 )}
 
                 {/* Actions */}
-                <div className="flex justify-end gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity mt-2">
+                <div className="flex justify-start gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity mt-2">
                      <button
                         onClick={() => navigator.clipboard.writeText(item.command)}
-                        className="p-1 text-slate-500 hover:text-white hover:bg-white/10 rounded"
+                        className="p-1 text-slate-500 hover:text-white hover:bg-white/10"
                         title="Copiar"
                      >
                         <Copy size={12} />
                      </button>
                      <button
                         onClick={() => onStartEditing(item)}
-                        className="p-1 text-slate-500 hover:text-white hover:bg-white/10 rounded"
+                        className="p-1 text-slate-500 hover:text-white hover:bg-white/10"
                         title="Editar"
                      >
                         <Edit2 size={12} />
                      </button>
                      <button
                         onClick={() => onRemove(item.id)}
-                        className="p-1 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded"
+                        className="p-1 text-slate-500 hover:text-red-400 hover:bg-red-500/10"
                         title="Remover"
                      >
                         <Trash2 size={12} />
                      </button>
                      <button
                         onClick={() => onExecute(favCommand)}
-                        className="flex items-center gap-1.5 px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold rounded transition-colors ml-1 shadow-lg shadow-blue-900/20"
+                        className="flex items-center gap-1.5 px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold transition-colors ml-1 shadow-lg shadow-blue-900/20"
                      >
                         <Play size={10} fill="currentColor" />
                         Run
@@ -548,14 +548,14 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = React.memo(({
         <div className="flex gap-1">
             <button
                 onClick={() => setIsFolderModalOpen(true)}
-                className="p-1.5 text-slate-400 hover:text-white hover:bg-white/5 rounded transition-colors"
+                className="p-1.5 text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
                 title="Nova Pasta"
             >
                 <FolderPlus size={16} />
             </button>
             <button
                 onClick={() => setIsModalOpen(true)}
-                className="p-1.5 text-slate-400 hover:text-white hover:bg-white/5 rounded transition-colors"
+                className="p-1.5 text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
                 title="Novo Comando"
             >
                 <Plus size={16} />
@@ -611,7 +611,7 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = React.memo(({
              <textarea 
                value={newCommand}
                onChange={(e) => setNewCommand(e.target.value)}
-               className="w-full bg-[#121214] border border-white/10 rounded p-2 text-sm text-white focus:border-blue-500 outline-none font-mono"
+               className="w-full bg-[#121214] border border-white/10 p-2 text-sm text-white focus:border-blue-500 outline-none font-mono"
                rows={3}
                placeholder="docker ps -a"
                required
@@ -623,12 +623,12 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = React.memo(({
                type="text"
                value={newLabel}
                onChange={(e) => setNewLabel(e.target.value)}
-               className="w-full bg-[#121214] border border-white/10 rounded p-2 text-sm text-white focus:border-blue-500 outline-none"
+               className="w-full bg-[#121214] border border-white/10 p-2 text-sm text-white focus:border-blue-500 outline-none"
                placeholder="Listar containers"
              />
            </div>
            <div className="flex justify-end pt-2">
-             <button type="submit" className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded font-medium text-sm">
+             <button type="submit" className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium text-sm">
                Salvar
              </button>
            </div>
@@ -644,13 +644,13 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = React.memo(({
                       type="text"
                       value={newFolderName}
                       onChange={(e) => setNewFolderName(e.target.value)}
-                      className="w-full bg-[#121214] border border-white/10 rounded p-2 text-sm text-white focus:border-blue-500 outline-none"
+                      className="w-full bg-[#121214] border border-white/10 p-2 text-sm text-white focus:border-blue-500 outline-none"
                       placeholder="Meus Scripts"
                       required
                   />
               </div>
               <div className="flex justify-end pt-2">
-                  <button type="submit" className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded font-medium text-sm">
+                  <button type="submit" className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium text-sm">
                       Criar Pasta
                   </button>
               </div>
