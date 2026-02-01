@@ -218,6 +218,16 @@ const App: React.FC = () => {
     }
   };
 
+  const handleRenameSession = (sessionId: string, newTitle: string) => {
+      setSessions(prevSessions => {
+          const updatedSessions = prevSessions.map(session => 
+              session.id === sessionId ? { ...session, title: newTitle } : session
+          );
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedSessions));
+          return updatedSessions;
+      });
+  };
+
   const handleSelectDirectory = async () => {
     if (!isBackendOnline) {
       setErrorMessage("Não é possível selecionar diretório: O servidor backend está OFFLINE.");
@@ -406,6 +416,7 @@ const App: React.FC = () => {
         currentSessionId={currentSessionId}
         onSelectSession={handleSelectSession}
         onDeleteSession={handleDeleteSession}
+        onRenameSession={handleRenameSession}
       />
 
       {/* Header */}
