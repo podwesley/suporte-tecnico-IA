@@ -31,6 +31,7 @@ interface RecursiveItemProps {
     onToggleFolder: (id: string) => void;
     onRemove: (id: string) => void;
     onExecute: (item: FavoriteCommand) => void;
+    onAddChild: (folderId: string) => void;
 }
 
 const RecursiveItem: React.FC<RecursiveItemProps> = ({ 
@@ -47,7 +48,8 @@ const RecursiveItem: React.FC<RecursiveItemProps> = ({
     onDropOnFolder, 
     onToggleFolder, 
     onRemove, 
-    onExecute 
+    onExecute,
+    onAddChild 
 }) => {
     const isFolder = item.type === 'folder';
     const isEditing = editingId === item.id;
@@ -107,6 +109,13 @@ const RecursiveItem: React.FC<RecursiveItemProps> = ({
                      </div>
 
                      <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button 
+                            onClick={(e) => { e.stopPropagation(); onAddChild(item.id); }}
+                            className="p-1 hover:bg-white/10 text-slate-400 hover:text-white"
+                            title="Novo Comando"
+                        >
+                            <Plus size={12} />
+                        </button>
                          <button 
                             onClick={(e) => { e.stopPropagation(); onStartEditing(item); }}
                             className="p-1 hover:bg-white/10 text-slate-400 hover:text-white"
@@ -149,6 +158,7 @@ const RecursiveItem: React.FC<RecursiveItemProps> = ({
                                         onToggleFolder={onToggleFolder}
                                         onRemove={onRemove}
                                         onExecute={onExecute}
+                                        onAddChild={onAddChild}
                                     />
                                 ))
                             ) : (
@@ -302,6 +312,9 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = React.memo(({
   const [editLabelValue, setEditLabelValue] = useState('');
 
   const [draggedItemId, setDraggedItemId] = useState<string | null>(null);
+
+  const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
+  const [targetFolderId, setTargetFolderId] = useState<string | null>(null);
 
   // --- Recursive Helpers ---
   // Using useCallback for helpers isn't strictly necessary unless they are deps for other hooks, 
@@ -489,16 +502,30 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = React.memo(({
   const handleAddCommand = (e: React.FormEvent) => {
     e.preventDefault();
     if (newCommand.trim()) {
-      onAdd({
+      const newItem: FavoriteCommand = {
         id: uuidv4(),
         type: 'command',
         command: newCommand.trim(),
         label: newLabel.trim() || newCommand.trim()
-      });
+      };
+
+      if (targetFolderId) {
+          const newTree = addItemToFolder(favorites, targetFolderId, newItem);
+          onReorder(newTree);
+      } else {
+          onAdd(newItem);
+      }
+
       setNewCommand('');
       setNewLabel('');
       setIsModalOpen(false);
+      setTargetFolderId(null);
     }
+  };
+
+  const handleAddChild = (folderId: string) => {
+      setTargetFolderId(folderId);
+      setIsModalOpen(true);
   };
 
   const handleCreateFolder = (e: React.FormEvent) => {
@@ -543,21 +570,56 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = React.memo(({
            <Star size={16} className="text-yellow-500" />
            <span>Favoritos</span>
         </div>
-        <div className="flex gap-1">
+        <div className="relative">
             <button
-                onClick={() => setIsFolderModalOpen(true)}
-                className="p-1.5 text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
-                title="Nova Pasta"
-            >
-                <FolderPlus size={16} />
-            </button>
-            <button
-                onClick={() => setIsModalOpen(true)}
-                className="p-1.5 text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
-                title="Novo Comando"
+                onClick={() => setIsAddMenuOpen(!isAddMenuOpen)}
+                className={clsx(
+                    "p-1.5 transition-colors",
+                    isAddMenuOpen ? "text-white bg-white/10" : "text-slate-400 hover:text-white hover:bg-white/5"
+                )}
+                title="Adicionar"
             >
                 <Plus size={16} />
             </button>
+            <AnimatePresence>
+                {isAddMenuOpen && (
+                    <>
+                        <div 
+                            className="fixed inset-0 z-40" 
+                            onClick={() => setIsAddMenuOpen(false)} 
+                        />
+                        <motion.div 
+                            initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                            className="absolute right-0 mt-2 w-40 bg-[#121214] border border-white/10 shadow-2xl z-50 py-1"
+                        >
+                            <button 
+                                onClick={() => { 
+                                    setTargetFolderId(null);
+                                    setIsModalOpen(true); 
+                                    setIsAddMenuOpen(false); 
+                                }}
+                                className="w-full px-3 py-2 text-left text-xs text-slate-300 hover:bg-white/5 hover:text-white flex items-center gap-2"
+                            >
+                                <Terminal size={14} className="text-blue-500" />
+                                Novo Comando
+                            </button>
+                            <button 
+                                onClick={() => { 
+                                    setTargetFolderId(null);
+                                    setIsFolderModalOpen(true); 
+                                    setIsAddMenuOpen(false); 
+                                }}
+                                className="w-full px-3 py-2 text-left text-xs text-slate-300 hover:bg-white/5 hover:text-white flex items-center gap-2"
+                            >
+                                <FolderPlus size={14} className="text-yellow-500" />
+                                Nova Pasta
+                            </button>
+                        </motion.div>
+                    </>
+                )}
+            </AnimatePresence>
         </div>
       </div>
 
@@ -595,6 +657,7 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = React.memo(({
                         onToggleFolder={handleToggleFolder}
                         onRemove={onRemove}
                         onExecute={onExecute}
+                        onAddChild={handleAddChild}
                     />
                 ))
             )}
@@ -602,7 +665,14 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = React.memo(({
       </div>
 
       {/* Add Command Modal */}
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Adicionar Favorito">
+      <Modal 
+        isOpen={isModalOpen} 
+        onClose={() => {
+            setIsModalOpen(false);
+            setTargetFolderId(null);
+        }} 
+        title={targetFolderId ? `Adicionar à pasta "${(findItem(favorites, targetFolderId) as any)?.name}"` : "Adicionar Favorito"}
+      >
         <form onSubmit={handleAddCommand} className="space-y-4">
            <div>
              <label className="block text-xs font-medium text-slate-400 mb-1">Comando</label>
