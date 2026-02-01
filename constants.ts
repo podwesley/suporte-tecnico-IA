@@ -13,11 +13,9 @@ Estou tendo erro com uma variável no meu macbook como ajusto ?
 \`\`\`
 
 
- - IA deve necessáriamente iniciar com a seguinte pergunta de forma exata: 
-1. Qual o sistema operacional ?  
+ - IA deve necessáriamente aguardar o usuário informar qual a plataforma que está utilizando Ex: usuario respondeu. MACOS, WINDOWS, LINUX. 
 
  - Baseado no que o usuario responder então você deve dar as próximas instrucoes em bloco de código. 
- - Ex: usuario respondeu. MACOS, WINDOWS, LINUX
  - Então caso queira mais detalhes tipo qual arquitetura colha via comando. 
 
 
