@@ -66,6 +66,7 @@ const App: React.FC = () => {
   
   const [inputValue, setInputValue] = useState('');
   const [currentWorkingDirectory, setCurrentWorkingDirectory] = useState<string | null>(null);
+  const [defaultDirectory, setDefaultDirectory] = useState<string | null>(null);
   const [selectedOS, setSelectedOS] = useState<string | null>(null);
   const [commandQueue, setCommandQueue] = useState<CommandHistoryItem[]>([]);
   const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
@@ -75,6 +76,19 @@ const App: React.FC = () => {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isFirstRender = useRef(true);
+
+  // Fetch default directory on load/connect
+  useEffect(() => {
+      if (isBackendOnline && !defaultDirectory) {
+          commandExecutor.execute("echo $HOME")
+            .then(res => {
+                if (res.success && res.output) {
+                    setDefaultDirectory(res.output.trim());
+                }
+            })
+            .catch(console.error);
+      }
+  }, [isBackendOnline]);
 
   // Load data on mount
   useEffect(() => {
@@ -221,7 +235,7 @@ const App: React.FC = () => {
 
   const handleClearDirectory = (e: React.MouseEvent) => {
       e.stopPropagation();
-      setCurrentWorkingDirectory(null);
+      setCurrentWorkingDirectory(defaultDirectory);
   };
 
   const handleOSSelect = (osId: string) => {
