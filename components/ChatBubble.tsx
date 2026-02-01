@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { User, Bot, Terminal } from 'lucide-react';
+import { User, Bot, Terminal, Copy, Check } from 'lucide-react';
 import { Message, Role } from '../types';
 import MarkdownRenderer from './MarkdownRenderer';
 import { clsx } from 'clsx';
@@ -20,6 +20,17 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
   onSendMessage 
 }) => {
   const isUser = message.role === Role.USER;
+  const [isCopied, setIsCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(message.text);
+      setIsCopied(true);
+      setTimeout(() => setIsCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+    }
+  };
 
   return (
     <motion.div 
@@ -54,10 +65,17 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
         )}>
           {/* Header (Role Name) */}
           <div className={clsx(
-            "flex items-center gap-2 opacity-50 text-[9px] font-bold tracking-widest uppercase",
+            "flex items-center justify-between gap-2 opacity-50 text-[9px] font-bold tracking-widest uppercase",
             isUser ? "mb-0.5" : "mb-2"
           )}>
-            {isUser ? "Você" : "Tech Support AI"}
+            <span>{isUser ? "Você" : "Tech Support AI"}</span>
+            <button 
+              onClick={handleCopy}
+              className="hover:opacity-100 transition-opacity cursor-pointer p-1 rounded hover:bg-white/10"
+              title="Copiar markdown"
+            >
+              {isCopied ? <Check size={12} /> : <Copy size={12} />}
+            </button>
           </div>
           
           <div className={clsx(
