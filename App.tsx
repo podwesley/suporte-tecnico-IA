@@ -11,7 +11,7 @@ import { FavoritesSidebar } from './components/FavoritesSidebar';
 import { Modal } from './components/Modal';
 import { APP_NAME } from './constants';
 import { motion, AnimatePresence } from 'framer-motion';
-import { History, FolderOpen, RefreshCw, Plus, X, Server, Terminal, Box, Shield, Zap } from 'lucide-react';
+import { History, FolderOpen, Plus, X, Server, Terminal, Box, Shield, Zap, PanelLeft } from 'lucide-react';
 
 const STORAGE_KEY = 'techsupport_ai_sessions';
 const FAVORITES_KEY = 'techsupport_ai_favorites';
@@ -62,6 +62,7 @@ const App: React.FC = () => {
   const [sessions, setSessions] = useState<ChatSession[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [isCommandSidebarVisible, setIsCommandSidebarVisible] = useState(false);
   
   const [inputValue, setInputValue] = useState('');
   const [currentWorkingDirectory, setCurrentWorkingDirectory] = useState<string | null>(null);
@@ -362,13 +363,23 @@ const App: React.FC = () => {
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 h-16 bg-[#09090b]/80 backdrop-blur-xl border-b border-white/5 z-20 flex items-center justify-between px-4">
         <div className="flex items-center gap-4">
-          <button 
-            onClick={() => setIsSidebarOpen(true)}
-            className="p-2 -ml-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
-            title="Histórico"
-          >
-            <History size={20} />
-          </button>
+          <div className="flex items-center gap-1">
+            <button 
+                onClick={() => setIsSidebarOpen(true)}
+                className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+                title="Histórico de Conversas"
+            >
+                <History size={20} />
+            </button>
+            
+            <button 
+                onClick={() => setIsCommandSidebarVisible(!isCommandSidebarVisible)}
+                className={`p-2 rounded-lg transition-colors ${isCommandSidebarVisible ? 'text-blue-500 bg-blue-500/10' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                title={isCommandSidebarVisible ? "Ocultar Fila de Comandos" : "Mostrar Fila de Comandos"}
+            >
+                <PanelLeft size={20} />
+            </button>
+          </div>
           
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
@@ -453,12 +464,25 @@ const App: React.FC = () => {
       {/* Content Container */}
       <div className="flex flex-1 pt-16 overflow-hidden">
           {/* Left Column: Command Queue */}
-          <CommandSidebar 
-            commands={commandQueue} 
-            onExecute={handleExecuteFromSidebar}
-            onDelete={handleDeleteCommands}
-            onFavorite={handleAddToFavorites}
-          />
+          <AnimatePresence mode="wait" initial={false}>
+            {isCommandSidebarVisible && (
+                <motion.div
+                    key="command-sidebar"
+                    initial={{ width: 0, opacity: 0 }}
+                    animate={{ width: "auto", opacity: 1 }}
+                    exit={{ width: 0, opacity: 0 }}
+                    transition={{ duration: 0.3, ease: "easeInOut" }}
+                    className="overflow-hidden h-full flex-shrink-0"
+                >
+                     <CommandSidebar 
+                        commands={commandQueue} 
+                        onExecute={handleExecuteFromSidebar}
+                        onDelete={handleDeleteCommands}
+                        onFavorite={handleAddToFavorites}
+                    />
+                </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Middle Column: Chat Area */}
           <div className="flex-1 flex flex-col relative min-w-0 bg-gradient-to-b from-[#09090b] to-black">
