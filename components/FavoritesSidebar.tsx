@@ -95,7 +95,7 @@ const RecursiveItem: React.FC<RecursiveItemProps> = ({
 
     const containerClasses = clsx(
         "group relative border transition-all duration-200",
-        "bg-[#121214] border-white/5",
+        "bg-bg-surface border-border-main",
         draggedItemId === item.id ? "opacity-40 border-dashed border-blue-500" : "hover:border-white/10 hover:bg-white/5",
         dropIndicator === 'inside' && isFolder && "ring-1 ring-blue-500 bg-blue-500/10"
     );
@@ -269,48 +269,57 @@ const RecursiveItem: React.FC<RecursiveItemProps> = ({
                         )}
                 </div>
 
-                <div className="mb-2 border border-white/5 overflow-hidden bg-[#09090b]">
-                    <code className="block text-[0.75rem] font-mono p-1.5 break-all text-emerald-500/90">
-                        {item.command}
-                    </code>
-                </div>
+                                <div className="mb-2 border border-border-main overflow-hidden bg-bg-main/50">
+
+                                    <code className="block text-[0.75rem] font-mono p-1.5 break-all text-emerald-500/90">{item.command}</code>
+
+                                </div>
+
+                                
+
+                                {hasOutput && (
+
+                                    <div className="mt-2">
+
+                                        <button onClick={() => setIsOutputVisible(!isOutputVisible)} className="flex items-center gap-1 text-[10px] text-slate-500 hover:text-slate-300 mb-1">
+
+                                             <Terminal size={10} />
+
+                                             <span>Output</span>
+
+                                             <motion.div animate={{ rotate: isOutputVisible ? 180 : 0 }} transition={{ duration: 0.2 }}><ChevronDown size={10} /></motion.div>
+
+                                        </button>
+
+                                        <AnimatePresence>
+
+                                            {isOutputVisible && (
+
+                                                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
+
+                                                    <div className="bg-bg-main/50 border border-border-main p-0 text-xs font-mono text-slate-300 max-h-60 overflow-y-auto custom-scrollbar shadow-inner mt-1">
+
+                                                         <pre className="p-2 m-0 whitespace-pre-wrap font-mono bg-transparent">
+
+                                                            <SyntaxHighlighter code={favCommand.output} />
+
+                                                         </pre>
+
+                                                    </div>
+
+                                                    <div className="text-[10px] text-slate-600 mt-1 text-right">{favCommand.timestamp && new Date(favCommand.timestamp).toLocaleTimeString()}</div>
+
+                                                </motion.div>
+
+                                            )}
+
+                                        </AnimatePresence>
+
+                                    </div>
+
+                                )}
+
                 
-                {hasOutput && (
-                    <div className="mt-2">
-                        <button 
-                            onClick={() => setIsOutputVisible(!isOutputVisible)}
-                            className="flex items-center gap-1 text-[10px] text-slate-500 hover:text-slate-300 mb-1"
-                        >
-                             <Terminal size={10} />
-                             <span>Output</span>
-                             <motion.div 
-                                animate={{ rotate: isOutputVisible ? 180 : 0 }}
-                                transition={{ duration: 0.2 }}
-                             >
-                                 <ChevronDown size={10} />
-                             </motion.div>
-                        </button>
-                        <AnimatePresence>
-                            {isOutputVisible && (
-                                <motion.div 
-                                    initial={{ height: 0, opacity: 0 }}
-                                    animate={{ height: 'auto', opacity: 1 }}
-                                    exit={{ height: 0, opacity: 0 }}
-                                    className="overflow-hidden"
-                                >
-                                    <div className="bg-[#121214] border border-white/5 p-0 text-xs font-mono text-slate-300 max-h-60 overflow-y-auto custom-scrollbar shadow-inner mt-1">
-                                         <pre className="p-2 m-0 whitespace-pre-wrap font-mono bg-transparent">
-                                            <SyntaxHighlighter code={favCommand.output} />
-                                         </pre>
-                                    </div>
-                                    <div className="text-[10px] text-slate-600 mt-1 text-right">
-                                        {favCommand.timestamp && new Date(favCommand.timestamp).toLocaleTimeString()}
-                                    </div>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </div>
-                )}
 
                 {/* Actions */}
                 <div className="flex justify-start gap-1 mt-2">
@@ -553,18 +562,11 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = React.memo(({
 
 
   return (
-    <div 
-        className="relative flex-shrink-0 h-full flex flex-col bg-[#09090b] border-l border-white/5"
-        style={{ width: `${width}px` }}
-    >
-      {/* Resize Handle */}
-      <div 
-        className="absolute left-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-blue-500/50 transition-colors z-50"
-        onMouseDown={onResizeStart}
-      />
+  return (
+    <div className="relative flex-shrink-0 h-full flex flex-col bg-bg-sidebar border-l border-border-main group/sidebar" style={{ width: `${width}px` }}>
+      <div className="absolute left-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-blue-500/50 transition-colors z-50" onMouseDown={onResizeStart} />
 
-      {/* Header */}
-      <div className="h-14 px-4 flex items-center justify-between border-b border-white/5 bg-[#09090b]">
+      <div className="h-14 px-4 flex items-center justify-between border-b border-border-main bg-bg-sidebar">
         <div className="flex items-center gap-2 text-sm font-medium text-slate-200">
            <Star size={16} className="text-yellow-500" />
            <span>Favoritos</span>
@@ -587,35 +589,15 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = React.memo(({
                             className="fixed inset-0 z-40" 
                             onClick={() => setIsAddMenuOpen(false)} 
                         />
-                        <motion.div 
-                            initial={{ opacity: 0, y: 8, scale: 0.95 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: 8, scale: 0.95 }}
-                            className="absolute right-0 mt-2 w-40 bg-[#121214] border border-white/10 shadow-2xl z-50 py-1"
-                        >
-                            <button 
-                                onClick={() => { 
-                                    setTargetFolderId(null);
-                                    setIsModalOpen(true); 
-                                    setIsAddMenuOpen(false); 
-                                }}
-                                className="w-full px-3 py-2 text-left text-xs text-slate-300 hover:bg-white/5 hover:text-white flex items-center gap-2"
-                            >
-                                <Terminal size={14} className="text-blue-500" />
-                                Novo Comando
-                            </button>
-                            <button 
-                                onClick={() => { 
-                                    setTargetFolderId(null);
-                                    setIsFolderModalOpen(true); 
-                                    setIsAddMenuOpen(false); 
-                                }}
-                                className="w-full px-3 py-2 text-left text-xs text-slate-300 hover:bg-white/5 hover:text-white flex items-center gap-2"
-                            >
-                                <FolderPlus size={14} className="text-yellow-500" />
-                                Nova Pasta
-                            </button>
-                        </motion.div>
+                                                <motion.div initial={{ opacity: 0, y: 8, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 8, scale: 0.95 }} className="absolute right-0 mt-2 w-40 bg-bg-surface border border-border-main shadow-2xl z-50 py-1">
+                                                    <button onClick={() => { setTargetFolderId(null); setIsModalOpen(true); setIsAddMenuOpen(false); }} className="w-full px-3 py-2 text-left text-xs text-slate-300 hover:bg-white/5 hover:text-white flex items-center gap-2">
+                                                        <Terminal size={14} className="text-blue-500" /> Novo Comando
+                                                    </button>
+                                                    <button onClick={() => { setTargetFolderId(null); setIsFolderModalOpen(true); setIsAddMenuOpen(false); }} className="w-full px-3 py-2 text-left text-xs text-slate-300 hover:bg-white/5 hover:text-white flex items-center gap-2">
+                                                        <FolderPlus size={14} className="text-yellow-500" /> Nova Pasta
+                                                    </button>
+                                                </motion.div>
+                        
                     </>
                 )}
             </AnimatePresence>
@@ -663,36 +645,17 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = React.memo(({
       </div>
 
       {/* Add Command Modal */}
-      <Modal 
-        isOpen={isModalOpen} 
-        onClose={() => {
-            setIsModalOpen(false);
-            setTargetFolderId(null);
-        }} 
-        title={targetFolderId ? `Adicionar à pasta "${(findItem(favorites, targetFolderId) as any)?.name}"` : "Adicionar Favorito"}
-      >
-        <form onSubmit={handleAddCommand} className="space-y-4">
-           <div>
-             <label className="block text-xs font-medium text-slate-400 mb-1">Comando</label>
-             <textarea 
-               value={newCommand}
-               onChange={(e) => setNewCommand(e.target.value)}
-               className="w-full bg-[#121214] border border-white/10 p-2 text-sm text-white focus:border-blue-500 outline-none font-mono"
-               rows={3}
-               placeholder="docker ps -a"
-               required
-             />
-           </div>
-           <div>
-             <label className="block text-xs font-medium text-slate-400 mb-1">Nome/Label</label>
-             <input 
-               type="text"
-               value={newLabel}
-               onChange={(e) => setNewLabel(e.target.value)}
-               className="w-full bg-[#121214] border border-white/10 p-2 text-sm text-white focus:border-blue-500 outline-none"
-               placeholder="Listar containers"
-             />
-           </div>
+            <Modal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setTargetFolderId(null); }} title={targetFolderId ? `Adicionar à pasta "${(findItem(favorites, targetFolderId) as any)?.name}"` : "Adicionar Favorito"}>
+              <form onSubmit={handleAddCommand} className="space-y-4">
+                 <div>
+                   <label className="block text-xs font-medium text-slate-400 mb-1">Comando</label>
+                   <textarea value={newCommand} onChange={(e) => setNewCommand(e.target.value)} className="w-full bg-bg-main border border-border-main p-2 text-sm text-white focus:border-blue-500 outline-none font-mono" rows={3} placeholder="docker ps -a" required />
+                 </div>
+                 <div>
+                   <label className="block text-xs font-medium text-slate-400 mb-1">Nome/Label</label>
+                   <input type="text" value={newLabel} onChange={(e) => setNewLabel(e.target.value)} className="w-full bg-bg-main border border-border-main p-2 text-sm text-white focus:border-blue-500 outline-none" placeholder="Listar containers" />
+                 </div>
+      
            <div className="flex justify-end pt-2">
              <button type="submit" className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium text-sm">
                Salvar
@@ -702,19 +665,13 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = React.memo(({
       </Modal>
 
       {/* Create Folder Modal */}
-      <Modal isOpen={isFolderModalOpen} onClose={() => setIsFolderModalOpen(false)} title="Nova Pasta">
-          <form onSubmit={handleCreateFolder} className="space-y-4">
-              <div>
-                  <label className="block text-xs font-medium text-slate-400 mb-1">Nome da Pasta</label>
-                  <input 
-                      type="text"
-                      value={newFolderName}
-                      onChange={(e) => setNewFolderName(e.target.value)}
-                      className="w-full bg-[#121214] border border-white/10 p-2 text-sm text-white focus:border-blue-500 outline-none"
-                      placeholder="Meus Scripts"
-                      required
-                  />
-              </div>
+            <Modal isOpen={isFolderModalOpen} onClose={() => setIsFolderModalOpen(false)} title="Nova Pasta">
+                <form onSubmit={handleCreateFolder} className="space-y-4">
+                    <div>
+                        <label className="block text-xs font-medium text-slate-400 mb-1">Nome da Pasta</label>
+                        <input type="text" value={newFolderName} onChange={(e) => setNewFolderName(e.target.value)} className="w-full bg-bg-main border border-border-main p-2 text-sm text-white focus:border-blue-500 outline-none" placeholder="Meus Scripts" required />
+                    </div>
+      
               <div className="flex justify-end pt-2">
                   <button type="submit" className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium text-sm">
                       Criar Pasta

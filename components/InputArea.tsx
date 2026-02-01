@@ -56,9 +56,9 @@ export const InputArea: React.FC<InputAreaProps> = ({
       >
         <div 
             className={`
-                relative flex items-end gap-2 bg-[#09090b]/80 backdrop-blur-xl p-2 rounded-[24px] 
+                relative flex items-end gap-2 bg-bg-input backdrop-blur-xl p-2 rounded-[24px] 
                 border transition-all duration-300 shadow-2xl
-                ${isFocused && !disabled ? 'border-blue-500/50 ring-1 ring-blue-500/20' : 'border-white/10 ring-1 ring-white/5'}
+                ${isFocused && !disabled ? 'border-blue-500/50 ring-1 ring-blue-500/20' : 'border-border-main ring-1 ring-white/5'}
             `}
         >
           <div className="flex-1 min-w-0 relative">

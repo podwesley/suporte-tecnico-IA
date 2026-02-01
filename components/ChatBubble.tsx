@@ -41,7 +41,7 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
         className="flex w-full mb-8 justify-end"
       >
         <div className="max-w-[85%] md:max-w-[75%] w-full flex justify-end">
-            <div className="relative rounded-2xl shadow-sm border bg-blue-950/30 backdrop-blur-sm text-slate-200 border-blue-500/20 rounded-tr-sm px-6 py-4">
+            <div className="relative rounded-2xl shadow-sm border bg-blue-600/10 backdrop-blur-sm text-slate-200 border-blue-500/30 rounded-tr-sm px-6 py-4">
                 <MarkdownRenderer 
                     content={message.text}
                     onRunCommand={onRunCommand}
@@ -68,7 +68,7 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
         </div>
 
         {/* Bubble Content */}
-        <div className="relative rounded-2xl shadow-sm border bg-slate-900/50 backdrop-blur-sm text-slate-200 border-white/10 rounded-tl-sm px-6 py-4">
+        <div className="relative rounded-2xl shadow-sm border bg-bg-surface/50 backdrop-blur-sm text-slate-200 border-border-main rounded-tl-sm px-6 py-4">
           {/* Header (Role Name) */}
           <div className="flex items-center justify-between gap-2 opacity-50 text-[9px] font-bold tracking-widest uppercase mb-2">
             <span>Tech Support AI</span>

@@ -448,7 +448,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#09090b] flex flex-col font-sans text-slate-200 overflow-hidden">
+    <div className="min-h-screen bg-bg-main flex flex-col font-sans text-slate-200 overflow-hidden">
       
       <HistorySidebar 
         isOpen={isSidebarOpen} 
@@ -461,7 +461,7 @@ const App: React.FC = () => {
       />
 
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 h-16 bg-[#09090b]/80 backdrop-blur-xl border-b border-white/5 z-20 flex items-center justify-between px-4">
+      <header className="fixed top-0 left-0 right-0 h-16 bg-bg-main/80 backdrop-blur-xl border-b border-border-main z-20 flex items-center justify-between px-4">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-1">
             <button 
@@ -496,7 +496,7 @@ const App: React.FC = () => {
             <div className="relative group">
                 <button
                     onClick={handleSelectDirectory}
-                    className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-slate-300 bg-[#121214] hover:bg-white/5 border border-white/5 transition-all"
+                    className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-slate-300 bg-bg-surface hover:bg-white/5 border border-border-main transition-all"
                     title={currentWorkingDirectory || defaultDirectory || "Selecionar pasta de trabalho"}
                 >
                     <FolderOpen size={14} className="text-yellow-500" />
@@ -562,7 +562,7 @@ const App: React.FC = () => {
           </AnimatePresence>
 
           {/* Middle Column: Chat Area */}
-          <div className="flex-1 flex flex-col relative min-w-0 bg-gradient-to-b from-[#09090b] to-black">
+          <div className="flex-1 flex flex-col relative min-w-0 bg-gradient-to-b from-bg-main to-bg-surface/30">
             <main className="flex-1 w-full mx-auto pb-40 px-6 overflow-y-auto custom-scrollbar pt-6">
                 {messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center mt-20 text-center opacity-0 animate-[fadeIn_0.8s_ease-out_forwards]">
@@ -574,7 +574,7 @@ const App: React.FC = () => {
                         className="relative mb-8"
                     >
                         <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 via-emerald-500 to-blue-600 rounded-full blur-xl opacity-20 animate-pulse"></div>
-                        <div className="relative w-24 h-24 bg-[#121214] rounded-3xl flex items-center justify-center border border-white/10 shadow-2xl">
+                        <div className="relative w-24 h-24 bg-bg-surface rounded-3xl flex items-center justify-center border border-border-main shadow-2xl">
                             <Cpu size={48} className="text-blue-500" fill="currentColor" />
                         </div>
                     </motion.div>
@@ -600,9 +600,9 @@ const App: React.FC = () => {
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.3 + (i * 0.1) }}
                                 onClick={() => handleSendMessage(item.label)}
-                                className="group flex items-center gap-4 text-sm bg-[#121214] hover:bg-[#1a1a1e] border border-white/5 hover:border-blue-500/30 text-slate-300 p-4 rounded-xl text-left transition-all"
+                                className="group flex items-center gap-4 text-sm bg-bg-surface hover:bg-bg-surface/80 border border-border-main hover:border-blue-500/30 text-slate-300 p-4 rounded-xl text-left transition-all"
                             >
-                                <div className="p-2 bg-black/50 rounded-lg group-hover:scale-110 transition-transform">
+                                <div className="p-2 bg-black/20 rounded-lg group-hover:scale-110 transition-transform">
                                     {item.icon}
                                 </div>
                                 <span className="font-medium group-hover:text-blue-200 transition-colors">{item.label}</span>
