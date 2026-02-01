@@ -43,7 +43,7 @@ export const CommandSidebar: React.FC<CommandSidebarProps> = ({ commands, onExec
       <div className="h-14 px-4 flex items-center justify-between border-b border-white/10 bg-[#0c0c0e]">
         <div className="flex items-center gap-2 text-xs font-bold font-mono tracking-wider text-slate-300 uppercase">
            <Terminal size={14} className="text-blue-500" />
-           <span>CMD_QUEUE</span>
+           <span>FILA DE COMANDOS</span>
         </div>
         
         {commands.length > 0 && (
