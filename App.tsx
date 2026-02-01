@@ -73,6 +73,7 @@ const App: React.FC = () => {
   const [isBackendOnline, setIsBackendOnline] = useState(true);
   const [errorModalOpen, setErrorModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [isOSModalOpen, setIsOSModalOpen] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isFirstRender = useRef(true);
@@ -192,6 +193,7 @@ const App: React.FC = () => {
     setCommandQueue([]); // Clear queue
     geminiService.resetSession();
     setIsSidebarOpen(false);
+    setIsOSModalOpen(true);
   };
 
   const handleSelectSession = async (session: ChatSession) => {
@@ -241,6 +243,7 @@ const App: React.FC = () => {
 
   const handleOSSelect = (osId: string) => {
       setSelectedOS(osId);
+      setIsOSModalOpen(false);
       handleSendMessage(`${osId.toUpperCase()}`);
   };
 
@@ -434,29 +437,6 @@ const App: React.FC = () => {
                 <h1 className="text-sm font-bold tracking-tight text-white hidden sm:block">{APP_NAME}</h1>
             </div>
             
-            {/* OS Buttons */}
-            <div className="hidden md:flex items-center gap-1 bg-[#121214] p-1 border border-white/5">
-                {[ 
-                    { id: 'macos', label: 'MACOS', icon: '🍎' },
-                    { id: 'windows', label: 'WINDOWS', icon: '🪟' },
-                    { id: 'linux', label: 'LINUX', icon: '🐧' }
-                ].map(os => (
-                    <button
-                        key={os.id}
-                        onClick={() => handleOSSelect(os.id)}
-                        className={`
-                            px-3 py-1.5 text-[10px] font-bold transition-all flex items-center gap-1.5
-                            ${selectedOS === os.id 
-                                ? 'bg-blue-600 text-white shadow-md' 
-                                : 'text-slate-400 hover:text-white hover:bg-white/5'
-                            }
-                        `}
-                    >
-                        <span>{os.icon}</span>
-                        <span className="hidden lg:inline">{os.label}</span>
-                    </button>
-                ))}
-            </div>
           </div>
         </div>
         
@@ -597,7 +577,14 @@ const App: React.FC = () => {
 
             {/* Input Area (Restricted Width) */}
             <div className="absolute bottom-0 left-0 right-0 z-30 pointer-events-none">
-                <InputArea onSend={handleSendMessage} isLoading={isLoading} value={inputValue} onChange={setInputValue} />
+                <InputArea 
+                    onSend={handleSendMessage} 
+                    isLoading={isLoading} 
+                    value={inputValue} 
+                    onChange={setInputValue} 
+                    disabled={messages.length === 0}
+                    placeholder={messages.length === 0 ? "Clique em 'Novo' para iniciar..." : undefined}
+                />
             </div>
           </div>
           
@@ -618,6 +605,33 @@ const App: React.FC = () => {
           type="error"
       >
           <p>{errorMessage}</p>
+      </Modal>
+
+      <Modal 
+          isOpen={isOSModalOpen} 
+          onClose={() => setIsOSModalOpen(false)} 
+          title="Selecione o Sistema Operacional" 
+          type="info"
+      >
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {[ 
+                  { id: 'macos', label: 'MACOS', icon: '🍎', description: 'Apple Ecosystem' },
+                  { id: 'windows', label: 'WINDOWS', icon: '🪟', description: 'Microsoft Ecosystem' },
+                  { id: 'linux', label: 'LINUX', icon: '🐧', description: 'Open Source Power' }
+              ].map(os => (
+                  <button
+                      key={os.id}
+                      onClick={() => handleOSSelect(os.id)}
+                      className="group flex flex-col items-center gap-3 p-6 bg-[#121214] border border-white/5 hover:border-blue-500/50 hover:bg-blue-500/5 transition-all duration-300"
+                  >
+                      <span className="text-4xl filter grayscale group-hover:grayscale-0 transition-all duration-300 transform group-hover:scale-110">{os.icon}</span>
+                      <div className="text-center">
+                          <span className="block font-bold text-slate-200 group-hover:text-blue-400">{os.label}</span>
+                          <span className="text-xs text-slate-500 mt-1">{os.description}</span>
+                      </div>
+                  </button>
+              ))}
+          </div>
       </Modal>
     </div>
   );
