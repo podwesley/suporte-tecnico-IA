@@ -396,7 +396,7 @@ const App: React.FC = () => {
           <div className="flex items-center gap-1">
             <button 
                 onClick={() => setIsSidebarOpen(true)}
-                className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+                className="p-2 text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
                 title="Histórico de Conversas"
             >
                 <History size={20} />
@@ -404,7 +404,7 @@ const App: React.FC = () => {
             
             <button 
                 onClick={() => setIsCommandSidebarVisible(!isCommandSidebarVisible)}
-                className={`p-2 rounded-lg transition-colors ${isCommandSidebarVisible ? 'text-blue-500 bg-blue-500/10' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                className={`p-2 transition-colors ${isCommandSidebarVisible ? 'text-blue-500 bg-blue-500/10' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
                 title={isCommandSidebarVisible ? "Ocultar Fila de Comandos" : "Mostrar Fila de Comandos"}
             >
                 <PanelLeft size={20} />
@@ -413,14 +413,14 @@ const App: React.FC = () => {
           
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center text-white shadow-lg shadow-blue-900/20">
+                <div className="w-8 h-8 bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-900/20">
                     <Zap size={18} fill="currentColor" />
                 </div>
                 <h1 className="text-sm font-bold tracking-tight text-white hidden sm:block">{APP_NAME}</h1>
             </div>
             
             {/* OS Buttons */}
-            <div className="hidden md:flex items-center gap-1 bg-[#121214] rounded-lg p-1 border border-white/5">
+            <div className="hidden md:flex items-center gap-1 bg-[#121214] p-1 border border-white/5">
                 {[ 
                     { id: 'macos', label: 'MACOS', icon: '🍎' },
                     { id: 'windows', label: 'WINDOWS', icon: '🪟' },
@@ -430,7 +430,7 @@ const App: React.FC = () => {
                         key={os.id}
                         onClick={() => handleOSSelect(os.id)}
                         className={`
-                            px-3 py-1.5 rounded-md text-[10px] font-bold transition-all flex items-center gap-1.5
+                            px-3 py-1.5 text-[10px] font-bold transition-all flex items-center gap-1.5
                             ${selectedOS === os.id 
                                 ? 'bg-blue-600 text-white shadow-md' 
                                 : 'text-slate-400 hover:text-white hover:bg-white/5'
@@ -449,7 +449,7 @@ const App: React.FC = () => {
             <div className="relative group">
                 <button
                     onClick={handleSelectDirectory}
-                    className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-slate-300 bg-[#121214] hover:bg-white/5 border border-white/5 rounded-lg transition-all"
+                    className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-slate-300 bg-[#121214] hover:bg-white/5 border border-white/5 transition-all"
                     title={currentWorkingDirectory || "Selecionar pasta de trabalho"}
                 >
                     <FolderOpen size={14} className="text-yellow-500" />
@@ -462,7 +462,7 @@ const App: React.FC = () => {
                 {currentWorkingDirectory && (
                     <button 
                         onClick={handleClearDirectory}
-                        className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 shadow-sm"
+                        className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600 shadow-sm"
                         title="Resetar diretório"
                     >
                         <X size={10} />
@@ -470,7 +470,7 @@ const App: React.FC = () => {
                 )}
             </div>
 
-            <div className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full border ${isBackendOnline ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
+            <div className={`hidden md:flex items-center gap-2 px-3 py-1.5 border ${isBackendOnline ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
                 <span className="relative flex h-2 w-2">
                   {isBackendOnline && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>}
                   <span className={`relative inline-flex rounded-full h-2 w-2 ${isBackendOnline ? 'bg-emerald-500' : 'bg-red-500'}`}></span>
@@ -482,7 +482,7 @@ const App: React.FC = () => {
             
             <button 
                 onClick={handleNewChat}
-                className="group flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 rounded-lg transition-all active:scale-95 shadow-lg shadow-blue-900/20"
+                className="group flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 transition-all active:scale-95 shadow-lg shadow-blue-900/20"
                 title="Iniciar nova conversa"
             >
                 <Plus size={16} className="group-hover:rotate-90 transition-transform duration-300" />
