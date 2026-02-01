@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { geminiService } from './services/geminiService';
 import { commandExecutor } from './services/commandExecutor';
-import { Message, Role, ChatSession, CommandHistoryItem, FavoriteCommand } from './types';
+import { Message, Role, ChatSession, CommandHistoryItem, FavoriteCommand, FavoriteItem } from './types';
 import { ChatBubble } from './components/ChatBubble';
 import { InputArea } from './components/InputArea';
 import { HistorySidebar } from './components/HistorySidebar';
@@ -13,6 +13,46 @@ import { APP_NAME } from './constants';
 
 const STORAGE_KEY = 'techsupport_ai_sessions';
 const FAVORITES_KEY = 'techsupport_ai_favorites';
+
+// Helper functions for recursive updates
+const clearOutputsRecursive = (items: FavoriteItem[]): FavoriteItem[] => {
+    return items.map((item: FavoriteItem) => {
+        if (item.type === 'folder') {
+            return { ...item, items: clearOutputsRecursive(item.items) };
+        }
+        // It's a command
+        if ('output' in item) {
+             const { output, ...rest } = item as FavoriteCommand;
+             return rest as FavoriteCommand;
+        }
+        return item;
+    });
+};
+
+const updateCommandInTree = (items: FavoriteItem[], commandId: string, output: string): FavoriteItem[] => {
+  return items.map(item => {
+      if (item.type === 'folder') {
+          return { ...item, items: updateCommandInTree(item.items, commandId, output) };
+      }
+      if (item.id === commandId && item.type === 'command') {
+          return { ...item, output };
+      }
+      // Handle legacy items without type
+      if (item.id === commandId && !item.type) {
+         return { ...item, output };
+      }
+      return item;
+  });
+};
+
+const removeItemFromTree = (items: FavoriteItem[], id: string): FavoriteItem[] => {
+  return items.filter(item => item.id !== id).map(item => {
+      if (item.type === 'folder') {
+          return { ...item, items: removeItemFromTree(item.items, id) };
+      }
+      return item;
+  });
+};
 
 const App: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -25,7 +65,7 @@ const App: React.FC = () => {
   const [currentWorkingDirectory, setCurrentWorkingDirectory] = useState<string | null>(null);
   const [selectedOS, setSelectedOS] = useState<string | null>(null);
   const [commandQueue, setCommandQueue] = useState<CommandHistoryItem[]>([]);
-  const [favorites, setFavorites] = useState<FavoriteCommand[]>([]);
+  const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
   const [isBackendOnline, setIsBackendOnline] = useState(true);
   const [errorModalOpen, setErrorModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -44,7 +84,9 @@ const App: React.FC = () => {
       
       const savedFavs = localStorage.getItem(FAVORITES_KEY);
       if (savedFavs) {
-          setFavorites(JSON.parse(savedFavs));
+          const loaded = JSON.parse(savedFavs);
+          // Clear outputs on load
+          setFavorites(clearOutputsRecursive(loaded));
       }
 
     } catch (e) {
@@ -222,10 +264,11 @@ const App: React.FC = () => {
 
   // Favorites Handlers
   const handleAddToFavorites = (command: string) => {
-      const exists = favorites.find(f => f.command === command);
+      const exists = favorites.some(f => f.type === 'command' && f.command === command);
       if (!exists) {
           const newFav: FavoriteCommand = {
               id: uuidv4(),
+              type: 'command',
               command,
               label: command
           };
@@ -235,23 +278,18 @@ const App: React.FC = () => {
 
   const handleExecuteFavorite = async (item: FavoriteCommand) => {
       const output = await handleRunCommand(item.command, false);
-      
-      setFavorites(prev => prev.map(f => 
-          f.id === item.id 
-              ? { ...f, output: output } 
-              : f
-      ));
+      setFavorites(prev => updateCommandInTree(prev, item.id, output));
   };
 
   const handleRemoveFavorite = (id: string) => {
-      setFavorites(prev => prev.filter(f => f.id !== id));
+      setFavorites(prev => removeItemFromTree(prev, id));
   };
 
-  const handleReorderFavorites = (newOrder: FavoriteCommand[]) => {
+  const handleReorderFavorites = (newOrder: FavoriteItem[]) => {
       setFavorites(newOrder);
   };
   
-  const handleManualAddFavorite = (fav: FavoriteCommand) => {
+  const handleManualAddFavorite = (fav: FavoriteItem) => {
       setFavorites(prev => [...prev, fav]);
   };
 

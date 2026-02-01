@@ -19,10 +19,21 @@ export interface CommandHistoryItem {
 
 export interface FavoriteCommand {
   id: string;
+  type?: 'command';
   command: string;
   label: string;
   output?: string;
 }
+
+export interface FavoriteFolder {
+  id: string;
+  type: 'folder';
+  name: string;
+  isOpen: boolean;
+  items: FavoriteItem[];
+}
+
+export type FavoriteItem = FavoriteCommand | FavoriteFolder;
 
 export interface ChatSession {
   id: string;
