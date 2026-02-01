@@ -38,7 +38,7 @@ export const CommandSidebar: React.FC<CommandSidebarProps> = ({ commands, onExec
   };
 
   return (
-    <div className="w-[448px] flex-shrink-0 h-full flex flex-col bg-[#09090b] border-r border-white/10">
+    <div className="w-[25vw] max-w-[448px] min-w-[250px] flex-shrink-0 h-full flex flex-col bg-[#09090b] border-r border-white/10">
       {/* Header */}
       <div className="h-14 px-4 flex items-center justify-between border-b border-white/10 bg-[#0c0c0e]">
         <div className="flex items-center gap-2 text-xs font-bold font-mono tracking-wider text-slate-300 uppercase">

@@ -472,7 +472,7 @@ const App: React.FC = () => {
                     animate={{ width: "auto", opacity: 1 }}
                     exit={{ width: 0, opacity: 0 }}
                     transition={{ duration: 0.3, ease: "easeInOut" }}
-                    className="overflow-hidden h-full flex-shrink-0"
+                    className="overflow-hidden h-full flex-shrink-1"
                 >
                      <CommandSidebar 
                         commands={commandQueue} 
@@ -486,7 +486,7 @@ const App: React.FC = () => {
 
           {/* Middle Column: Chat Area */}
           <div className="flex-1 flex flex-col relative min-w-0 bg-gradient-to-b from-[#09090b] to-black">
-            <main className="flex-1 w-full max-w-4xl mx-auto pb-40 px-6 overflow-y-auto custom-scrollbar pt-6">
+            <main className="flex-1 w-full mx-auto pb-40 px-6 overflow-y-auto custom-scrollbar pt-6">
                 {messages.length === 0 ? (
                 <div className="flex flex-col items-center justify-center mt-20 text-center opacity-0 animate-[fadeIn_0.8s_ease-out_forwards]">
                     

@@ -531,7 +531,7 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = React.memo(({
 
 
   return (
-    <div className="w-[672px] flex-shrink-0 h-full flex flex-col bg-[#09090b] border-l border-white/5">
+    <div className="w-[35vw] max-w-[672px] min-w-[300px] flex-shrink-0 h-full flex flex-col bg-[#09090b] border-l border-white/5">
       {/* Header */}
       <div className="h-14 px-4 flex items-center justify-between border-b border-white/5 bg-[#09090b]">
         <div className="flex items-center gap-2 text-sm font-medium text-slate-200">
