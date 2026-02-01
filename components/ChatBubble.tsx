@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { User, Bot, Terminal, Copy, Check } from 'lucide-react';
 import { Message, Role } from '../types';
-import MarkdownRenderer from './MarkdownRenderer';
+import MarkdownRenderer, { CodeBlock } from './MarkdownRenderer';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -32,43 +32,46 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
     }
   };
 
+  if (isUser) {
+    return (
+      <motion.div 
+        initial={{ opacity: 0, y: 10, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.3, ease: "easeOut" }}
+        className="flex w-full mb-8 justify-end"
+      >
+        <div className="max-w-[85%] md:max-w-[75%] w-full flex justify-end">
+            <div className="relative rounded-2xl shadow-sm border bg-blue-950/30 backdrop-blur-sm text-slate-200 border-blue-500/20 rounded-tr-sm px-6 py-4">
+                <MarkdownRenderer 
+                    content={message.text}
+                    onRunCommand={onRunCommand}
+                    onInputUpdate={onInputUpdate}
+                    onSendMessage={onSendMessage}
+                />
+            </div>
+        </div>
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div 
       initial={{ opacity: 0, y: 10, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.3, ease: "easeOut" }}
-      className={clsx(
-        "flex w-full mb-8 group",
-        isUser ? "justify-end" : "justify-start"
-      )}
+      className="flex w-full mb-8 group justify-start"
     >
-      <div className={clsx(
-        "flex max-w-[85%] md:max-w-[75%] gap-4",
-        isUser ? "flex-row-reverse" : "flex-row"
-      )}>
+      <div className="flex max-w-[85%] md:max-w-[75%] gap-4 flex-row">
         {/* Avatar */}
-        <div className={clsx(
-          "w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg mt-1",
-          isUser 
-            ? "bg-blue-600 text-white" 
-            : "bg-emerald-600 text-white"
-        )}>
-          {isUser ? <User size={16} /> : <Bot size={16} />}
+        <div className="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg mt-1 bg-emerald-600 text-white">
+          <Bot size={16} />
         </div>
 
         {/* Bubble Content */}
-        <div className={clsx(
-          "relative rounded-2xl shadow-sm border",
-          isUser 
-            ? "bg-blue-600 text-white border-blue-500 rounded-tr-sm px-2.5 py-1.5" 
-            : "bg-slate-900/50 backdrop-blur-sm text-slate-200 border-white/10 rounded-tl-sm px-6 py-4"
-        )}>
+        <div className="relative rounded-2xl shadow-sm border bg-slate-900/50 backdrop-blur-sm text-slate-200 border-white/10 rounded-tl-sm px-6 py-4">
           {/* Header (Role Name) */}
-          <div className={clsx(
-            "flex items-center justify-between gap-2 opacity-50 text-[9px] font-bold tracking-widest uppercase",
-            isUser ? "mb-0.5" : "mb-2"
-          )}>
-            <span>{isUser ? "Você" : "Tech Support AI"}</span>
+          <div className="flex items-center justify-between gap-2 opacity-50 text-[9px] font-bold tracking-widest uppercase mb-2">
+            <span>Tech Support AI</span>
             <button 
               onClick={handleCopy}
               className="hover:opacity-100 transition-opacity cursor-pointer p-1 rounded hover:bg-white/10"
@@ -78,19 +81,13 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
             </button>
           </div>
           
-          <div className={clsx(
-            isUser ? "leading-tight text-[11px] md:text-xs text-blue-50 font-medium" : "leading-7 text-sm md:text-base text-slate-300"
-          )}>
-              {isUser ? (
-                  <p className="whitespace-pre-wrap">{message.text}</p>
-              ) : (
-                  <MarkdownRenderer 
-                      content={message.text} 
-                      onRunCommand={onRunCommand}
-                      onInputUpdate={onInputUpdate}
-                      onSendMessage={onSendMessage}
-                  />
-              )}
+          <div className="leading-7 text-sm md:text-base text-slate-300">
+              <MarkdownRenderer 
+                  content={message.text} 
+                  onRunCommand={onRunCommand}
+                  onInputUpdate={onInputUpdate}
+                  onSendMessage={onSendMessage}
+              />
           </div>
 
           {/* Timestamp or Status (Optional) */}

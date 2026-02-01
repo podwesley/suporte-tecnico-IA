@@ -21,7 +21,7 @@ interface MarkdownRendererProps {
   onSendMessage?: (text: string) => void;
 }
 
-const CodeBlock: React.FC<{
+export const CodeBlock: React.FC<{
   language: string;
   code: string;
   onRunCommand?: (command: string) => Promise<string>;
@@ -166,6 +166,16 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, onRunComma
                 language = possibleLang;
                 code = part.substring(firstLineBreak + 1);
             }
+          }
+
+          // Heuristic to detect bash/shell if language is text
+          if (language === 'text') {
+             const trimmed = code.trim();
+             const commonShellCommands = ['git', 'docker', 'npm', 'yarn', 'pnpm', 'ls', 'cd', 'cat', 'grep', 'sudo', 'echo', 'brew', 'apt', 'curl', 'wget', 'ssh'];
+             const firstWord = trimmed.split(' ')[0];
+             if (commonShellCommands.includes(firstWord)) {
+                language = 'bash';
+             }
           }
 
           return (
