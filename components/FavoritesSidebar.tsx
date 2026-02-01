@@ -250,7 +250,7 @@ const RecursiveItem: React.FC<RecursiveItemProps> = ({
                 )}
 
                 {/* Actions */}
-                <div className="flex justify-start gap-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity mt-2">
+                <div className="flex justify-start gap-1 mt-2">
                      <button
                         onClick={() => navigator.clipboard.writeText(item.command)}
                         className="p-1 text-slate-500 hover:text-white hover:bg-white/10"
