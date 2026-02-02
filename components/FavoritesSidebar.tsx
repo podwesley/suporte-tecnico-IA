@@ -17,6 +17,7 @@ interface FavoritesSidebarProps {
   width?: number;
   onResizeStart?: () => void;
   executingFavoriteId?: string | null;
+  isHelpMode: boolean;
 }
 
 type DropPosition = 'before' | 'after' | 'inside' | null;
@@ -38,6 +39,7 @@ interface RecursiveItemProps {
   onAddChild: (folderId: string) => void;
   onDropAtPosition: (draggedId: string, targetId: string, position: DropPosition) => void;
   executingFavoriteId?: string | null;
+  isHelpMode: boolean;
 }
 
 const RecursiveItem: React.FC<RecursiveItemProps> = ({
@@ -56,7 +58,8 @@ const RecursiveItem: React.FC<RecursiveItemProps> = ({
   onUpdate,
   onAddChild,
   onDropAtPosition,
-  executingFavoriteId
+  executingFavoriteId,
+  isHelpMode
 }) => {
   const isFolder = item.type === 'folder';
   const isEditing = editingId === item.id;
@@ -170,7 +173,7 @@ const RecursiveItem: React.FC<RecursiveItemProps> = ({
               <motion.div animate={{ rotate: item.isOpen ? 90 : 0 }} transition={{ duration: 0.2 }}>
                 <ChevronRight size={14} />
               </motion.div>
-              <Folder size={14} className="text-yellow-500/80" />
+              <Folder size={14} className={isHelpMode ? 'text-purple-500/80' : 'text-blue-500/80'} />
               {isEditing ? (
                 <input
                   autoFocus
@@ -183,7 +186,7 @@ const RecursiveItem: React.FC<RecursiveItemProps> = ({
                   className="bg-black/50 text-white text-xs px-1 py-0.5 w-full border border-blue-500 outline-none"
                 />
               ) : (
-                <span className="text-xs font-medium truncate" onDoubleClick={(e) => { e.stopPropagation(); onStartEditing(item); }}>
+                <span className={`text-xs font-medium truncate ${isHelpMode ? 'text-purple-300 group-hover:text-purple-200' : 'text-blue-300 group-hover:text-blue-200'}`} onDoubleClick={(e) => { e.stopPropagation(); onStartEditing(item); }}>
                   {item.name}
                 </span>
               )}
@@ -218,6 +221,7 @@ const RecursiveItem: React.FC<RecursiveItemProps> = ({
                     onAddChild={onAddChild}
                     onDropAtPosition={onDropAtPosition}
                     executingFavoriteId={executingFavoriteId}
+                    isHelpMode={isHelpMode}
                   />
                 ))
               ) : (
@@ -338,7 +342,8 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = React.memo(({
   onAdd,
   width = 450,
   onResizeStart,
-  executingFavoriteId
+  executingFavoriteId,
+  isHelpMode
 }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newCommand, setNewCommand] = useState('');
@@ -514,10 +519,10 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = React.memo(({
                 <div className="fixed inset-0 z-40" onClick={() => setIsAddMenuOpen(false)} />
                 <motion.div initial={{ opacity: 0, y: 8, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 8, scale: 0.95 }} className="absolute right-0 mt-2 w-40 bg-bg-surface border border-border-main shadow-2xl z-50 py-1">
                   <button type="button" onClick={() => { setTargetFolderId(null); setIsModalOpen(true); setIsAddMenuOpen(false); }} className="w-full px-3 py-2 text-left text-xs text-slate-300 hover:bg-white/5 hover:text-white flex items-center gap-2">
-                    <Terminal size={14} className="text-blue-500" /> Novo Comando
+                    <Terminal size={14} className={isHelpMode ? "text-purple-500" : "text-blue-500"} /> Novo Comando
                   </button>
                   <button type="button" onClick={() => { setTargetFolderId(null); setIsFolderModalOpen(true); setIsAddMenuOpen(false); }} className="w-full px-3 py-2 text-left text-xs text-slate-300 hover:bg-white/5 hover:text-white flex items-center gap-2">
-                    <FolderPlus size={14} className="text-yellow-500" /> Nova Pasta
+                    <FolderPlus size={14} className={isHelpMode ? "text-purple-500" : "text-blue-500"} /> Nova Pasta
                   </button>
                 </motion.div>
               </>
@@ -529,12 +534,12 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = React.memo(({
         <AnimatePresence mode='popLayout'>
           {favorites.length === 0 ? (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex flex-col items-center justify-center h-40 text-slate-500 text-xs text-center px-6">
-              <Star size={24} className="mb-2 opacity-20" />
+              <Star size={24} className="mb-2 opacity-20 text-yellow-500" />
               <p>Arraste comandos aqui para salvar.</p>
             </motion.div>
           ) : (
             favorites.map((fav) => (
-              <RecursiveItem key={fav.id} item={fav} level={0} editingId={editingId} editLabelValue={editLabelValue} draggedItemId={draggedItemId} onStartEditing={startEditing} onSaveEditing={saveEditing} setEditLabelValue={setEditLabelValue} onDragStart={onDragStartHandler} onToggleFolder={handleToggleFolder} onRemove={onRemove} onExecute={onExecute} onUpdate={onUpdate} onAddChild={handleAddChild} onDropAtPosition={onDropAtPositionHandler} executingFavoriteId={executingFavoriteId} />
+              <RecursiveItem key={fav.id} item={fav} level={0} editingId={editingId} editLabelValue={editLabelValue} draggedItemId={draggedItemId} onStartEditing={startEditing} onSaveEditing={saveEditing} setEditLabelValue={setEditLabelValue} onDragStart={onDragStartHandler} onToggleFolder={handleToggleFolder} onRemove={onRemove} onExecute={onExecute} onUpdate={onUpdate} onAddChild={handleAddChild} onDropAtPosition={onDropAtPositionHandler} executingFavoriteId={executingFavoriteId} isHelpMode={isHelpMode} />
             ))
           )}
         </AnimatePresence>

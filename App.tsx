@@ -789,6 +789,7 @@ const App: React.FC = () => {
             width={favoritesWidth}
             onResizeStart={startResizing}
             executingFavoriteId={executingFavoriteId}
+            isHelpMode={isHelpMode}
           />
       </div>
       
