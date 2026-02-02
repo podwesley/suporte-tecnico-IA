@@ -1065,7 +1065,7 @@ const App: React.FC = () => {
               {/* API Key Section */}
               <div className="bg-bg-main border border-white/5 p-4 rounded-lg">
                   <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
-                      <Shield size={14} className="text-purple-500" />
+                      <Shield size={14} className="text-slate-400" />
                       Gemini API
                   </h3>
                   <form onSubmit={handleSaveApiKey} className="flex gap-2">
@@ -1073,12 +1073,12 @@ const App: React.FC = () => {
                           type="password" 
                           value={apiKey} 
                           onChange={(e) => setApiKey(e.target.value)} 
-                          className="flex-1 bg-bg-surface border border-white/10 focus:border-purple-500 p-2 text-sm text-white outline-none rounded" 
+                          className="flex-1 bg-bg-surface border border-white/10 focus:border-white/30 p-2 text-sm text-white outline-none rounded" 
                           placeholder="Cole sua chave API aqui..."
                       />
                       <button 
                           type="submit" 
-                          className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded transition-all shadow-lg"
+                          className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded transition-all"
                       >
                           Salvar
                       </button>
@@ -1089,12 +1089,12 @@ const App: React.FC = () => {
               <div>
                   <div className="flex items-center justify-between mb-3">
                       <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                          <MessageSquare size={14} className="text-purple-500" />
+                          <MessageSquare size={14} className="text-slate-400" />
                           Prompts Personalizados
                       </h3>
                       <button 
                           onClick={() => handleOpenPromptEditor()}
-                          className="flex items-center gap-2 px-3 py-1.5 text-xs font-bold text-white bg-purple-600 hover:bg-purple-500 rounded transition-all"
+                          className="flex items-center gap-2 px-3 py-1.5 text-xs font-bold text-white bg-white/10 hover:bg-white/20 rounded transition-all"
                       >
                           <Plus size={14} /> Prompt de sistema
                       </button>
@@ -1105,10 +1105,10 @@ const App: React.FC = () => {
                           <p className="text-center text-slate-500 text-xs py-8 italic bg-bg-main border border-white/5 rounded-lg">Nenhum prompt personalizado salvo.</p>
                       ) : (
                           savedPrompts.map(prompt => (
-                              <div key={prompt.id} className="group flex items-center justify-between p-3 bg-bg-main border border-white/5 hover:border-purple-500/30 rounded-lg transition-all">
+                              <div key={prompt.id} className="group flex items-center justify-between p-3 bg-bg-main border border-white/5 hover:border-white/20 rounded-lg transition-all">
                                   <button 
                                       onClick={() => handleLoadPrompt(prompt)}
-                                      className="flex-1 text-left text-sm text-slate-200 hover:text-purple-300 transition-colors font-medium truncate"
+                                      className="flex-1 text-left text-sm text-slate-200 hover:text-white transition-colors font-medium truncate"
                                   >
                                       {prompt.title}
                                   </button>
@@ -1150,7 +1150,7 @@ const App: React.FC = () => {
                       type="text" 
                       value={promptTitle} 
                       onChange={(e) => setPromptTitle(e.target.value)} 
-                      className="w-full bg-bg-main border border-white/10 focus:border-purple-500 p-2 text-sm text-white outline-none rounded" 
+                      className="w-full bg-bg-main border border-white/10 focus:border-white/30 p-2 text-sm text-white outline-none rounded" 
                       placeholder="Ex: Análise de Logs"
                       required
                   />
@@ -1160,7 +1160,7 @@ const App: React.FC = () => {
                   <textarea 
                       value={promptContent} 
                       onChange={(e) => setPromptContent(e.target.value)} 
-                      className="w-full h-64 bg-bg-main border border-white/10 focus:border-purple-500 p-3 text-sm text-slate-200 outline-none rounded font-mono resize-none custom-scrollbar" 
+                      className="w-full h-64 bg-bg-main border border-white/10 focus:border-white/30 p-3 text-sm text-slate-200 outline-none rounded font-mono resize-none custom-scrollbar" 
                       placeholder="Digite seu prompt aqui..."
                       required
                   />
@@ -1168,7 +1168,7 @@ const App: React.FC = () => {
               <div className="flex justify-end pt-2">
                   <button 
                       type="submit" 
-                      className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded transition-all shadow-lg shadow-purple-900/20"
+                      className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded transition-all shadow-sm"
                   >
                       <Save size={14} /> Salvar Prompt
                   </button>
