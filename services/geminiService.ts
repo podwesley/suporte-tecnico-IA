@@ -10,7 +10,8 @@ export class GeminiService {
   constructor() {
     const apiKey = process.env.API_KEY;
     if (!apiKey) {
-      console.error("API_KEY is missing from environment variables.");
+      console.error("API_KEY está ausente nas variáveis de ambiente.");
+      throw new Error("API_KEY está ausente nas variáveis de ambiente.");
     }
     // Initialize with the API key from environment variables
     this.ai = new GoogleGenAI({ apiKey: apiKey || '' });
@@ -27,8 +28,8 @@ export class GeminiService {
         },
       });
     } catch (error) {
-      console.error("Failed to initialize chat session:", error);
-      throw error;
+      console.error("Falhou em iniciar a sessão de chat:", error);
+      throw `Falhou em iniciar a sessão de chat: ${error}`;
     }
   }
 
@@ -58,9 +59,10 @@ export class GeminiService {
         history: history as any // Type assertion needed sometimes depending on exact SDK version types
       });
     } catch (error) {
-       console.error("Failed to resume session:", error);
+       console.error("Não retomou a sessão:", error);
        // Fallback to fresh session if history fails
        this.initializeChat(this.currentSystemPrompt);
+      throw `Não retomou a sessão: ${error}`;
     }
   }
 
@@ -73,7 +75,7 @@ export class GeminiService {
     }
 
     if (!this.chatSession) {
-        throw new Error("Chat session could not be initialized.");
+        throw new Error("A sessão de chat não pôde ser iniciada.");
     }
 
     try {
@@ -90,8 +92,8 @@ export class GeminiService {
       }
       return fullText;
     } catch (error) {
-      console.error("Error sending message to Gemini:", error);
-      throw error;
+      console.error("Mensagem de erro enviando para Gêmeos:", error);
+      throw `Mensagem de erro enviando para Gemini: ${error}`;
     }
   }
 }
