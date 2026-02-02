@@ -78,7 +78,7 @@ export const HistorySidebar: React.FC<HistorySidebarProps> = ({
           >
             <div className="p-4 border-b border-white/5 flex items-center justify-between">
               <div className="flex items-center gap-2 text-slate-200">
-                <Clock size={18} />
+                <Clock size={18} className={isHelpMode ? 'text-purple-500' : 'text-blue-500'} />
                 <h2 className="text-sm font-bold tracking-tight">{isHelpMode ? 'Histórico Agente' : 'Histórico Suporte'}</h2>
               </div>
               <button 
@@ -92,7 +92,7 @@ export const HistorySidebar: React.FC<HistorySidebarProps> = ({
             <div className="flex-1 overflow-y-auto p-2 space-y-1 custom-scrollbar">
               {sessions.length === 0 ? (
                 <div className="text-center text-slate-500 mt-20 flex flex-col items-center">
-                  <MessageSquare size={32} className="mb-3 opacity-20" />
+                  <MessageSquare size={32} className={clsx("mb-3 opacity-20", isHelpMode ? 'text-purple-500' : 'text-blue-500')} />
                   <p className="text-xs">Nenhuma conversa salva.</p>
                 </div>
               ) : (
