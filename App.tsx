@@ -557,7 +557,40 @@ const App: React.FC = () => {
       {/* Header */}
       <header className="fixed top-0 left-0 right-0 h-16 bg-bg-main/80 backdrop-blur-xl border-b border-border-main z-20 flex items-center justify-between px-4">
         <div className="flex items-center gap-4">
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
+            {/* Home Button */}
+            <button 
+                onClick={handleHome}
+                className="p-2 text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+                title="Página Inicial"
+            >
+                <Home size={20} />
+            </button>
+
+            {/* BraveMode Button */}
+            <button 
+                onClick={handleHelpMode}
+                className={`flex items-center gap-2 px-3 py-1.5 text-xs font-semibold transition-all active:scale-95 border ${isHelpMode ? 'bg-purple-600 text-white border-purple-500 shadow-lg shadow-purple-900/20' : 'bg-transparent text-slate-400 border-transparent hover:bg-white/5 hover:text-white'}`}
+                title="Ativar BraveMode (Modo Agente)"
+            >
+                <HelpCircle size={16} />
+                <span className="hidden sm:inline">BraveMode</span>
+            </button>
+
+            {/* Prompt Button */}
+            {isHelpMode && (
+                <button 
+                    onClick={() => {}} 
+                    className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-purple-300 bg-purple-500/10 border border-purple-500/20 hover:bg-purple-500/20 transition-all"
+                    title="Ver Prompt do Agente"
+                >
+                    <MessageSquare size={16} />
+                    <span className="hidden sm:inline">Prompt</span>
+                </button>
+            )}
+
+            <div className="h-6 w-px bg-white/10 mx-1" />
+
             <button 
                 onClick={() => setIsSidebarOpen(true)}
                 className="p-2 text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
@@ -583,9 +616,9 @@ const App: React.FC = () => {
                     {isHelpMode ? <HelpCircle size={18} fill="currentColor" /> : <Cpu size={18} fill="currentColor" />}
                 </div>
                 <div className="flex flex-col">
-                    <h1 className="text-sm font-bold tracking-tight text-white hidden sm:block">{isHelpMode ? "Modo Tutor" : APP_NAME}</h1>
+                    <h1 className="text-sm font-bold tracking-tight text-white hidden sm:block">{isHelpMode ? "Modo Agente" : APP_NAME}</h1>
                     {isHelpMode && (
-                        <span className="text-[10px] font-black text-purple-400 leading-none tracking-widest uppercase">Modo Ajuda</span>
+                        <span className="text-[10px] font-black text-purple-400 leading-none tracking-widest uppercase">Modo Agente</span>
                     )}
                 </div>
             </div>
@@ -594,17 +627,6 @@ const App: React.FC = () => {
         </div>
         
         <div className="flex items-center gap-3">
-            {isHelpMode && (
-                <button 
-                    onClick={handleExitHelpMode}
-                    className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-slate-300 bg-white/5 hover:bg-white/10 transition-all active:scale-95 border border-white/10"
-                    title="Voltar para Início"
-                >
-                    <Home size={16} />
-                    <span className="hidden sm:inline">Voltar</span>
-                </button>
-            )}
-            
             <div className="relative group">
                 <button
                     onClick={handleSelectDirectory}
@@ -639,23 +661,6 @@ const App: React.FC = () => {
                 </span>
             </div>
             
-            <button 
-                onClick={handleHome}
-                className="p-2 text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
-                title="Página Inicial"
-            >
-                <Home size={20} />
-            </button>
-
-            <button 
-                onClick={handleHelpMode}
-                className={`group flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-white ${isHelpMode ? 'bg-purple-600 ring-2 ring-purple-400' : 'bg-bg-surface hover:bg-white/10'} transition-all active:scale-95 shadow-lg`}
-                title="Modo Ajuda/Tutor"
-            >
-                <HelpCircle size={16} />
-                <span className="hidden sm:inline">Ajuda</span>
-            </button>
-
             <button 
                 onClick={handleNewChat}
                 className="group flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 transition-all active:scale-95 shadow-lg shadow-blue-900/20"
