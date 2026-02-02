@@ -529,10 +529,10 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = React.memo(({
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setIsAddMenuOpen(false)} />
                 <motion.div initial={{ opacity: 0, y: 8, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 8, scale: 0.95 }} className="absolute right-0 mt-2 w-40 bg-bg-surface border border-border-main shadow-2xl z-50 py-1">
-                  <button type="button" onClick={() => { setTargetFolderId(null); setIsModalOpen(true); setIsAddMenuOpen(false); }} className="w-full px-3 py-2 text-left text-xs text-slate-300 hover:bg-white/5 hover:text-white flex items-center gap-2">
+                  <button type="button" onClick={() => { setTargetFolderId(null); setIsModalOpen(true); setIsAddMenuOpen(false); }} className="w-full px-3 py-2 text-left text-xs text-slate-300 hover:bg-white/5 hover:text-white flex items-center gap-2 font-bold font-mono tracking-wider uppercase">
                     <Terminal size={14} className={isHelpMode ? "text-purple-500" : "text-blue-500"} /> Novo Comando
                   </button>
-                  <button type="button" onClick={() => { setTargetFolderId(null); setIsFolderModalOpen(true); setIsAddMenuOpen(false); }} className="w-full px-3 py-2 text-left text-xs text-slate-300 hover:bg-white/5 hover:text-white flex items-center gap-2">
+                  <button type="button" onClick={() => { setTargetFolderId(null); setIsFolderModalOpen(true); setIsAddMenuOpen(false); }} className="w-full px-3 py-2 text-left text-xs text-slate-300 hover:bg-white/5 hover:text-white flex items-center gap-2 font-bold font-mono tracking-wider uppercase">
                     <FolderPlus size={14} className="text-white" /> Nova Pasta
                   </button>
                 </motion.div>
