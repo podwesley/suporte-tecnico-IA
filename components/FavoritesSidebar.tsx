@@ -262,12 +262,12 @@ const RecursiveItem: React.FC<RecursiveItemProps> = ({
             </span>
         </div>
         <div className="mb-2 border border-border-main overflow-hidden bg-bg-main/50">
-          <code className="block text-[0.75rem] font-mono p-1.5 break-all text-emerald-500/90">{item.command}</code>
+          <code className="block text-[0.75rem] font-mono p-1.5 break-all text-emerald-300">{item.command}</code>
         </div>
         {(hasOutput || isExecuting) && (
           <div className="mt-2">
             <div className="flex items-center justify-between mb-1">
-                <button onClick={() => setIsOutputVisible(!isOutputVisible)} className="flex items-center gap-1 text-[10px] text-white hover:text-slate-300">
+                <button onClick={() => setIsOutputVisible(!isOutputVisible)} className="flex items-center gap-1 text-[10px] text-white font-mono tracking-wider uppercase hover:text-slate-300">
                     <Terminal size={10} />
                     <span>Output</span>
                     <motion.div animate={{ rotate: isOutputVisible ? 180 : 0 }} transition={{ duration: 0.2 }}><ChevronDown size={10} /></motion.div>
