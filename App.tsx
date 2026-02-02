@@ -9,11 +9,12 @@ import { HistorySidebar } from './components/HistorySidebar';
 import { CommandSidebar } from './components/CommandSidebar';
 import { FavoritesSidebar } from './components/FavoritesSidebar';
 import { Modal } from './components/Modal';
-import { APP_NAME } from './agents';
+import { APP_NAME, SYSTEM_PROMPT_AGENT_TUTOR, SYSTEM_PROMPT_AGENT_SUPPORT } from './agents';
 import { motion, AnimatePresence } from 'framer-motion';
-import { History, FolderOpen, Plus, X, Server, Terminal, Box, Shield, Cpu, PanelLeft } from 'lucide-react';
+import { History, FolderOpen, Plus, X, Server, Terminal, Box, Shield, Cpu, PanelLeft, HelpCircle, Home, LogOut } from 'lucide-react';
 
 const STORAGE_KEY = 'techsupport_ai_sessions';
+const HELP_STORAGE_KEY = 'techsupport_ai_help_sessions';
 const FAVORITES_KEY = 'techsupport_ai_favorites';
 
 // Helper functions for recursive updates
@@ -59,7 +60,11 @@ const removeItemFromTree = (items: FavoriteItem[], id: string): FavoriteItem[] =
 const App: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [sessions, setSessions] = useState<ChatSession[]>([]);
+  
+  // Split sessions into support (default) and help
+  const [supportSessions, setSupportSessions] = useState<ChatSession[]>([]);
+  const [helpSessions, setHelpSessions] = useState<ChatSession[]>([]);
+  
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isCommandSidebarVisible, setIsCommandSidebarVisible] = useState(false);
@@ -80,6 +85,11 @@ const App: React.FC = () => {
   const [errorModalOpen, setErrorModalOpen] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [isOSModalOpen, setIsOSModalOpen] = useState(false);
+  const [isHelpMode, setIsHelpMode] = useState(false);
+
+  // Computed sessions for current view
+  const sessions = isHelpMode ? helpSessions : supportSessions;
+  const setSessions = isHelpMode ? setHelpSessions : setSupportSessions;
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isFirstRender = useRef(true);
@@ -101,10 +111,16 @@ const App: React.FC = () => {
   // Load data on mount
   useEffect(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsedSessions: ChatSession[] = JSON.parse(saved);
-        setSessions(parsedSessions);
+      // Load Support Sessions
+      const savedSupport = localStorage.getItem(STORAGE_KEY);
+      if (savedSupport) {
+        setSupportSessions(JSON.parse(savedSupport));
+      }
+
+      // Load Help Sessions
+      const savedHelp = localStorage.getItem(HELP_STORAGE_KEY);
+      if (savedHelp) {
+        setHelpSessions(JSON.parse(savedHelp));
       }
       
       const savedFavs = localStorage.getItem(FAVORITES_KEY);
@@ -119,7 +135,7 @@ const App: React.FC = () => {
     }
     // Initialize default service
     try {
-        geminiService.initializeChat();
+        geminiService.initializeChat(SYSTEM_PROMPT_AGENT_SUPPORT);
     } catch (e) {
         console.error("Service init failed", e);
     }
@@ -145,7 +161,10 @@ const App: React.FC = () => {
     }
 
     if (currentSessionId && messages.length > 0) {
-      setSessions(prevSessions => {
+      const targetSetSessions = isHelpMode ? setHelpSessions : setSupportSessions;
+      const storageKey = isHelpMode ? HELP_STORAGE_KEY : STORAGE_KEY;
+
+      targetSetSessions(prevSessions => {
         const existingIndex = prevSessions.findIndex(s => s.id === currentSessionId);
         const title = messages[0].text.substring(0, 40) + (messages[0].text.length > 40 ? '...' : '');
         
@@ -165,11 +184,11 @@ const App: React.FC = () => {
           newSessions = [updatedSession, ...prevSessions];
         }
         
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(newSessions));
+        localStorage.setItem(storageKey, JSON.stringify(newSessions));
         return newSessions;
       });
     }
-  }, [messages, currentSessionId, commandQueue]);
+  }, [messages, currentSessionId, commandQueue, isHelpMode]);
 
   // Auto-scroll
   useEffect(() => {
@@ -197,9 +216,41 @@ const App: React.FC = () => {
     setCurrentSessionId(uuidv4());
     setIsLoading(false);
     setCommandQueue([]); // Clear queue
-    geminiService.resetSession();
+    
+    const targetPrompt = isHelpMode ? SYSTEM_PROMPT_AGENT_TUTOR : SYSTEM_PROMPT_AGENT_SUPPORT;
+    geminiService.resetSession(targetPrompt);
     setIsSidebarOpen(false);
-    setIsOSModalOpen(true);
+    
+    if (!isHelpMode) {
+        setIsOSModalOpen(true);
+    }
+  };
+
+  const handleHome = () => {
+      setIsHelpMode(false);
+      setMessages([]);
+      setCurrentSessionId(null);
+      setIsLoading(false);
+      setCommandQueue([]);
+      geminiService.resetSession(SYSTEM_PROMPT_AGENT_SUPPORT);
+      setIsSidebarOpen(false);
+      setIsOSModalOpen(false);
+  };
+
+  const handleHelpMode = () => {
+    setIsHelpMode(true);
+    setMessages([]);
+    setCurrentSessionId(uuidv4());
+    setIsLoading(false);
+    setCommandQueue([]);
+    geminiService.resetSession(SYSTEM_PROMPT_AGENT_TUTOR);
+    setIsSidebarOpen(false);
+    setIsCommandSidebarVisible(false);
+    setIsOSModalOpen(false); 
+  };
+
+  const handleExitHelpMode = () => {
+    handleHome();
   };
 
   const handleSelectSession = async (session: ChatSession) => {
@@ -209,15 +260,20 @@ const App: React.FC = () => {
     setIsLoading(false);
     setIsSidebarOpen(false);
     
-    // Resume context in Gemini Service
-    await geminiService.resumeSession(session.messages);
+    // Resume context in Gemini Service with correct prompt for current mode
+    const targetPrompt = isHelpMode ? SYSTEM_PROMPT_AGENT_TUTOR : SYSTEM_PROMPT_AGENT_SUPPORT;
+    await geminiService.resumeSession(session.messages, targetPrompt);
   };
 
   const handleDeleteSession = (e: React.MouseEvent, sessionId: string) => {
     e.stopPropagation();
-    const updatedSessions = sessions.filter(s => s.id !== sessionId);
-    setSessions(updatedSessions);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedSessions));
+    const targetSessions = isHelpMode ? helpSessions : supportSessions;
+    const targetSetSessions = isHelpMode ? setHelpSessions : setSupportSessions;
+    const storageKey = isHelpMode ? HELP_STORAGE_KEY : STORAGE_KEY;
+
+    const updatedSessions = targetSessions.filter(s => s.id !== sessionId);
+    targetSetSessions(updatedSessions);
+    localStorage.setItem(storageKey, JSON.stringify(updatedSessions));
 
     if (currentSessionId === sessionId) {
       handleNewChat();
@@ -225,11 +281,14 @@ const App: React.FC = () => {
   };
 
   const handleRenameSession = (sessionId: string, newTitle: string) => {
-      setSessions(prevSessions => {
+      const targetSetSessions = isHelpMode ? setHelpSessions : setSupportSessions;
+      const storageKey = isHelpMode ? HELP_STORAGE_KEY : STORAGE_KEY;
+
+      targetSetSessions(prevSessions => {
           const updatedSessions = prevSessions.map(session => 
               session.id === sessionId ? { ...session, title: newTitle } : session
           );
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedSessions));
+          localStorage.setItem(storageKey, JSON.stringify(updatedSessions));
           return updatedSessions;
       });
   };
@@ -371,6 +430,21 @@ const App: React.FC = () => {
       setFavorites(prev => removeItemFromTree(prev, id));
   };
 
+  const handleUpdateFavorite = (id: string, updates: Partial<FavoriteItem>) => {
+      const updateRecursive = (items: FavoriteItem[]): FavoriteItem[] => {
+          return items.map(item => {
+              if (item.id === id) {
+                  return { ...item, ...updates } as FavoriteItem;
+              }
+              if (item.type === 'folder') {
+                  return { ...item, items: updateRecursive(item.items) };
+              }
+              return item;
+          });
+      };
+      setFavorites(prev => updateRecursive(prev));
+  };
+
   const handleReorderFavorites = (newOrder: FavoriteItem[]) => {
       setFavorites(newOrder);
   };
@@ -492,27 +566,45 @@ const App: React.FC = () => {
                 <History size={20} />
             </button>
             
-            <button 
-                onClick={() => setIsCommandSidebarVisible(!isCommandSidebarVisible)}
-                className={`p-2 transition-colors ${isCommandSidebarVisible ? 'text-blue-500 bg-blue-500/10' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
-                title={isCommandSidebarVisible ? "Ocultar Fila de Comandos" : "Mostrar Fila de Comandos"}
-            >
-                <PanelLeft size={20} />
-            </button>
+            {!isHelpMode && (
+                <button 
+                    onClick={() => setIsCommandSidebarVisible(!isCommandSidebarVisible)}
+                    className={`p-2 transition-colors ${isCommandSidebarVisible ? 'text-blue-500 bg-blue-500/10' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                    title={isCommandSidebarVisible ? "Ocultar Fila de Comandos" : "Mostrar Fila de Comandos"}
+                >
+                    <PanelLeft size={20} />
+                </button>
+            )}
           </div>
           
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-900/20">
-                    <Cpu size={18} fill="currentColor" />
+                <div className={`w-8 h-8 ${isHelpMode ? 'bg-purple-600' : 'bg-blue-600'} flex items-center justify-center text-white shadow-lg shadow-blue-900/20`}>
+                    {isHelpMode ? <HelpCircle size={18} fill="currentColor" /> : <Cpu size={18} fill="currentColor" />}
                 </div>
-                <h1 className="text-sm font-bold tracking-tight text-white hidden sm:block">{APP_NAME}</h1>
+                <div className="flex flex-col">
+                    <h1 className="text-sm font-bold tracking-tight text-white hidden sm:block">{isHelpMode ? "Modo Tutor" : APP_NAME}</h1>
+                    {isHelpMode && (
+                        <span className="text-[10px] font-black text-purple-400 leading-none tracking-widest uppercase">Modo Ajuda</span>
+                    )}
+                </div>
             </div>
             
           </div>
         </div>
         
         <div className="flex items-center gap-3">
+            {isHelpMode && (
+                <button 
+                    onClick={handleExitHelpMode}
+                    className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-slate-300 bg-white/5 hover:bg-white/10 transition-all active:scale-95 border border-white/10"
+                    title="Voltar para Início"
+                >
+                    <Home size={16} />
+                    <span className="hidden sm:inline">Voltar</span>
+                </button>
+            )}
+            
             <div className="relative group">
                 <button
                     onClick={handleSelectDirectory}
@@ -548,6 +640,23 @@ const App: React.FC = () => {
             </div>
             
             <button 
+                onClick={handleHome}
+                className="p-2 text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+                title="Página Inicial"
+            >
+                <Home size={20} />
+            </button>
+
+            <button 
+                onClick={handleHelpMode}
+                className={`group flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-white ${isHelpMode ? 'bg-purple-600 ring-2 ring-purple-400' : 'bg-bg-surface hover:bg-white/10'} transition-all active:scale-95 shadow-lg`}
+                title="Modo Ajuda/Tutor"
+            >
+                <HelpCircle size={16} />
+                <span className="hidden sm:inline">Ajuda</span>
+            </button>
+
+            <button 
                 onClick={handleNewChat}
                 className="group flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 transition-all active:scale-95 shadow-lg shadow-blue-900/20"
                 title="Iniciar nova conversa"
@@ -562,7 +671,7 @@ const App: React.FC = () => {
       <div className="flex flex-1 pt-16 overflow-hidden">
           {/* Left Column: Command Queue */}
           <AnimatePresence mode="wait" initial={false}>
-            {isCommandSidebarVisible && (
+            {!isHelpMode && isCommandSidebarVisible && (
                 <motion.div
                     key="command-sidebar"
                     initial={{ width: 0, opacity: 0 }}
@@ -593,42 +702,43 @@ const App: React.FC = () => {
                         transition={{ delay: 0.2 }}
                         className="relative mb-8"
                     >
-                        <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 via-emerald-500 to-blue-600 rounded-full blur-xl opacity-20 animate-pulse"></div>
+                        <div className={`absolute -inset-1 bg-gradient-to-r ${isHelpMode ? 'from-purple-600 via-pink-500 to-purple-600' : 'from-blue-600 via-emerald-500 to-blue-600'} rounded-full blur-xl opacity-20 animate-pulse`}></div>
                         <div className="relative w-24 h-24 bg-bg-surface rounded-3xl flex items-center justify-center border border-border-main shadow-2xl">
-                            <Cpu size={48} className="text-blue-500" fill="currentColor" />
+                            {isHelpMode ? <HelpCircle size={48} className="text-purple-500" /> : <Cpu size={48} className="text-blue-500" fill="currentColor" />}
                         </div>
                     </motion.div>
 
                     <h2 className="text-3xl font-bold text-white mb-3 tracking-tight">
-                        Como posso ajudar?
+                        {isHelpMode ? "Modo Tutor Ativado" : "Como posso ajudar?"}
                     </h2>
                     <p className="text-slate-500 max-w-md text-sm leading-relaxed mb-12">
-                        Especialista em Docker, Kubernetes, Linux e Debugging.
-                        Selecione uma opção abaixo ou descreva seu problema.
+                        {isHelpMode ? "Estou aqui para tirar suas dúvidas e ensinar sobre o sistema. Pergunte o que quiser!" : "Especialista em Docker, Kubernetes, Linux e Debugging. Selecione uma opção abaixo ou descreva seu problema."}
                     </p>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full max-w-2xl">
-                        {[ 
-                            { label: "Erro no Docker Container", icon: <Box size={18} className="text-blue-400" /> },
-                            { label: "Instalar MySQL no Ubuntu", icon: <Server size={18} className="text-emerald-400" /> },
-                            { label: "Variaveis de Ambiente Node", icon: <Terminal size={18} className="text-yellow-400" /> },
-                            { label: "Permissão Negada (Porta 80)", icon: <Shield size={18} className="text-red-400" /> }
-                        ].map((item, i) => (
-                            <motion.button 
-                                key={i}
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.3 + (i * 0.1) }}
-                                onClick={() => handleSendMessage(item.label)}
-                                className="group flex items-center gap-4 text-sm bg-bg-surface hover:bg-bg-surface/80 border border-border-main hover:border-blue-500/30 text-slate-300 p-4 rounded-xl text-left transition-all"
-                            >
-                                <div className="p-2 bg-black/20 rounded-lg group-hover:scale-110 transition-transform">
-                                    {item.icon}
-                                </div>
-                                <span className="font-medium group-hover:text-blue-200 transition-colors">{item.label}</span>
-                            </motion.button>
-                        ))}
-                    </div>
+                    {!isHelpMode && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full max-w-2xl">
+                            {[ 
+                                { label: "Erro no Docker Container", icon: <Box size={18} className="text-blue-400" /> },
+                                { label: "Instalar MySQL no Ubuntu", icon: <Server size={18} className="text-emerald-400" /> },
+                                { label: "Variaveis de Ambiente Node", icon: <Terminal size={18} className="text-yellow-400" /> },
+                                { label: "Permissão Negada (Porta 80)", icon: <Shield size={18} className="text-red-400" /> }
+                            ].map((item, i) => (
+                                <motion.button 
+                                    key={i}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: 0.3 + (i * 0.1) }}
+                                    onClick={() => handleSendMessage(item.label)}
+                                    className="group flex items-center gap-4 text-sm bg-bg-surface hover:bg-bg-surface/80 border border-border-main hover:border-blue-500/30 text-slate-300 p-4 rounded-xl text-left transition-all"
+                                >
+                                    <div className="p-2 bg-black/20 rounded-lg group-hover:scale-110 transition-transform">
+                                        {item.icon}
+                                    </div>
+                                    <span className="font-medium group-hover:text-blue-200 transition-colors">{item.label}</span>
+                                </motion.button>
+                            ))}
+                        </div>
+                    )}
                 </div>
                 ) : (
                 <div className="space-y-2">
@@ -639,6 +749,7 @@ const App: React.FC = () => {
                         onRunCommand={handleRunCommand}
                         onInputUpdate={handleInputUpdate}
                         onSendMessage={handleSendMessage}
+                        onFavorite={handleAddToFavorites}
                     />
                     ))}
                     {/* Invisible element to scroll to */}
@@ -654,8 +765,8 @@ const App: React.FC = () => {
                     isLoading={isLoading} 
                     value={inputValue} 
                     onChange={setInputValue} 
-                    disabled={messages.length === 0}
-                    placeholder={messages.length === 0 ? "Clique em 'Novo' para iniciar..." : undefined}
+                    disabled={messages.length === 0 && !isHelpMode}
+                    placeholder={messages.length === 0 ? (isHelpMode ? "Digite sua dúvida para o Tutor..." : "Clique em 'Novo' para iniciar...") : undefined}
                 />
             </div>
           </div>
@@ -665,6 +776,7 @@ const App: React.FC = () => {
             favorites={favorites}
             onExecute={handleExecuteFavorite}
             onRemove={handleRemoveFavorite}
+            onUpdate={handleUpdateFavorite}
             onReorder={handleReorderFavorites}
             onAdd={handleManualAddFavorite}
             width={favoritesWidth}

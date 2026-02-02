@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Play, Copy, Terminal, Plus, Send, X } from 'lucide-react';
+import { Play, Copy, Terminal, Plus, Send, X, Star } from 'lucide-react';
 import Prism from 'prismjs';
 import 'prismjs/themes/prism-tomorrow.css';
 import 'prismjs/components/prism-bash';
@@ -19,6 +19,7 @@ interface MarkdownRendererProps {
   onRunCommand?: (command: string) => Promise<string>;
   onInputUpdate?: (text: string) => void;
   onSendMessage?: (text: string) => void;
+  onFavorite?: (command: string) => void;
 }
 
 export const CodeBlock: React.FC<{
@@ -27,7 +28,8 @@ export const CodeBlock: React.FC<{
   onRunCommand?: (command: string) => Promise<string>;
   onInputUpdate?: (text: string) => void;
   onSendMessage?: (text: string) => void;
-}> = ({ language, code, onRunCommand, onInputUpdate, onSendMessage }) => {
+  onFavorite?: (command: string) => void;
+}> = ({ language, code, onRunCommand, onInputUpdate, onSendMessage, onFavorite }) => {
   const [isExecuting, setIsExecuting] = useState(false);
   const [output, setOutput] = useState<string | null>(null);
 
@@ -79,6 +81,16 @@ export const CodeBlock: React.FC<{
         </span>
         
         <div className="flex items-center gap-2">
+            {isExecutable && onFavorite && (
+                <button
+                    onClick={() => onFavorite(code.trim())}
+                    className="hover:text-yellow-400 transition-colors cursor-pointer flex items-center gap-1 p-1 hover:bg-white/5 rounded"
+                    title="Favoritar comando"
+                >
+                    <Star size={12} />
+                </button>
+            )}
+
             {isExecutable && onRunCommand && !output && !isExecuting && (
                 <button
                     onClick={handleRun}
@@ -116,9 +128,18 @@ export const CodeBlock: React.FC<{
              <span className="text-emerald-500 font-bold">➜</span>
              <span className="text-blue-400 font-bold">~</span>
              <span className="opacity-75">Console Output</span>
-             <button onClick={() => setOutput(null)} className="ml-auto hover:text-white p-1 rounded hover:bg-white/10">
-                <X size={12} />
-             </button>
+             <div className="ml-auto flex items-center gap-2">
+               <button 
+                  onClick={() => output && navigator.clipboard.writeText(output)} 
+                  className="hover:text-white p-1 rounded hover:bg-white/10"
+                  title="Copiar saída"
+               >
+                  <Copy size={12} />
+               </button>
+               <button onClick={() => setOutput(null)} className="hover:text-white p-1 rounded hover:bg-white/10">
+                  <X size={12} />
+               </button>
+             </div>
           </div>
           
           <div className="font-mono text-xs text-slate-300 whitespace-pre-wrap max-h-[200px] overflow-y-auto custom-scrollbar mb-3 select-text selection:bg-blue-500/30">
@@ -149,7 +170,7 @@ export const CodeBlock: React.FC<{
   );
 };
 
-const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, onRunCommand, onInputUpdate, onSendMessage }) => {
+const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, onRunCommand, onInputUpdate, onSendMessage, onFavorite }) => {
   const parts = content.split(/```/);
 
   return (
@@ -186,6 +207,7 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, onRunComma
                 onRunCommand={onRunCommand}
                 onInputUpdate={onInputUpdate}
                 onSendMessage={onSendMessage}
+                onFavorite={onFavorite}
             />
           );
         } else {

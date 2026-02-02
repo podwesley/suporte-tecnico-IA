@@ -11,13 +11,15 @@ interface ChatBubbleProps {
   onRunCommand?: (command: string) => Promise<string>;
   onInputUpdate?: (text: string) => void;
   onSendMessage?: (text: string) => void;
+  onFavorite?: (command: string) => void;
 }
 
 export const ChatBubble: React.FC<ChatBubbleProps> = ({ 
   message, 
   onRunCommand, 
   onInputUpdate, 
-  onSendMessage 
+  onSendMessage,
+  onFavorite
 }) => {
   const isUser = message.role === Role.USER;
   const [isCopied, setIsCopied] = useState(false);
@@ -47,6 +49,7 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
                     onRunCommand={onRunCommand}
                     onInputUpdate={onInputUpdate}
                     onSendMessage={onSendMessage}
+                    onFavorite={onFavorite}
                 />
             </div>
         </div>
@@ -87,6 +90,7 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
                   onRunCommand={onRunCommand}
                   onInputUpdate={onInputUpdate}
                   onSendMessage={onSendMessage}
+                  onFavorite={onFavorite}
               />
           </div>
 

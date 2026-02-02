@@ -5,6 +5,7 @@ import { Message, Role } from "../types";
 export class GeminiService {
   private ai: GoogleGenAI;
   private chatSession: Chat | null = null;
+  private currentSystemPrompt: string = SYSTEM_PROMPT_AGENT_SUPPORT;
 
   constructor() {
     const apiKey = process.env.API_KEY;
@@ -15,12 +16,13 @@ export class GeminiService {
     this.ai = new GoogleGenAI({ apiKey: apiKey || '' });
   }
 
-  public initializeChat(): void {
+  public initializeChat(systemPrompt: string = SYSTEM_PROMPT_AGENT_SUPPORT): void {
+    this.currentSystemPrompt = systemPrompt;
     try {
       this.chatSession = this.ai.chats.create({
         model: 'gemini-3-flash-preview',
         config: {
-          systemInstruction: SYSTEM_PROMPT_AGENT_SUPPORT,
+          systemInstruction: this.currentSystemPrompt,
           temperature: 0.2, 
         },
       });
@@ -30,12 +32,13 @@ export class GeminiService {
     }
   }
 
-  public resetSession(): void {
+  public resetSession(systemPrompt: string = SYSTEM_PROMPT_AGENT_SUPPORT): void {
     this.chatSession = null;
-    this.initializeChat();
+    this.initializeChat(systemPrompt);
   }
 
-  public async resumeSession(previousMessages: Message[]): Promise<void> {
+  public async resumeSession(previousMessages: Message[], systemPrompt: string = SYSTEM_PROMPT_AGENT_SUPPORT): Promise<void> {
+    this.currentSystemPrompt = systemPrompt;
     // Convert application messages to Gemini API history format
     // Filter out error messages or incomplete states if necessary
     const history = previousMessages
@@ -49,7 +52,7 @@ export class GeminiService {
       this.chatSession = this.ai.chats.create({
         model: 'gemini-3-flash-preview',
         config: {
-            systemInstruction: SYSTEM_PROMPT_AGENT_SUPPORT,
+            systemInstruction: this.currentSystemPrompt,
             temperature: 0.2,
         },
         history: history as any // Type assertion needed sometimes depending on exact SDK version types
@@ -57,7 +60,7 @@ export class GeminiService {
     } catch (error) {
        console.error("Failed to resume session:", error);
        // Fallback to fresh session if history fails
-       this.initializeChat();
+       this.initializeChat(this.currentSystemPrompt);
     }
   }
 
@@ -66,7 +69,7 @@ export class GeminiService {
     onChunk: (text: string) => void
   ): Promise<string> {
     if (!this.chatSession) {
-      this.initializeChat();
+      this.initializeChat(this.currentSystemPrompt);
     }
 
     if (!this.chatSession) {
