@@ -11,7 +11,7 @@ import { FavoritesSidebar } from './components/FavoritesSidebar';
 import { Modal } from './components/Modal';
 import { APP_NAME, SYSTEM_PROMPT_AGENT_TUTOR, SYSTEM_PROMPT_AGENT_SUPPORT } from './agents';
 import { motion, AnimatePresence } from 'framer-motion';
-import { History, FolderOpen, Plus, X, Server, Terminal, Box, Shield, Cpu, PanelLeft, HelpCircle, Home, LogOut, MessageSquare } from 'lucide-react';
+import { History, FolderOpen, Plus, X, Server, Terminal, Box, Shield, Cpu, PanelLeft, HelpCircle, Home, LogOut, MessageSquare, HardDrive, Clock } from 'lucide-react';
 
 const STORAGE_KEY = 'techsupport_ai_sessions';
 const HELP_STORAGE_KEY = 'techsupport_ai_help_sessions';
@@ -86,6 +86,9 @@ const App: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState('');
   const [isOSModalOpen, setIsOSModalOpen] = useState(false);
   const [isHelpMode, setIsHelpMode] = useState(false);
+  
+  const [currentTime, setCurrentTime] = useState<string>('');
+  const [diskSpace, setDiskSpace] = useState<string>('');
 
   // Computed sessions for current view
   const sessions = isHelpMode ? helpSessions : supportSessions;
@@ -93,6 +96,27 @@ const App: React.FC = () => {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const isFirstRender = useRef(true);
+
+  // Time & Disk Space Effects
+  useEffect(() => {
+    const timer = setInterval(() => {
+        const now = new Date();
+        setCurrentTime(now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+      if (isBackendOnline) {
+          commandExecutor.execute("df -h . | awk 'NR==2 {print $4}'")
+            .then(res => {
+                if (res.success && res.output) {
+                    setDiskSpace(res.output.trim());
+                }
+            })
+            .catch(console.error);
+      }
+  }, [isBackendOnline]);
 
   // Fetch default directory on load/connect
   useEffect(() => {
@@ -554,11 +578,11 @@ const App: React.FC = () => {
           className={`pointer-events-none fixed inset-0 z-[60] mix-blend-overlay ${isHelpMode ? 'bg-purple-600' : 'bg-blue-600'}`}
         />
         <motion.div
-            key={isHelpMode ? 'scan-line' : 'scan-line-support'}
-            initial={{ top: -100, opacity: 0 }}
-            animate={{ top: '120%', opacity: [0, 1, 0] }}
-            transition={{ duration: 1, ease: "easeInOut" }}
-            className={`pointer-events-none fixed left-0 right-0 h-40 z-[60] bg-gradient-to-b ${isHelpMode ? 'from-transparent via-purple-500/30 to-transparent' : 'from-transparent via-blue-500/30 to-transparent'}`}
+            key={isHelpMode ? 'scan-line-agent' : 'scan-line-support'}
+            initial={{ left: isHelpMode ? '-20%' : '120%', opacity: 0 }}
+            animate={{ left: isHelpMode ? '120%' : '-20%', opacity: [0, 1, 0] }}
+            transition={{ duration: 0.8, ease: "easeInOut" }}
+            className={`pointer-events-none fixed top-0 bottom-0 w-64 z-[60] bg-gradient-to-r ${isHelpMode ? 'from-transparent via-purple-500/50 to-transparent' : 'from-transparent via-blue-500/50 to-transparent'}`}
         />
       </AnimatePresence>
 
@@ -681,7 +705,33 @@ const App: React.FC = () => {
         </div>
         
         <div className="flex items-center gap-3">
-            <div className={`hidden md:flex items-center gap-2 px-3 py-1.5 border ${isBackendOnline ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
+            {/* System Stats (Time, Path, Disk) */}
+            <div className="hidden lg:flex items-center gap-4 text-xs font-mono text-slate-300 bg-black/30 px-4 py-2 rounded-lg border border-white/10 shadow-inner">
+                <div className="flex items-center gap-2">
+                    <Clock size={14} className="text-blue-400" />
+                    <span className="font-bold">{currentTime}</span>
+                </div>
+                <div className="w-px h-4 bg-white/10" />
+                <div className="flex items-center gap-2 max-w-[200px] truncate" title={currentWorkingDirectory || defaultDirectory || ""}>
+                    <FolderOpen size={14} className="text-yellow-500" />
+                    <span className="font-medium text-slate-200">
+                        {(currentWorkingDirectory || defaultDirectory) ? (
+                            (currentWorkingDirectory || defaultDirectory) === '/' ? '/' : (currentWorkingDirectory || defaultDirectory)?.split('/').pop()
+                        ) : '...'}
+                    </span>
+                </div>
+                {diskSpace && (
+                    <>
+                        <div className="w-px h-4 bg-white/10" />
+                        <div className="flex items-center gap-2">
+                            <HardDrive size={14} className="text-emerald-400" />
+                            <span className="font-bold">{diskSpace} <span className="text-[10px] opacity-50 uppercase ml-0.5">Livre</span></span>
+                        </div>
+                    </>
+                )}
+            </div>
+
+            <div className={`hidden md:flex items-center gap-2 px-3 py-2 border rounded-lg ${isBackendOnline ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
                 <span className="relative flex h-2 w-2">
                   {isBackendOnline && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>}
                   <span className={`relative inline-flex rounded-full h-2 w-2 ${isBackendOnline ? 'bg-emerald-500' : 'bg-red-500'}`}></span>
