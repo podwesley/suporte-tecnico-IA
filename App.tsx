@@ -705,26 +705,14 @@ const App: React.FC = () => {
             {/* Mode Button (Toggle) */}
             <button 
                 onClick={isHelpMode ? handleHome : handleHelpMode}
-                className={`flex items-center gap-2 px-3 py-1.5 text-[10px] font-black uppercase tracking-tighter transition-all active:scale-95 border rounded-none ${isHelpMode ? 'bg-blue-500/10 text-blue-400 border-blue-500/30 hover:bg-blue-500/20' : 'bg-purple-500/10 text-purple-400 border-purple-500/30 hover:bg-purple-500/20'}`}
+                className="flex items-center gap-2 px-3 py-1.5 text-[10px] font-black uppercase tracking-tighter transition-all active:scale-95 border border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 hover:text-slate-200 rounded-none"
                 title={isHelpMode ? "Trocar para Modo Suporte" : "Trocar para Modo Agente"}
             >
-                <ArrowLeftRight size={12} className={isHelpMode ? 'text-blue-400' : 'text-purple-400'} />
+                <ArrowLeftRight size={12} className="text-slate-400" />
                 <span className="hidden sm:inline">
                     {isHelpMode ? "Mudar para Suporte" : "Mudar para Agente"}
                 </span>
             </button>
-
-            {/* Configurações Button */}
-            {isHelpMode && (
-                <button 
-                    onClick={handleOpenPromptLibrary} 
-                    className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-purple-300 bg-purple-500/10 border border-purple-500/20 hover:bg-purple-500/20 transition-all rounded-none"
-                    title="Ver Configurações do Agente"
-                >
-                    <Settings size={16} />
-                    <span className="hidden sm:inline">Configurações</span>
-                </button>
-            )}
 
             <div className="h-6 w-px bg-white/10 mx-1" />
 
@@ -748,6 +736,15 @@ const App: React.FC = () => {
           </div>
           
           <div className="flex items-center gap-4">
+            <button 
+                onClick={handleOpenPromptLibrary} 
+                className="flex items-center gap-2 px-3 py-1.5 text-[10px] font-black uppercase tracking-tighter transition-all active:scale-95 border border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 hover:text-slate-200 rounded-none"
+                title="Ver Configurações do Agente"
+            >
+                <Settings size={14} />
+                <span className="hidden sm:inline">Configurações</span>
+            </button>
+
             <div className="relative group">
                 <button
                     onClick={handleSelectDirectory}
