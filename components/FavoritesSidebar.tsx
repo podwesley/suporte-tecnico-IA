@@ -274,7 +274,7 @@ const RecursiveItem: React.FC<RecursiveItemProps> = ({
             <AnimatePresence>
               {isOutputVisible && (
                 <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
-                  <div ref={outputRef} className="bg-bg-main/50 border border-border-main p-0 text-xs font-mono text-slate-300 max-h-60 overflow-y-auto custom-scrollbar shadow-inner mt-1">
+                  <div ref={outputRef} className="bg-bg-main/50 border border-border-main p-0 text-xs font-mono text-slate-300 max-h-60 overflow-y-auto custom-scrollbar shadow-inner mt-1 select-text">
                     <pre className="p-2 m-0 whitespace-pre-wrap font-mono bg-transparent min-h-[20px]">
                       {favCommand.output ? (
                         <SyntaxHighlighter code={favCommand.output} />

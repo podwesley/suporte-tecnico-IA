@@ -62,7 +62,7 @@ export const InputArea: React.FC<InputAreaProps> = ({
                 border transition-all duration-300 shadow-2xl
                 ${isFocused && !disabled 
                     ? (isHelpMode ? 'border-purple-500/50 ring-1 ring-purple-500/20' : 'border-blue-500/50 ring-1 ring-blue-500/20') 
-                    : 'border-border-main ring-1 ring-white/5'}
+                    : (isHelpMode ? 'border-purple-500/20 ring-1 ring-white/5' : 'border-blue-500/20 ring-1 ring-white/5')}
             `}
         >
           <div className="flex-1 min-w-0 relative">
