@@ -96,6 +96,7 @@ const App: React.FC = () => {
   const [promptTitle, setPromptTitle] = useState('');
   const [promptContent, setPromptContent] = useState('');
   const [editingPromptId, setEditingPromptId] = useState<string | null>(null);
+  const [activePromptTitle, setActivePromptTitle] = useState<string | null>(null);
   const [apiKey, setApiKey] = useState('');
   
   const [currentTime, setCurrentTime] = useState<string>('');
@@ -263,6 +264,7 @@ const App: React.FC = () => {
     setCurrentSessionId(uuidv4());
     setIsLoading(false);
     setCommandQueue([]); // Clear queue
+    setActivePromptTitle(null);
     
     const targetPrompt = isHelpMode ? SYSTEM_PROMPT_AGENT_TUTOR : SYSTEM_PROMPT_AGENT_SUPPORT;
     geminiService.resetSession(targetPrompt);
@@ -279,9 +281,8 @@ const App: React.FC = () => {
       setCurrentSessionId(null);
       setIsLoading(false);
       setCommandQueue([]);
+      setActivePromptTitle(null);
       geminiService.resetSession(SYSTEM_PROMPT_AGENT_SUPPORT);
-      setIsSidebarOpen(false);
-      setIsOSModalOpen(false);
   };
 
   const handleHelpMode = () => {
@@ -561,8 +562,9 @@ const App: React.FC = () => {
       });
   };
 
-  const handleLoadPrompt = (content: string) => {
-      setInputValue(content);
+  const handleLoadPrompt = (prompt: SavedPrompt) => {
+      setInputValue(prompt.content);
+      setActivePromptTitle(prompt.title);
       setIsPromptLibraryOpen(false);
   };
 
@@ -715,16 +717,6 @@ const App: React.FC = () => {
                 </span>
             </button>
 
-            <div className="h-6 w-px bg-white/10 mx-1" />
-
-            <button 
-                onClick={() => setIsSidebarOpen(true)}
-                className="p-2 text-slate-400 hover:text-white hover:bg-white/5 transition-colors rounded-none"
-                title="Histórico de Conversas"
-            >
-                <History size={20} />
-            </button>
-
             {!isHelpMode && (
                 <button 
                     onClick={handleNewChat}
@@ -748,13 +740,31 @@ const App: React.FC = () => {
           </div>
           
           <div className="flex items-center gap-4">
+            {isHelpMode && activePromptTitle && (
+                <button 
+                    onClick={() => setIsPromptLibraryOpen(true)}
+                    className="flex items-center gap-2 px-3 py-1.5 text-[10px] font-black uppercase tracking-tighter transition-all active:scale-95 border border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 hover:text-slate-200 rounded-none animate-in fade-in slide-in-from-left-2"
+                    title={`Prompt Ativo: ${activePromptTitle}`}
+                >
+                    <MessageSquare size={14} className="text-purple-400" />
+                    <span className="hidden sm:inline max-w-[150px] truncate">{activePromptTitle}</span>
+                </button>
+            )}
+
             <button 
                 onClick={handleOpenPromptLibrary} 
-                className="flex items-center gap-2 px-3 py-1.5 text-[10px] font-black uppercase tracking-tighter transition-all active:scale-95 border border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 hover:text-slate-200 rounded-none"
-                title="Ver Configurações do Agente"
+                className="p-2 text-slate-400 hover:text-white hover:bg-white/5 transition-colors rounded-none"
+                title="Configurações do Agente"
             >
-                <Settings size={14} />
-                <span className="hidden sm:inline">Configurações</span>
+                <Settings size={20} />
+            </button>
+
+            <button 
+                onClick={() => setIsSidebarOpen(true)}
+                className="p-2 text-slate-400 hover:text-white hover:bg-white/5 transition-colors rounded-none"
+                title="Histórico de Conversas"
+            >
+                <History size={20} />
             </button>
 
             <div className="relative group">
@@ -894,7 +904,10 @@ const App: React.FC = () => {
                                             initial={{ opacity: 0, y: 10 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ duration: 0.3 }}
-                                            onClick={() => setInputValue(prompt.content)}
+                                            onClick={() => {
+                                                setInputValue(prompt.content);
+                                                setActivePromptTitle(prompt.title);
+                                            }}
                                             className="group flex items-center gap-4 text-sm bg-bg-surface hover:bg-bg-surface/80 border border-border-main hover:border-purple-500/30 text-slate-300 p-4 rounded-xl text-left transition-all"
                                         >
                                             <div className="p-2 bg-purple-500/10 rounded-lg group-hover:scale-110 transition-transform">
@@ -1082,7 +1095,7 @@ const App: React.FC = () => {
                           savedPrompts.map(prompt => (
                               <div key={prompt.id} className="group flex items-center justify-between p-3 bg-bg-main border border-white/5 hover:border-purple-500/30 rounded-lg transition-all">
                                   <button 
-                                      onClick={() => handleLoadPrompt(prompt.content)}
+                                      onClick={() => handleLoadPrompt(prompt)}
                                       className="flex-1 text-left text-sm text-slate-200 hover:text-purple-300 transition-colors font-medium truncate"
                                   >
                                       {prompt.title}
