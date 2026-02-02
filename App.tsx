@@ -11,7 +11,7 @@ import { FavoritesSidebar } from './components/FavoritesSidebar';
 import { Modal } from './components/Modal';
 import { APP_NAME, SYSTEM_PROMPT_AGENT_TUTOR, SYSTEM_PROMPT_AGENT_SUPPORT } from './agents';
 import { motion, AnimatePresence } from 'framer-motion';
-import { History, FolderOpen, Plus, X, Server, Terminal, Box, Shield, Cpu, PanelLeft, HelpCircle, Home, LogOut, MessageSquare, HardDrive, Clock, Save, Edit, Trash2, Settings } from 'lucide-react';
+import { History, FolderOpen, Plus, X, Server, Terminal, Box, Shield, Cpu, PanelLeft, HelpCircle, Home, LogOut, MessageSquare, HardDrive, Clock, Save, Edit, Trash2, Settings, ArrowLeftRight } from 'lucide-react';
 
 const STORAGE_KEY = 'techsupport_ai_sessions';
 const HELP_STORAGE_KEY = 'techsupport_ai_help_sessions';
@@ -689,17 +689,6 @@ const App: React.FC = () => {
       <header className="fixed top-0 left-0 right-0 h-16 bg-bg-main/80 backdrop-blur-xl border-b border-border-main z-20 flex items-center justify-between px-4">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            {/* Home Button */}
-            {isHelpMode && (
-                <button 
-                    onClick={handleHome}
-                    className="p-2 -ml-2 text-slate-400 hover:text-white hover:bg-white/5 transition-colors rounded-none"
-                    title="Página Inicial"
-                >
-                    <Home size={20} />
-                </button>
-            )}
-
             {/* Logo and Title */}
             <div className="flex items-center gap-2 mr-2">
                 <div className={`w-8 h-8 ${isHelpMode ? 'bg-purple-600' : 'bg-blue-600'} flex items-center justify-center text-white shadow-lg shadow-blue-900/20 rounded-none`}>
@@ -716,10 +705,13 @@ const App: React.FC = () => {
             {/* Mode Button (Toggle) */}
             <button 
                 onClick={isHelpMode ? handleHome : handleHelpMode}
-                className={`flex items-center gap-2 px-3 py-1.5 text-xs font-semibold transition-all active:scale-95 border rounded-none ${isHelpMode ? 'bg-transparent text-blue-400 border-blue-500/30 hover:bg-blue-500/10' : 'bg-transparent text-purple-400 border-purple-500/30 hover:bg-purple-500/10'}`}
-                title={isHelpMode ? "Voltar para Modo Suporte" : "Ativar Modo Agente"}
+                className={`flex items-center gap-2 px-3 py-1.5 text-[10px] font-black uppercase tracking-tighter transition-all active:scale-95 border rounded-none ${isHelpMode ? 'bg-blue-500/10 text-blue-400 border-blue-500/30 hover:bg-blue-500/20' : 'bg-purple-500/10 text-purple-400 border-purple-500/30 hover:bg-purple-500/20'}`}
+                title={isHelpMode ? "Trocar para Modo Suporte" : "Trocar para Modo Agente"}
             >
-                <span className="hidden sm:inline">{isHelpMode ? "Modo Suporte" : "Modo Agente"}</span>
+                <ArrowLeftRight size={12} className={isHelpMode ? 'text-blue-400' : 'text-purple-400'} />
+                <span className="hidden sm:inline">
+                    {isHelpMode ? "Mudar para Suporte" : "Mudar para Agente"}
+                </span>
             </button>
 
             {/* Configurações Button */}
@@ -784,8 +776,21 @@ const App: React.FC = () => {
         </div>
         
         <div className="flex items-center gap-3">
-            {/* System Stats (Time, Path, Disk) */}
+            {/* System Stats (Home, Time, Path, Disk) */}
             <div className="hidden lg:flex items-center gap-4 text-xs font-mono text-slate-300 bg-black/30 px-4 py-2 rounded-none border border-white/10 shadow-inner">
+                {isHelpMode && (
+                    <>
+                        <button 
+                            onClick={handleHome}
+                            className="flex items-center gap-1.5 text-slate-400 hover:text-white transition-colors"
+                            title="Página Inicial (Sair do Modo Agente)"
+                        >
+                            <Home size={14} />
+                            <span className="font-bold">HOME</span>
+                        </button>
+                        <div className="w-px h-4 bg-white/10" />
+                    </>
+                )}
                 <div className="flex items-center gap-2">
                     <Clock size={14} className="text-blue-400" />
                     <span className="font-bold">{currentTime}</span>

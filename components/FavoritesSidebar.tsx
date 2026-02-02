@@ -245,7 +245,7 @@ const RecursiveItem: React.FC<RecursiveItemProps> = ({
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
       className={containerClasses}
-      style={{ marginLeft: level > 0 ? '12px' : '0' }}
+      style={{ marginLeft: level > 0 ? '2px' : '0' }}
       draggable={!isEditing}
       onDragStart={(e) => onDragStart(e, item.id)}
       onDragOver={handleDragOver}
@@ -520,7 +520,7 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = React.memo(({
       <div className="h-14 px-4 flex items-center justify-between border-b border-border-main">
         <div className="flex items-center gap-2 text-sm font-medium text-slate-200">
           <Star size={16} className="text-yellow-500" />
-          <span>Favoritos</span>
+          <span class="">Favoritos</span>
         </div>
         <div className="relative">
           <button type="button" onClick={() => setIsAddMenuOpen(!isAddMenuOpen)} className={clsx("p-1.5 transition-colors", isAddMenuOpen ? "text-white bg-white/10" : "text-slate-400 hover:text-white hover:bg-white/5")} title="Adicionar"><Plus size={16} /></button>
