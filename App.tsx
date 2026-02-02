@@ -11,8 +11,8 @@ import { FavoritesSidebar } from './components/FavoritesSidebar';
 import { Modal } from './components/Modal';
 import { APP_NAME, SYSTEM_PROMPT_AGENT_TUTOR, SYSTEM_PROMPT_AGENT_SUPPORT } from './agents';
 import { motion, AnimatePresence } from 'framer-motion';
-import { History, FolderOpen, Plus, X, Server, Terminal, Box, Shield, Cpu, PanelLeft, HelpCircle, Home, LogOut, MessageSquare, HardDrive, Clock, Save, Edit, Trash2, Settings, ArrowLeftRight } from 'lucide-react';
-import { FaApple, FaWindows, FaLinux } from 'react-icons/fa';
+import { History, FolderOpen, Plus, X, Server, Terminal, Box, Shield, Cpu, PanelLeft, HelpCircle, Home, LogOut, MessageSquare, HardDrive, Clock, Save, Edit, Trash2, Settings, ArrowLeftRight, Bot, Laptop } from 'lucide-react';
+import { FaApple, FaWindows, FaLinux, FaRobot, FaLaptopCode } from 'react-icons/fa';
 
 const STORAGE_KEY = 'techsupport_ai_sessions';
 const HELP_STORAGE_KEY = 'techsupport_ai_help_sessions';
@@ -96,8 +96,19 @@ const App: React.FC = () => {
   const [promptTitle, setPromptTitle] = useState('');
   const [promptContent, setPromptContent] = useState('');
   const [editingPromptId, setEditingPromptId] = useState<string | null>(null);
-  const [activePromptTitle, setActivePromptTitle] = useState<string | null>(null);
+  const [activePromptTitle, setActivePromptTitle] = useState<string | null>(() => {
+      return localStorage.getItem('techsupport_ai_active_prompt');
+  });
   const [apiKey, setApiKey] = useState('');
+
+  // Persist active prompt title
+  useEffect(() => {
+      if (activePromptTitle) {
+          localStorage.setItem('techsupport_ai_active_prompt', activePromptTitle);
+      } else {
+          localStorage.removeItem('techsupport_ai_active_prompt');
+      }
+  }, [activePromptTitle]);
   
   const [currentTime, setCurrentTime] = useState<string>('');
   const [diskSpace, setDiskSpace] = useState<string>('');
@@ -265,6 +276,7 @@ const App: React.FC = () => {
     setIsLoading(false);
     setCommandQueue([]); // Clear queue
     setActivePromptTitle(null);
+    localStorage.removeItem('techsupport_ai_active_prompt');
     
     const targetPrompt = isHelpMode ? SYSTEM_PROMPT_AGENT_TUTOR : SYSTEM_PROMPT_AGENT_SUPPORT;
     geminiService.resetSession(targetPrompt);
@@ -281,7 +293,7 @@ const App: React.FC = () => {
       setCurrentSessionId(null);
       setIsLoading(false);
       setCommandQueue([]);
-      setActivePromptTitle(null);
+      // setActivePromptTitle(null); // Keep persistent
       geminiService.resetSession(SYSTEM_PROMPT_AGENT_SUPPORT);
   };
 
@@ -694,8 +706,8 @@ const App: React.FC = () => {
           <div className="flex items-center gap-2">
             {/* Logo and Title */}
             <div className="flex items-center gap-2 mr-2">
-                <div className={`w-8 h-8 ${isHelpMode ? 'bg-purple-600' : 'bg-blue-600'} flex items-center justify-center text-white shadow-lg shadow-blue-900/20 rounded-none`}>
-                    {isHelpMode ? <HelpCircle size={18} fill="currentColor" /> : <Cpu size={18} fill="currentColor" />}
+                <div className={`w-8 h-8 ${isHelpMode ? 'bg-purple-600/10 border border-purple-500/30' : 'bg-blue-600/10 border border-blue-500/30'} flex items-center justify-center text-white shadow-lg shadow-blue-900/20 rounded-none`}>
+                    {isHelpMode ? <Bot size={18} strokeWidth={2} className="text-purple-400" /> : <Laptop size={18} strokeWidth={2} className="text-blue-400" />}
                 </div>
                 <div className="flex flex-col">
                     <h1 className="text-sm font-bold tracking-tight text-white hidden sm:block">{isHelpMode ? "Modo Agente" : "Modo Suporte"}</h1>
@@ -883,7 +895,7 @@ const App: React.FC = () => {
                     >
                         <div className={`absolute -inset-1 bg-gradient-to-r ${isHelpMode ? 'from-purple-600 via-pink-500 to-purple-600' : 'from-blue-600 via-emerald-500 to-blue-600'} rounded-full blur-xl opacity-20 animate-pulse`}></div>
                         <div className="relative w-24 h-24 bg-bg-surface rounded-3xl flex items-center justify-center border border-border-main shadow-2xl">
-                            {isHelpMode ? <HelpCircle size={48} className="text-purple-500" /> : <Cpu size={48} className="text-blue-500" fill="currentColor" />}
+                            {isHelpMode ? <Bot size={56} strokeWidth={1.5} className="text-purple-500" /> : <Laptop size={56} strokeWidth={1.5} className="text-blue-500" />}
                         </div>
                     </motion.div>
 
