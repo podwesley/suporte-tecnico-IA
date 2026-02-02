@@ -73,7 +73,10 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
         </div>
 
         {/* Bubble Content */}
-        <div className="relative rounded-2xl shadow-sm border bg-bg-surface/50 backdrop-blur-sm text-slate-200 border-border-main rounded-tl-sm px-6 py-4">
+        <div className={clsx(
+            "relative rounded-2xl shadow-sm border backdrop-blur-sm text-slate-200 rounded-tl-sm px-6 py-4 bg-bg-surface/50",
+            isHelpMode ? "border-purple-500/20" : "border-emerald-500/20"
+        )}>
           {/* Header (Role Name) */}
           <div className="flex items-center justify-between gap-2 opacity-50 text-[9px] font-bold tracking-widest uppercase mb-2">
             <span>{isHelpMode ? 'AI Agent Tutor' : 'Tech Support AI'}</span>

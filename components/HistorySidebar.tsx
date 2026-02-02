@@ -106,8 +106,8 @@ export const HistorySidebar: React.FC<HistorySidebarProps> = ({
                     className={clsx(
                       "group relative flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-200 border",
                       currentSessionId === session.id 
-                        ? (isHelpMode ? "bg-purple-600/10 border-purple-500/30 text-white" : "bg-blue-600/10 border-blue-500/30 text-white")
-                        : "bg-transparent border-transparent hover:bg-white/5 text-slate-400 hover:text-slate-200"
+                        ? (isHelpMode ? "bg-purple-600/10 border-purple-500/50 text-white shadow-[0_0_15px_rgba(147,51,234,0.1)]" : "bg-blue-600/10 border-blue-500/50 text-white shadow-[0_0_15px_rgba(37,99,235,0.1)]")
+                        : (isHelpMode ? "bg-transparent border-white/5 hover:border-purple-500/30 text-slate-400 hover:text-slate-200" : "bg-transparent border-white/5 hover:border-blue-500/30 text-slate-400 hover:text-slate-200")
                     )}
                   >
                     <MessageSquare size={16} className={clsx("flex-shrink-0", currentSessionId === session.id ? (isHelpMode ? "text-purple-500" : "text-blue-500") : "text-slate-600")} />

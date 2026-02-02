@@ -266,11 +266,22 @@ const RecursiveItem: React.FC<RecursiveItemProps> = ({
         </div>
         {(hasOutput || isExecuting) && (
           <div className="mt-2">
-            <button onClick={() => setIsOutputVisible(!isOutputVisible)} className="flex items-center gap-1 text-[10px] text-white hover:text-slate-300 mb-1">
-              <Terminal size={10} />
-              <span>Output</span>
-              <motion.div animate={{ rotate: isOutputVisible ? 180 : 0 }} transition={{ duration: 0.2 }}><ChevronDown size={10} /></motion.div>
-            </button>
+            <div className="flex items-center justify-between mb-1">
+                <button onClick={() => setIsOutputVisible(!isOutputVisible)} className="flex items-center gap-1 text-[10px] text-white hover:text-slate-300">
+                    <Terminal size={10} />
+                    <span>Output</span>
+                    <motion.div animate={{ rotate: isOutputVisible ? 180 : 0 }} transition={{ duration: 0.2 }}><ChevronDown size={10} /></motion.div>
+                </button>
+                {hasOutput && (
+                    <button 
+                        onClick={(e) => { e.stopPropagation(); favCommand.output && navigator.clipboard.writeText(favCommand.output); }}
+                        className="p-1 text-slate-500 hover:text-white transition-colors"
+                        title="Copiar Output"
+                    >
+                        <Copy size={10} />
+                    </button>
+                )}
+            </div>
             <AnimatePresence>
               {isOutputVisible && (
                 <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
