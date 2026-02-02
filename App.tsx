@@ -638,7 +638,7 @@ const App: React.FC = () => {
       setMessages((prev) => 
         prev.map((msg) => 
           msg.id === aiMessageId 
-            ? { ...msg, text: "Erro: Não foi possível conectar ao Suporte AI. Verifique sua chave de API." } 
+            ? { ...msg, text: `Erro: O serviço de IA está indisponível no momento. Verifique se o backend está rodando e se sua chave de API está correta.\n\nDetalhes do erro: ${error}` } 
             : msg
         )
       );
