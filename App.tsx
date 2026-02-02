@@ -11,7 +11,7 @@ import { FavoritesSidebar } from './components/FavoritesSidebar';
 import { Modal } from './components/Modal';
 import { APP_NAME, SYSTEM_PROMPT_AGENT_TUTOR, SYSTEM_PROMPT_AGENT_SUPPORT } from './agents';
 import { motion, AnimatePresence } from 'framer-motion';
-import { History, FolderOpen, Plus, X, Server, Terminal, Box, Shield, Cpu, PanelLeft, HelpCircle, Home, LogOut, MessageSquare, HardDrive, Clock, Save, Edit, Trash2 } from 'lucide-react';
+import { History, FolderOpen, Plus, X, Server, Terminal, Box, Shield, Cpu, PanelLeft, HelpCircle, Home, LogOut, MessageSquare, HardDrive, Clock, Save, Edit, Trash2, Settings } from 'lucide-react';
 
 const STORAGE_KEY = 'techsupport_ai_sessions';
 const HELP_STORAGE_KEY = 'techsupport_ai_help_sessions';
@@ -95,6 +95,7 @@ const App: React.FC = () => {
   const [promptTitle, setPromptTitle] = useState('');
   const [promptContent, setPromptContent] = useState('');
   const [editingPromptId, setEditingPromptId] = useState<string | null>(null);
+  const [apiKey, setApiKey] = useState('');
   
   const [currentTime, setCurrentTime] = useState<string>('');
   const [diskSpace, setDiskSpace] = useState<string>('');
@@ -167,6 +168,12 @@ const App: React.FC = () => {
       const savedPromptsData = localStorage.getItem(PROMPTS_KEY);
       if (savedPromptsData) {
           setSavedPrompts(JSON.parse(savedPromptsData));
+      }
+
+      // Load API Key
+      const savedApiKey = localStorage.getItem('techsupport_ai_api_key');
+      if (savedApiKey) {
+          setApiKey(savedApiKey);
       }
 
     } catch (e) {
@@ -497,6 +504,14 @@ const App: React.FC = () => {
       setIsPromptLibraryOpen(true);
   };
 
+  const handleSaveApiKey = (e: React.FormEvent) => {
+      e.preventDefault();
+      localStorage.setItem('techsupport_ai_api_key', apiKey);
+      // Ideally, re-initialize Gemini Service here, but for now just saving.
+      // geminiService.updateApiKey(apiKey); // Assuming we might add this method later.
+      alert("API Key salva com sucesso!"); // Simple feedback for now
+  };
+
   const handleOpenPromptEditor = (prompt?: SavedPrompt) => {
       if (prompt) {
           setEditingPromptId(prompt.id);
@@ -677,31 +692,30 @@ const App: React.FC = () => {
             {/* Home Button */}
             <button 
                 onClick={handleHome}
-                className="p-2 text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+                className="p-2 text-slate-400 hover:text-white hover:bg-white/5 transition-colors rounded-none"
                 title="Página Inicial"
             >
                 <Home size={20} />
             </button>
 
-            {/* BraveMode Button */}
+            {/* Mode Button */}
             <button 
                 onClick={handleHelpMode}
-                className={`flex items-center gap-2 px-3 py-1.5 text-xs font-semibold transition-all active:scale-95 border ${isHelpMode ? 'bg-purple-600 text-white border-purple-500 shadow-lg shadow-purple-900/20' : 'bg-transparent text-slate-400 border-transparent hover:bg-white/5 hover:text-white'}`}
-                title="Ativar BraveMode (Modo Agente)"
+                className={`flex items-center gap-2 px-3 py-1.5 text-xs font-semibold transition-all active:scale-95 border rounded-none ${isHelpMode ? 'bg-purple-600 text-white border-purple-500 shadow-lg shadow-purple-900/20' : 'bg-blue-600 text-white border-blue-500 shadow-lg shadow-blue-900/20'}`}
+                title={isHelpMode ? "Reiniciar Modo Agente" : "Ativar Modo Agente"}
             >
-                <HelpCircle size={16} />
-                <span className="hidden sm:inline">BraveMode</span>
+                <span className="hidden sm:inline">{isHelpMode ? "Modo Agente" : "Modo Suporte"}</span>
             </button>
 
-            {/* Prompt Button */}
+            {/* Configurações Button */}
             {isHelpMode && (
                 <button 
                     onClick={handleOpenPromptLibrary} 
-                    className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-purple-300 bg-purple-500/10 border border-purple-500/20 hover:bg-purple-500/20 transition-all"
-                    title="Ver Prompt do Agente"
+                    className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-purple-300 bg-purple-500/10 border border-purple-500/20 hover:bg-purple-500/20 transition-all rounded-none"
+                    title="Ver Configurações do Agente"
                 >
-                    <MessageSquare size={16} />
-                    <span className="hidden sm:inline">Prompt</span>
+                    <Settings size={16} />
+                    <span className="hidden sm:inline">Configurações</span>
                 </button>
             )}
 
@@ -709,7 +723,7 @@ const App: React.FC = () => {
 
             <button 
                 onClick={() => setIsSidebarOpen(true)}
-                className="p-2 text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+                className="p-2 text-slate-400 hover:text-white hover:bg-white/5 transition-colors rounded-none"
                 title="Histórico de Conversas"
             >
                 <History size={20} />
@@ -718,7 +732,7 @@ const App: React.FC = () => {
             {!isHelpMode && (
                 <button 
                     onClick={() => setIsCommandSidebarVisible(!isCommandSidebarVisible)}
-                    className={`p-2 transition-colors ${isCommandSidebarVisible ? 'text-blue-500 bg-blue-500/10' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
+                    className={`p-2 transition-colors rounded-none ${isCommandSidebarVisible ? 'text-blue-500 bg-blue-500/10' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}
                     title={isCommandSidebarVisible ? "Ocultar Fila de Comandos" : "Mostrar Fila de Comandos"}
                 >
                     <PanelLeft size={20} />
@@ -742,7 +756,7 @@ const App: React.FC = () => {
             {!isHelpMode && (
                 <button 
                     onClick={handleNewChat}
-                    className="group flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 transition-all active:scale-95 shadow-lg shadow-blue-900/20"
+                    className="group flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 transition-all active:scale-95 shadow-lg shadow-blue-900/20 rounded-none"
                     title="Iniciar nova conversa"
                 >
                     <Plus size={16} className="group-hover:rotate-90 transition-transform duration-300" />
@@ -753,7 +767,7 @@ const App: React.FC = () => {
             <div className="relative group">
                 <button
                     onClick={handleSelectDirectory}
-                    className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-slate-300 bg-bg-surface hover:bg-white/5 border border-border-main transition-all"
+                    className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-slate-300 bg-bg-surface hover:bg-white/5 border border-border-main transition-all rounded-none"
                     title={currentWorkingDirectory || defaultDirectory || "Selecionar pasta de trabalho"}
                 >
                     <FolderOpen size={14} className="text-yellow-500" />
@@ -779,7 +793,7 @@ const App: React.FC = () => {
         
         <div className="flex items-center gap-3">
             {/* System Stats (Time, Path, Disk) */}
-            <div className="hidden lg:flex items-center gap-4 text-xs font-mono text-slate-300 bg-black/30 px-4 py-2 rounded-lg border border-white/10 shadow-inner">
+            <div className="hidden lg:flex items-center gap-4 text-xs font-mono text-slate-300 bg-black/30 px-4 py-2 rounded-none border border-white/10 shadow-inner">
                 <div className="flex items-center gap-2">
                     <Clock size={14} className="text-blue-400" />
                     <span className="font-bold">{currentTime}</span>
@@ -804,7 +818,7 @@ const App: React.FC = () => {
                 )}
             </div>
 
-            <div className={`hidden md:flex items-center gap-2 px-3 py-2 border rounded-lg ${isBackendOnline ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
+            <div className={`hidden md:flex items-center gap-2 px-3 py-2 border rounded-none ${isBackendOnline ? 'bg-emerald-500/10 border-emerald-500/20' : 'bg-red-500/10 border-red-500/20'}`}>
                 <span className="relative flex h-2 w-2">
                   {isBackendOnline && <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>}
                   <span className={`relative inline-flex rounded-full h-2 w-2 ${isBackendOnline ? 'bg-emerald-500' : 'bg-red-500'}`}></span>
@@ -973,54 +987,84 @@ const App: React.FC = () => {
           </div>
       </Modal>
 
-      {/* Prompt Library Modal */}
+      {/* Settings Modal (Formerly Prompt Library) */}
       <Modal 
           isOpen={isPromptLibraryOpen} 
           onClose={() => setIsPromptLibraryOpen(false)} 
-          title="Biblioteca de Prompts" 
+          title="Configurações" 
           type="info"
       >
-          <div className="space-y-4">
-              <div className="flex justify-end">
-                  <button 
-                      onClick={() => handleOpenPromptEditor()}
-                      className="flex items-center gap-2 px-3 py-1.5 text-xs font-bold text-white bg-purple-600 hover:bg-purple-500 rounded transition-all"
-                  >
-                      <Plus size={14} /> Novo Prompt
-                  </button>
+          <div className="space-y-6">
+              {/* API Key Section */}
+              <div className="bg-bg-main border border-white/5 p-4 rounded-lg">
+                  <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+                      <Shield size={14} className="text-purple-500" />
+                      Gemini API
+                  </h3>
+                  <form onSubmit={handleSaveApiKey} className="flex gap-2">
+                      <input 
+                          type="password" 
+                          value={apiKey} 
+                          onChange={(e) => setApiKey(e.target.value)} 
+                          className="flex-1 bg-bg-surface border border-white/10 focus:border-purple-500 p-2 text-sm text-white outline-none rounded" 
+                          placeholder="Cole sua chave API aqui..."
+                      />
+                      <button 
+                          type="submit" 
+                          className="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded transition-all shadow-lg"
+                      >
+                          Salvar
+                      </button>
+                  </form>
               </div>
-              
-              <div className="grid grid-cols-1 gap-2 max-h-[60vh] overflow-y-auto custom-scrollbar pr-1">
-                  {savedPrompts.length === 0 ? (
-                      <p className="text-center text-slate-500 text-xs py-8 italic">Nenhum prompt salvo.</p>
-                  ) : (
-                      savedPrompts.map(prompt => (
-                          <div key={prompt.id} className="group flex items-center justify-between p-3 bg-bg-main border border-white/5 hover:border-purple-500/30 rounded-lg transition-all">
-                              <button 
-                                  onClick={() => handleLoadPrompt(prompt.content)}
-                                  className="flex-1 text-left text-sm text-slate-200 hover:text-purple-300 transition-colors font-medium truncate"
-                              >
-                                  {prompt.title}
-                              </button>
-                              <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+
+              {/* Prompts Section */}
+              <div>
+                  <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                          <MessageSquare size={14} className="text-purple-500" />
+                          Prompts Personalizados
+                      </h3>
+                      <button 
+                          onClick={() => handleOpenPromptEditor()}
+                          className="flex items-center gap-2 px-3 py-1.5 text-xs font-bold text-white bg-purple-600 hover:bg-purple-500 rounded transition-all"
+                      >
+                          <Plus size={14} /> Prompt de sistema
+                      </button>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 gap-2 max-h-[40vh] overflow-y-auto custom-scrollbar pr-1">
+                      {savedPrompts.length === 0 ? (
+                          <p className="text-center text-slate-500 text-xs py-8 italic bg-bg-main border border-white/5 rounded-lg">Nenhum prompt personalizado salvo.</p>
+                      ) : (
+                          savedPrompts.map(prompt => (
+                              <div key={prompt.id} className="group flex items-center justify-between p-3 bg-bg-main border border-white/5 hover:border-purple-500/30 rounded-lg transition-all">
                                   <button 
-                                      onClick={() => handleOpenPromptEditor(prompt)}
-                                      className="p-1.5 text-slate-400 hover:text-white hover:bg-white/10 rounded"
-                                      title="Editar"
+                                      onClick={() => handleLoadPrompt(prompt.content)}
+                                      className="flex-1 text-left text-sm text-slate-200 hover:text-purple-300 transition-colors font-medium truncate"
                                   >
-                                      <Edit size={14} />
+                                      {prompt.title}
                                   </button>
-                                  <button 
-                                      onClick={() => handleDeletePrompt(prompt.id)}
-                                      className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded"
-                                      title="Excluir"
-                                  >
-                                      <Trash2 size={14} />
-                                  </button>
+                                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                      <button 
+                                          onClick={() => handleOpenPromptEditor(prompt)}
+                                          className="p-1.5 text-slate-400 hover:text-white hover:bg-white/10 rounded"
+                                          title="Editar"
+                                      >
+                                          <Edit size={14} />
+                                      </button>
+                                      <button 
+                                          onClick={() => handleDeletePrompt(prompt.id)}
+                                          className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded"
+                                          title="Excluir"
+                                      >
+                                          <Trash2 size={14} />
+                                      </button>
+                                  </div>
                               </div>
-                          </div>
-                      ))
-                  )}
+                          ))
+                      )}
+                  </div>
               </div>
           </div>
       </Modal>
