@@ -623,6 +623,17 @@ const App: React.FC = () => {
                 </div>
             </div>
 
+            {!isHelpMode && (
+                <button 
+                    onClick={handleNewChat}
+                    className="group flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 transition-all active:scale-95 shadow-lg shadow-blue-900/20"
+                    title="Iniciar nova conversa"
+                >
+                    <Plus size={16} className="group-hover:rotate-90 transition-transform duration-300" />
+                    <span className="hidden sm:inline">Iniciar Suporte</span>
+                </button>
+            )}
+
             <div className="relative group">
                 <button
                     onClick={handleSelectDirectory}
@@ -660,17 +671,6 @@ const App: React.FC = () => {
                     {isBackendOnline ? 'Online' : 'Offline'}
                 </span>
             </div>
-            
-            {!isHelpMode && (
-                <button 
-                    onClick={handleNewChat}
-                    className="group flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 transition-all active:scale-95 shadow-lg shadow-blue-900/20"
-                    title="Iniciar nova conversa"
-                >
-                    <Plus size={16} className="group-hover:rotate-90 transition-transform duration-300" />
-                    <span className="hidden sm:inline">Novo</span>
-                </button>
-            )}
         </div>
       </header>
 
