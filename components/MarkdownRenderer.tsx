@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Play, Copy, Terminal, Plus, Send, X, Star } from 'lucide-react';
+import { Play, Copy, Terminal, Plus, Send, X, Star, SkipForward } from 'lucide-react';
 import Prism from 'prismjs';
 import 'prismjs/themes/prism-tomorrow.css';
 import 'prismjs/components/prism-bash';
@@ -81,6 +81,17 @@ export const CodeBlock: React.FC<{
         </span>
         
         <div className="flex items-center gap-2">
+            {onSendMessage && (
+                <button
+                    onClick={() => onSendMessage('Pule esse passo já esta feito')}
+                    className="hover:text-blue-400 transition-colors cursor-pointer flex items-center gap-1 p-1 hover:bg-white/5 rounded"
+                    title="Pular etapa (já concluída)"
+                >
+                    <SkipForward size={12} />
+                    <span className="text-[10px]">Pular</span>
+                </button>
+            )}
+
             {isExecutable && onFavorite && (
                 <button
                     onClick={() => onFavorite(code.trim())}
