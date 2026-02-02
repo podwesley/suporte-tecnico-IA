@@ -884,6 +884,42 @@ const App: React.FC = () => {
                         {isHelpMode ? "Estou aqui para tirar suas dúvidas e ensinar sobre o sistema. Pergunte o que quiser!" : "Especialista em Docker, Kubernetes, Linux e Debugging. Selecione uma opção abaixo ou descreva seu problema."}
                     </p>
                     
+                    {isHelpMode && (
+                        <div className="w-full max-w-2xl mt-4">
+                            {savedPrompts.length > 0 ? (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                    {savedPrompts.map((prompt) => (
+                                        <motion.button 
+                                            key={prompt.id}
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ duration: 0.3 }}
+                                            onClick={() => setInputValue(prompt.content)}
+                                            className="group flex items-center gap-4 text-sm bg-bg-surface hover:bg-bg-surface/80 border border-border-main hover:border-purple-500/30 text-slate-300 p-4 rounded-xl text-left transition-all"
+                                        >
+                                            <div className="p-2 bg-purple-500/10 rounded-lg group-hover:scale-110 transition-transform">
+                                                <MessageSquare size={18} className="text-purple-400" />
+                                            </div>
+                                            <span className="font-medium group-hover:text-purple-200 transition-colors">{prompt.title}</span>
+                                        </motion.button>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="flex justify-center">
+                                    <button 
+                                        onClick={handleOpenPromptEditor}
+                                        className="flex items-center gap-2 px-6 py-3 bg-purple-500/10 border border-purple-500/30 hover:bg-purple-500/20 text-purple-300 hover:text-purple-200 rounded-xl transition-all group"
+                                    >
+                                        <div className="p-1 bg-purple-500/20 rounded-lg group-hover:scale-110 transition-transform">
+                                            <Plus size={16} />
+                                        </div>
+                                        <span className="font-medium">Criar Prompt Personalizado</span>
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    )}
+                    
                     {!isHelpMode && (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full max-w-2xl">
                             {[ 
