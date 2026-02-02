@@ -305,7 +305,7 @@ const RecursiveItem: React.FC<RecursiveItemProps> = ({
             type="button"
             disabled={isExecuting}
             onClick={(e) => { e.stopPropagation(); onExecute(favCommand); }}
-            className={`p-1.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed min-w-[26px] flex items-center justify-center rounded hover:bg-white/5 ${isHelpMode ? 'text-purple-400 hover:text-purple-300' : 'text-blue-400 hover:text-blue-300'}`}
+            className={`p-1.5 transition-all disabled:opacity-50 disabled:cursor-not-allowed min-w-[26px] flex items-center justify-center border border-transparent hover:bg-white/5 ${isHelpMode ? 'text-purple-400 hover:border-purple-500/50' : 'text-blue-400 hover:border-blue-500/50'}`}
             title="Executar"
           >
             {isExecuting ? (
@@ -316,9 +316,9 @@ const RecursiveItem: React.FC<RecursiveItemProps> = ({
               <Play size={10} strokeWidth={2} />
             )}
           </button>
-          <button type="button" onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(item.command); }} className="p-1.5 text-slate-500 hover:text-white hover:bg-white/5 rounded transition-colors" title="Copiar"><Copy size={12} /></button>
-          <button type="button" onClick={handleEditClick} className="p-1.5 text-slate-500 hover:text-white hover:bg-white/5 rounded transition-colors" title="Editar"><Edit2 size={12} /></button>
-          <button type="button" onClick={(e) => { e.stopPropagation(); onRemove(item.id); }} className="p-1.5 text-slate-500 hover:text-red-400 hover:bg-red-500/10 rounded transition-colors" title="Remover"><Trash2 size={12} /></button>
+          <button type="button" onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(item.command); }} className={`p-1.5 text-slate-500 border border-transparent hover:bg-white/5 transition-colors ${isHelpMode ? 'hover:text-purple-400 hover:border-purple-500/50' : 'hover:text-blue-400 hover:border-blue-500/50'}`} title="Copiar"><Copy size={12} /></button>
+          <button type="button" onClick={handleEditClick} className={`p-1.5 text-slate-500 border border-transparent hover:bg-white/5 transition-colors ${isHelpMode ? 'hover:text-purple-400 hover:border-purple-500/50' : 'hover:text-blue-400 hover:border-blue-500/50'}`} title="Editar"><Edit2 size={12} /></button>
+          <button type="button" onClick={(e) => { e.stopPropagation(); onRemove(item.id); }} className="p-1.5 text-slate-500 hover:text-red-400 border border-transparent hover:border-red-500/50 hover:bg-red-500/10 transition-colors" title="Remover"><Trash2 size={12} /></button>
         </div>
       </div>
     </motion.div>
