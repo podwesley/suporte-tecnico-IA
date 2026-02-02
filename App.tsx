@@ -693,14 +693,14 @@ const App: React.FC = () => {
             {isHelpMode && (
                 <button 
                     onClick={handleHome}
-                    className="p-2 text-slate-400 hover:text-white hover:bg-white/5 transition-colors rounded-none"
+                    className="p-2 -ml-2 text-slate-400 hover:text-white hover:bg-white/5 transition-colors rounded-none"
                     title="Página Inicial"
                 >
                     <Home size={20} />
                 </button>
             )}
 
-            {/* Logo and Title - Moved Here */}
+            {/* Logo and Title */}
             <div className="flex items-center gap-2 mr-2">
                 <div className={`w-8 h-8 ${isHelpMode ? 'bg-purple-600' : 'bg-blue-600'} flex items-center justify-center text-white shadow-lg shadow-blue-900/20 rounded-none`}>
                     {isHelpMode ? <HelpCircle size={18} fill="currentColor" /> : <Cpu size={18} fill="currentColor" />}
@@ -713,13 +713,13 @@ const App: React.FC = () => {
                 </div>
             </div>
 
-            {/* Mode Button */}
+            {/* Mode Button (Toggle) */}
             <button 
-                onClick={handleHelpMode}
-                className={`flex items-center gap-2 px-3 py-1.5 text-xs font-semibold transition-all active:scale-95 border rounded-none ${isHelpMode ? 'bg-purple-600 text-white border-purple-500 shadow-lg shadow-purple-900/20' : 'bg-blue-600 text-white border-blue-500 shadow-lg shadow-blue-900/20'}`}
-                title={isHelpMode ? "Reiniciar Modo Agente" : "Ativar Modo Agente"}
+                onClick={isHelpMode ? handleHome : handleHelpMode}
+                className={`flex items-center gap-2 px-3 py-1.5 text-xs font-semibold transition-all active:scale-95 border rounded-none ${isHelpMode ? 'bg-transparent text-blue-400 border-blue-500/30 hover:bg-blue-500/10' : 'bg-transparent text-purple-400 border-purple-500/30 hover:bg-purple-500/10'}`}
+                title={isHelpMode ? "Voltar para Modo Suporte" : "Ativar Modo Agente"}
             >
-                <span className="hidden sm:inline">{isHelpMode ? "Modo Agente" : "Modo Suporte"}</span>
+                <span className="hidden sm:inline">{isHelpMode ? "Modo Suporte" : "Modo Agente"}</span>
             </button>
 
             {/* Configurações Button */}

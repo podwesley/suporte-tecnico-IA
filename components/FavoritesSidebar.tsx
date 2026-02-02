@@ -515,9 +515,9 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = React.memo(({
   const handleToggleFolder = (id: string) => onReorder(toggleFolderOpen(favorites, id));
 
   return (
-    <div className="relative flex-shrink-0 h-full flex flex-col bg-bg-sidebar border-l border-border-main group/sidebar" style={{ width: `${width}px` }}>
+    <div className="relative flex-shrink-0 h-full flex flex-col border-l border-border-main group/sidebar" style={{ width: `${width}px` }}>
       <div className="absolute left-0 top-0 bottom-0 w-1 cursor-col-resize hover:bg-blue-500/50 transition-colors z-50" onMouseDown={onResizeStart} />
-      <div className="h-14 px-4 flex items-center justify-between border-b border-border-main bg-bg-sidebar">
+      <div className="h-14 px-4 flex items-center justify-between border-b border-border-main">
         <div className="flex items-center gap-2 text-sm font-medium text-slate-200">
           <Star size={16} className="text-yellow-500" />
           <span>Favoritos</span>
