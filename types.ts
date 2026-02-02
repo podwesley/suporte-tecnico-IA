@@ -49,3 +49,9 @@ export interface ChatState {
   isLoading: boolean;
   error: string | null;
 }
+
+export interface SavedPrompt {
+  id: string;
+  title: string;
+  content: string;
+}

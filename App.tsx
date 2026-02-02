@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 import { geminiService } from './services/geminiService';
 import { commandExecutor } from './services/commandExecutor';
-import { Message, Role, ChatSession, CommandHistoryItem, FavoriteCommand, FavoriteItem } from './types';
+import { Message, Role, ChatSession, CommandHistoryItem, FavoriteCommand, FavoriteItem, SavedPrompt } from './types';
 import { ChatBubble } from './components/ChatBubble';
 import { InputArea } from './components/InputArea';
 import { HistorySidebar } from './components/HistorySidebar';
@@ -11,11 +11,12 @@ import { FavoritesSidebar } from './components/FavoritesSidebar';
 import { Modal } from './components/Modal';
 import { APP_NAME, SYSTEM_PROMPT_AGENT_TUTOR, SYSTEM_PROMPT_AGENT_SUPPORT } from './agents';
 import { motion, AnimatePresence } from 'framer-motion';
-import { History, FolderOpen, Plus, X, Server, Terminal, Box, Shield, Cpu, PanelLeft, HelpCircle, Home, LogOut, MessageSquare, HardDrive, Clock } from 'lucide-react';
+import { History, FolderOpen, Plus, X, Server, Terminal, Box, Shield, Cpu, PanelLeft, HelpCircle, Home, LogOut, MessageSquare, HardDrive, Clock, Save, Edit, Trash2 } from 'lucide-react';
 
 const STORAGE_KEY = 'techsupport_ai_sessions';
 const HELP_STORAGE_KEY = 'techsupport_ai_help_sessions';
 const FAVORITES_KEY = 'techsupport_ai_favorites';
+const PROMPTS_KEY = 'techsupport_ai_custom_prompts';
 
 // Helper functions for recursive updates
 const clearOutputsRecursive = (items: FavoriteItem[]): FavoriteItem[] => {
@@ -87,6 +88,14 @@ const App: React.FC = () => {
   const [isOSModalOpen, setIsOSModalOpen] = useState(false);
   const [isHelpMode, setIsHelpMode] = useState(false);
   
+  // Prompt Library State
+  const [savedPrompts, setSavedPrompts] = useState<SavedPrompt[]>([]);
+  const [isPromptLibraryOpen, setIsPromptLibraryOpen] = useState(false);
+  const [isPromptEditorOpen, setIsPromptEditorOpen] = useState(false);
+  const [promptTitle, setPromptTitle] = useState('');
+  const [promptContent, setPromptContent] = useState('');
+  const [editingPromptId, setEditingPromptId] = useState<string | null>(null);
+  
   const [currentTime, setCurrentTime] = useState<string>('');
   const [diskSpace, setDiskSpace] = useState<string>('');
 
@@ -152,6 +161,12 @@ const App: React.FC = () => {
           const loaded = JSON.parse(savedFavs);
           // Clear outputs on load
           setFavorites(clearOutputsRecursive(loaded));
+      }
+
+      // Load Saved Prompts
+      const savedPromptsData = localStorage.getItem(PROMPTS_KEY);
+      if (savedPromptsData) {
+          setSavedPrompts(JSON.parse(savedPromptsData));
       }
 
     } catch (e) {
@@ -477,6 +492,64 @@ const App: React.FC = () => {
       setFavorites(prev => [...prev, fav]);
   };
 
+  // Prompt Library Handlers
+  const handleOpenPromptLibrary = () => {
+      setIsPromptLibraryOpen(true);
+  };
+
+  const handleOpenPromptEditor = (prompt?: SavedPrompt) => {
+      if (prompt) {
+          setEditingPromptId(prompt.id);
+          setPromptTitle(prompt.title);
+          setPromptContent(prompt.content);
+      } else {
+          setEditingPromptId(null);
+          setPromptTitle('');
+          setPromptContent('');
+      }
+      setIsPromptEditorOpen(true);
+  };
+
+  const handleSavePrompt = (e: React.FormEvent) => {
+      e.preventDefault();
+      if (!promptTitle.trim() || !promptContent.trim()) return;
+
+      const newPrompt: SavedPrompt = {
+          id: editingPromptId || uuidv4(),
+          title: promptTitle.trim(),
+          content: promptContent.trim()
+      };
+
+      setSavedPrompts(prev => {
+          let updated;
+          if (editingPromptId) {
+              updated = prev.map(p => p.id === editingPromptId ? newPrompt : p);
+          } else {
+              updated = [...prev, newPrompt];
+          }
+          localStorage.setItem(PROMPTS_KEY, JSON.stringify(updated));
+          return updated;
+      });
+
+      setIsPromptEditorOpen(false);
+      setEditingPromptId(null);
+      setPromptTitle('');
+      setPromptContent('');
+  };
+
+  const handleDeletePrompt = (id: string) => {
+      setSavedPrompts(prev => {
+          const updated = prev.filter(p => p.id !== id);
+          localStorage.setItem(PROMPTS_KEY, JSON.stringify(updated));
+          return updated;
+      });
+  };
+
+  const handleLoadPrompt = (content: string) => {
+      setInputValue(content);
+      setIsPromptLibraryOpen(false);
+  };
+
   const startResizing = React.useCallback(() => {
     setIsResizing(true);
     document.body.style.cursor = 'col-resize';
@@ -623,7 +696,7 @@ const App: React.FC = () => {
             {/* Prompt Button */}
             {isHelpMode && (
                 <button 
-                    onClick={() => {}} 
+                    onClick={handleOpenPromptLibrary} 
                     className="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-purple-300 bg-purple-500/10 border border-purple-500/20 hover:bg-purple-500/20 transition-all"
                     title="Ver Prompt do Agente"
                 >
@@ -898,6 +971,98 @@ const App: React.FC = () => {
                   </button>
               ))}
           </div>
+      </Modal>
+
+      {/* Prompt Library Modal */}
+      <Modal 
+          isOpen={isPromptLibraryOpen} 
+          onClose={() => setIsPromptLibraryOpen(false)} 
+          title="Biblioteca de Prompts" 
+          type="info"
+      >
+          <div className="space-y-4">
+              <div className="flex justify-end">
+                  <button 
+                      onClick={() => handleOpenPromptEditor()}
+                      className="flex items-center gap-2 px-3 py-1.5 text-xs font-bold text-white bg-purple-600 hover:bg-purple-500 rounded transition-all"
+                  >
+                      <Plus size={14} /> Novo Prompt
+                  </button>
+              </div>
+              
+              <div className="grid grid-cols-1 gap-2 max-h-[60vh] overflow-y-auto custom-scrollbar pr-1">
+                  {savedPrompts.length === 0 ? (
+                      <p className="text-center text-slate-500 text-xs py-8 italic">Nenhum prompt salvo.</p>
+                  ) : (
+                      savedPrompts.map(prompt => (
+                          <div key={prompt.id} className="group flex items-center justify-between p-3 bg-bg-main border border-white/5 hover:border-purple-500/30 rounded-lg transition-all">
+                              <button 
+                                  onClick={() => handleLoadPrompt(prompt.content)}
+                                  className="flex-1 text-left text-sm text-slate-200 hover:text-purple-300 transition-colors font-medium truncate"
+                              >
+                                  {prompt.title}
+                              </button>
+                              <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <button 
+                                      onClick={() => handleOpenPromptEditor(prompt)}
+                                      className="p-1.5 text-slate-400 hover:text-white hover:bg-white/10 rounded"
+                                      title="Editar"
+                                  >
+                                      <Edit size={14} />
+                                  </button>
+                                  <button 
+                                      onClick={() => handleDeletePrompt(prompt.id)}
+                                      className="p-1.5 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded"
+                                      title="Excluir"
+                                  >
+                                      <Trash2 size={14} />
+                                  </button>
+                              </div>
+                          </div>
+                      ))
+                  )}
+              </div>
+          </div>
+      </Modal>
+
+      {/* Prompt Editor Modal */}
+      <Modal
+          isOpen={isPromptEditorOpen}
+          onClose={() => setIsPromptEditorOpen(false)}
+          title={editingPromptId ? "Editar Prompt" : "Novo Prompt"}
+          type="info"
+      >
+          <form onSubmit={handleSavePrompt} className="space-y-4">
+              <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1">Título</label>
+                  <input 
+                      type="text" 
+                      value={promptTitle} 
+                      onChange={(e) => setPromptTitle(e.target.value)} 
+                      className="w-full bg-bg-main border border-white/10 focus:border-purple-500 p-2 text-sm text-white outline-none rounded" 
+                      placeholder="Ex: Análise de Logs"
+                      required
+                  />
+              </div>
+              <div className="flex-1 flex flex-col min-h-0">
+                  <label className="block text-xs font-medium text-slate-400 mb-1">Conteúdo do Prompt</label>
+                  <textarea 
+                      value={promptContent} 
+                      onChange={(e) => setPromptContent(e.target.value)} 
+                      className="w-full h-64 bg-bg-main border border-white/10 focus:border-purple-500 p-3 text-sm text-slate-200 outline-none rounded font-mono resize-none custom-scrollbar" 
+                      placeholder="Digite seu prompt aqui..."
+                      required
+                  />
+              </div>
+              <div className="flex justify-end pt-2">
+                  <button 
+                      type="submit" 
+                      className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs rounded transition-all shadow-lg shadow-purple-900/20"
+                  >
+                      <Save size={14} /> Salvar Prompt
+                  </button>
+              </div>
+          </form>
       </Modal>
     </div>
   );
