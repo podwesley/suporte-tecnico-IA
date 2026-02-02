@@ -552,6 +552,7 @@ const App: React.FC = () => {
         onSelectSession={handleSelectSession}
         onDeleteSession={handleDeleteSession}
         onRenameSession={handleRenameSession}
+        isHelpMode={isHelpMode}
       />
 
       {/* Header */}
@@ -757,6 +758,7 @@ const App: React.FC = () => {
                         onInputUpdate={handleInputUpdate}
                         onSendMessage={handleSendMessage}
                         onFavorite={handleAddToFavorites}
+                        isHelpMode={isHelpMode}
                     />
                     ))}
                     {/* Invisible element to scroll to */}
@@ -774,6 +776,7 @@ const App: React.FC = () => {
                     onChange={setInputValue} 
                     disabled={messages.length === 0 && !isHelpMode}
                     placeholder={messages.length === 0 ? (isHelpMode ? "Digite sua dúvida para o Tutor..." : "Clique em 'Novo' para iniciar...") : undefined}
+                    isHelpMode={isHelpMode}
                 />
             </div>
           </div>

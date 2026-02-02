@@ -225,7 +225,7 @@ const RecursiveItem: React.FC<RecursiveItemProps> = ({
                   />
                 ))
               ) : (
-                <div className="text-[10px] text-slate-600 ml-6 py-2 italic">Pasta vazia</div>
+                <div className="text-[10px] text-white ml-6 py-2 italic">Pasta vazia</div>
               )}
             </motion.div>
           )}
@@ -266,7 +266,7 @@ const RecursiveItem: React.FC<RecursiveItemProps> = ({
         </div>
         {(hasOutput || isExecuting) && (
           <div className="mt-2">
-            <button onClick={() => setIsOutputVisible(!isOutputVisible)} className="flex items-center gap-1 text-[10px] text-slate-500 hover:text-slate-300 mb-1">
+            <button onClick={() => setIsOutputVisible(!isOutputVisible)} className="flex items-center gap-1 text-[10px] text-white hover:text-slate-300 mb-1">
               <Terminal size={10} />
               <span>Output</span>
               <motion.div animate={{ rotate: isOutputVisible ? 180 : 0 }} transition={{ duration: 0.2 }}><ChevronDown size={10} /></motion.div>
@@ -279,7 +279,7 @@ const RecursiveItem: React.FC<RecursiveItemProps> = ({
                       {favCommand.output ? (
                         <SyntaxHighlighter code={favCommand.output} />
                       ) : isExecuting ? (
-                        <span className="text-slate-500 animate-pulse italic">Aguardando saída...</span>
+                        <span className="text-white animate-pulse italic">Aguardando saída...</span>
                       ) : null}
                     </pre>
                   </div>
@@ -294,7 +294,7 @@ const RecursiveItem: React.FC<RecursiveItemProps> = ({
             type="button"
             disabled={isExecuting}
             onClick={(e) => { e.stopPropagation(); onExecute(favCommand); }}
-            className="p-1.5 bg-blue-600 hover:bg-blue-500 text-white transition-colors shadow-lg shadow-blue-900/20 disabled:opacity-50 disabled:cursor-not-allowed min-w-[26px] flex items-center justify-center"
+            className={`p-1.5 text-white transition-colors shadow-lg shadow-blue-900/20 disabled:opacity-50 disabled:cursor-not-allowed min-w-[26px] flex items-center justify-center ${isHelpMode ? 'bg-purple-600 hover:bg-purple-500' : 'bg-blue-600 hover:bg-blue-500'}`}
             title="Executar"
           >
             {isExecuting ? (
@@ -522,7 +522,7 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = React.memo(({
                     <Terminal size={14} className={isHelpMode ? "text-purple-500" : "text-blue-500"} /> Novo Comando
                   </button>
                   <button type="button" onClick={() => { setTargetFolderId(null); setIsFolderModalOpen(true); setIsAddMenuOpen(false); }} className="w-full px-3 py-2 text-left text-xs text-slate-300 hover:bg-white/5 hover:text-white flex items-center gap-2">
-                    <FolderPlus size={14} className={isHelpMode ? "text-purple-500" : "text-blue-500"} /> Nova Pasta
+                    <FolderPlus size={14} className="text-white" /> Nova Pasta
                   </button>
                 </motion.div>
               </>
