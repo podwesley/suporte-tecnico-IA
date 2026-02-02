@@ -690,13 +690,28 @@ const App: React.FC = () => {
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             {/* Home Button */}
-            <button 
-                onClick={handleHome}
-                className="p-2 text-slate-400 hover:text-white hover:bg-white/5 transition-colors rounded-none"
-                title="Página Inicial"
-            >
-                <Home size={20} />
-            </button>
+            {isHelpMode && (
+                <button 
+                    onClick={handleHome}
+                    className="p-2 text-slate-400 hover:text-white hover:bg-white/5 transition-colors rounded-none"
+                    title="Página Inicial"
+                >
+                    <Home size={20} />
+                </button>
+            )}
+
+            {/* Logo and Title - Moved Here */}
+            <div className="flex items-center gap-2 mr-2">
+                <div className={`w-8 h-8 ${isHelpMode ? 'bg-purple-600' : 'bg-blue-600'} flex items-center justify-center text-white shadow-lg shadow-blue-900/20 rounded-none`}>
+                    {isHelpMode ? <HelpCircle size={18} fill="currentColor" /> : <Cpu size={18} fill="currentColor" />}
+                </div>
+                <div className="flex flex-col">
+                    <h1 className="text-sm font-bold tracking-tight text-white hidden sm:block">{isHelpMode ? "Modo Agente" : "Modo Suporte"}</h1>
+                    <span className={`text-[10px] font-black leading-none tracking-widest uppercase ${isHelpMode ? 'text-purple-400' : 'text-blue-400'}`}>
+                        {isHelpMode ? "Modo Agente" : "Modo Suporte"}
+                    </span>
+                </div>
+            </div>
 
             {/* Mode Button */}
             <button 
@@ -741,29 +756,6 @@ const App: React.FC = () => {
           </div>
           
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2">
-                <div className={`w-8 h-8 ${isHelpMode ? 'bg-purple-600' : 'bg-blue-600'} flex items-center justify-center text-white shadow-lg shadow-blue-900/20`}>
-                    {isHelpMode ? <HelpCircle size={18} fill="currentColor" /> : <Cpu size={18} fill="currentColor" />}
-                </div>
-                <div className="flex flex-col">
-                    <h1 className="text-sm font-bold tracking-tight text-white hidden sm:block">{isHelpMode ? "Modo Agente" : "Modo Suporte"}</h1>
-                    <span className={`text-[10px] font-black leading-none tracking-widest uppercase ${isHelpMode ? 'text-purple-400' : 'text-blue-400'}`}>
-                        {isHelpMode ? "Modo Agente" : "Modo Suporte"}
-                    </span>
-                </div>
-            </div>
-
-            {!isHelpMode && (
-                <button 
-                    onClick={handleNewChat}
-                    className="group flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-500 transition-all active:scale-95 shadow-lg shadow-blue-900/20 rounded-none"
-                    title="Iniciar nova conversa"
-                >
-                    <Plus size={16} className="group-hover:rotate-90 transition-transform duration-300" />
-                    <span className="hidden sm:inline">Iniciar Suporte</span>
-                </button>
-            )}
-
             <div className="relative group">
                 <button
                     onClick={handleSelectDirectory}
