@@ -12,6 +12,7 @@ interface HistorySidebarProps {
   onSelectSession: (session: ChatSession) => void;
   onDeleteSession: (e: React.MouseEvent, sessionId: string) => void;
   onRenameSession: (sessionId: string, newTitle: string) => void;
+  isHelpMode: boolean;
 }
 
 export const HistorySidebar: React.FC<HistorySidebarProps> = ({
@@ -21,7 +22,8 @@ export const HistorySidebar: React.FC<HistorySidebarProps> = ({
   currentSessionId,
   onSelectSession,
   onDeleteSession,
-  onRenameSession
+  onRenameSession,
+  isHelpMode
 }) => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
@@ -77,7 +79,7 @@ export const HistorySidebar: React.FC<HistorySidebarProps> = ({
             <div className="p-4 border-b border-white/5 flex items-center justify-between">
               <div className="flex items-center gap-2 text-slate-200">
                 <Clock size={18} />
-                <h2 className="text-sm font-bold tracking-tight">Histórico</h2>
+                <h2 className="text-sm font-bold tracking-tight">{isHelpMode ? 'Histórico Agente' : 'Histórico Suporte'}</h2>
               </div>
               <button 
                 onClick={onClose}
@@ -104,11 +106,11 @@ export const HistorySidebar: React.FC<HistorySidebarProps> = ({
                     className={clsx(
                       "group relative flex items-center gap-3 p-3 rounded-lg cursor-pointer transition-all duration-200 border",
                       currentSessionId === session.id 
-                        ? "bg-blue-600/10 border-blue-500/30 text-white" 
+                        ? (isHelpMode ? "bg-purple-600/10 border-purple-500/30 text-white" : "bg-blue-600/10 border-blue-500/30 text-white")
                         : "bg-transparent border-transparent hover:bg-white/5 text-slate-400 hover:text-slate-200"
                     )}
                   >
-                    <MessageSquare size={16} className={clsx("flex-shrink-0", currentSessionId === session.id ? "text-blue-500" : "text-slate-600")} />
+                    <MessageSquare size={16} className={clsx("flex-shrink-0", currentSessionId === session.id ? (isHelpMode ? "text-purple-500" : "text-blue-500") : "text-slate-600")} />
                     
                     <div className="flex-1 min-w-0">
                       {editingId === session.id ? (
@@ -119,7 +121,7 @@ export const HistorySidebar: React.FC<HistorySidebarProps> = ({
                                 onChange={(e) => setEditTitle(e.target.value)}
                                 onKeyDown={(e) => handleKeyDown(e, session.id)}
                                 onBlur={() => setEditingId(null)}
-                                className="w-full bg-bg-main border border-blue-500/50 rounded px-1.5 py-0.5 text-xs text-white focus:outline-none"
+                                className={`w-full bg-bg-main border rounded px-1.5 py-0.5 text-xs text-white focus:outline-none ${isHelpMode ? 'border-purple-500/50' : 'border-blue-500/50'}`}
                               />
                           </div>
                       ) : (
@@ -138,7 +140,7 @@ export const HistorySidebar: React.FC<HistorySidebarProps> = ({
                         <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-bg-sidebar shadow-[-10px_0_10px_rgba(34,34,41,1)]">
                             <button
                                 onClick={(e) => startEditing(e, session)}
-                                className="p-1.5 hover:bg-white/10 text-slate-500 hover:text-blue-400 rounded transition-all"
+                                className={`p-1.5 hover:bg-white/10 rounded transition-all ${isHelpMode ? 'text-slate-500 hover:text-purple-400' : 'text-slate-500 hover:text-blue-400'}`}
                                 title="Renomear"
                             >
                                 <Pencil size={12} />

@@ -9,6 +9,7 @@ interface InputAreaProps {
   onChange: (value: string) => void;
   disabled?: boolean;
   placeholder?: string;
+  isHelpMode: boolean;
 }
 
 export const InputArea: React.FC<InputAreaProps> = ({ 
@@ -17,7 +18,8 @@ export const InputArea: React.FC<InputAreaProps> = ({
   value, 
   onChange,
   disabled = false,
-  placeholder = "Descreva seu problema técnico..."
+  placeholder = "Descreva seu problema técnico...",
+  isHelpMode
 }) => {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [isFocused, setIsFocused] = useState(false);
@@ -58,7 +60,9 @@ export const InputArea: React.FC<InputAreaProps> = ({
             className={`
                 relative flex items-end gap-2 bg-bg-input backdrop-blur-xl p-2 rounded-[24px] 
                 border transition-all duration-300 shadow-2xl
-                ${isFocused && !disabled ? 'border-blue-500/50 ring-1 ring-blue-500/20' : 'border-border-main ring-1 ring-white/5'}
+                ${isFocused && !disabled 
+                    ? (isHelpMode ? 'border-purple-500/50 ring-1 ring-purple-500/20' : 'border-blue-500/50 ring-1 ring-blue-500/20') 
+                    : 'border-border-main ring-1 ring-white/5'}
             `}
         >
           <div className="flex-1 min-w-0 relative">
@@ -85,7 +89,7 @@ export const InputArea: React.FC<InputAreaProps> = ({
               w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 transition-all duration-200 mb-1 mr-1
               ${!value.trim() || isLoading || disabled
                 ? 'bg-slate-800 text-slate-500' 
-                : 'bg-blue-600 text-white shadow-lg shadow-blue-600/20'
+                : (isHelpMode ? 'bg-purple-600 text-white shadow-lg shadow-purple-600/20' : 'bg-blue-600 text-white shadow-lg shadow-blue-600/20')
               }
             `}
           >
@@ -98,9 +102,9 @@ export const InputArea: React.FC<InputAreaProps> = ({
         </div>
         
         <div className="text-center mt-2 flex items-center justify-center gap-2 opacity-50">
-            <Sparkles className="w-3 h-3 text-blue-400" />
+            <Sparkles className={`w-3 h-3 ${isHelpMode ? 'text-purple-400' : 'text-blue-400'}`} />
             <p className="text-[10px] text-slate-400 font-medium tracking-wide uppercase">
-             AI Tech Support • Verifique os comandos
+             {isHelpMode ? 'AI Agent Mode • Converse com o Agente' : 'AI Tech Support • Verifique os comandos'}
             </p>
         </div>
       </motion.div>
