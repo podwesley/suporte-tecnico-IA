@@ -326,12 +326,12 @@ const RecursiveItem: React.FC<RecursiveItemProps> = ({
     <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} title="Editar Favorito">
         <form onSubmit={handleSaveCommandEdit} className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1">Comando</label>
-            <textarea value={editCommandValue} onChange={(e) => setEditCommandValue(e.target.value)} className="w-full bg-bg-main border border-border-main p-2 text-sm text-white focus:border-blue-500 outline-none font-mono" rows={3} required />
-          </div>
-          <div>
             <label className="block text-xs font-medium text-slate-400 mb-1">Nome/Label</label>
             <input type="text" value={editLabelValue} onChange={(e) => setEditLabelValue(e.target.value)} className="w-full bg-bg-main border border-border-main p-2 text-sm text-white focus:border-blue-500 outline-none" />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-400 mb-1">Comando</label>
+            <textarea value={editCommandValue} onChange={(e) => setEditCommandValue(e.target.value)} className="w-full bg-bg-main border border-border-main p-2 text-sm text-white focus:border-blue-500 outline-none font-mono" rows={3} required />
           </div>
           <div className="flex justify-end pt-2">
             <button type="submit" className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium text-sm flex items-center gap-2">
@@ -558,12 +558,12 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = React.memo(({
       <Modal isOpen={isModalOpen} onClose={() => { setIsModalOpen(false); setTargetFolderId(null); }} title={targetFolderId ? `Adicionar à pasta "${(findItem(favorites, targetFolderId) as any)?.name}"` : "Adicionar Favorito"}>
         <form onSubmit={handleAddCommand} className="space-y-4">
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1">Comando</label>
-            <textarea value={newCommand} onChange={(e) => setNewCommand(e.target.value)} className="w-full bg-bg-main border border-border-main p-2 text-sm text-white focus:border-blue-500 outline-none font-mono" rows={3} placeholder="docker ps -a" required />
-          </div>
-          <div>
             <label className="block text-xs font-medium text-slate-400 mb-1">Nome/Label</label>
             <input type="text" value={newLabel} onChange={(e) => setNewLabel(e.target.value)} className="w-full bg-bg-main border border-border-main p-2 text-sm text-white focus:border-blue-500 outline-none" placeholder="Listar containers" />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-slate-400 mb-1">Comando</label>
+            <textarea value={newCommand} onChange={(e) => setNewCommand(e.target.value)} className="w-full bg-bg-main border border-border-main p-2 text-sm text-white focus:border-blue-500 outline-none font-mono" rows={3} placeholder="docker ps -a" required />
           </div>
           <div className="flex justify-end pt-2">
             <button type="submit" className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium text-sm">Salvar</button>
