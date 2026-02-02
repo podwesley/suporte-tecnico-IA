@@ -571,13 +571,13 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = React.memo(({
         </form>
       </Modal>
       <Modal isOpen={isFolderModalOpen} onClose={() => setIsFolderModalOpen(false)} title="Nova Pasta">
-        <form onSubmit={handleCreateFolder} className="space-y-4">
+        <form onSubmit={handleCreateFolder} className="font-bold font-mono uppercase space-y-4">
           <div>
             <label className="block text-xs font-medium text-slate-400 mb-1">Nome da Pasta</label>
             <input type="text" value={newFolderName} onChange={(e) => setNewFolderName(e.target.value)} className="w-full bg-bg-main border border-border-main p-2 text-sm text-white focus:border-blue-500 outline-none" placeholder="Meus Scripts" required />
           </div>
           <div className="flex justify-end pt-2">
-            <button type="submit" className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium text-sm">Criar Pasta</button>
+            <button type="submit" className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold font-mono tracking-wider uppercase text-sm">Criar Pasta</button>
           </div>
         </form>
       </Modal>
