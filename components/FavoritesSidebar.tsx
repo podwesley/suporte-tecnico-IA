@@ -256,8 +256,8 @@ const RecursiveItem: React.FC<RecursiveItemProps> = ({
       {dropIndicator === 'after' && indicatorLine('after')}
       <div className="p-3">
         <div className="flex justify-between items-start mb-1">
-            <span className="text-xs font-medium text-slate-400 truncate cursor-pointer hover:text-white flex items-center gap-1.5" onDoubleClick={handleEditClick}>
-              <Terminal size={10} className="text-blue-500" />
+            <span className={`text-xs font-medium truncate cursor-pointer hover:opacity-80 flex items-center gap-1.5 ${isHelpMode ? 'text-purple-400' : 'text-blue-400'}`} onDoubleClick={handleEditClick}>
+              <Terminal size={10} className={isHelpMode ? 'text-purple-500' : 'text-blue-500'} />
               {item.label}
             </span>
         </div>
