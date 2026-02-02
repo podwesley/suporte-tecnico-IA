@@ -542,8 +542,26 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-bg-main flex flex-col font-sans text-slate-200 overflow-hidden">
+    <div className="min-h-screen bg-bg-main flex flex-col font-sans text-slate-200 overflow-hidden relative">
       
+      {/* Tech Transition Effects */}
+      <AnimatePresence mode="sync">
+        <motion.div
+          key={isHelpMode ? 'agent-flash' : 'support-flash'}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: [0, 0.3, 0] }}
+          transition={{ duration: 0.5, ease: "easeInOut" }}
+          className={`pointer-events-none fixed inset-0 z-[60] mix-blend-overlay ${isHelpMode ? 'bg-purple-600' : 'bg-blue-600'}`}
+        />
+        <motion.div
+            key={isHelpMode ? 'scan-line' : 'scan-line-support'}
+            initial={{ top: -100, opacity: 0 }}
+            animate={{ top: '120%', opacity: [0, 1, 0] }}
+            transition={{ duration: 1, ease: "easeInOut" }}
+            className={`pointer-events-none fixed left-0 right-0 h-40 z-[60] bg-gradient-to-b ${isHelpMode ? 'from-transparent via-purple-500/30 to-transparent' : 'from-transparent via-blue-500/30 to-transparent'}`}
+        />
+      </AnimatePresence>
+
       <HistorySidebar 
         isOpen={isSidebarOpen} 
         onClose={() => setIsSidebarOpen(false)}
