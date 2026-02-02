@@ -11,7 +11,7 @@ import { FavoritesSidebar } from './components/FavoritesSidebar';
 import { Modal } from './components/Modal';
 import { APP_NAME, SYSTEM_PROMPT_AGENT_TUTOR, SYSTEM_PROMPT_AGENT_SUPPORT } from './agents';
 import { motion, AnimatePresence } from 'framer-motion';
-import { History, FolderOpen, Plus, X, Server, Terminal, Box, Shield, Cpu, PanelLeft, HelpCircle, Home, LogOut } from 'lucide-react';
+import { History, FolderOpen, Plus, X, Server, Terminal, Box, Shield, Cpu, PanelLeft, HelpCircle, Home, LogOut, MessageSquare } from 'lucide-react';
 
 const STORAGE_KEY = 'techsupport_ai_sessions';
 const HELP_STORAGE_KEY = 'techsupport_ai_help_sessions';
