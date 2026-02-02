@@ -12,6 +12,7 @@ import { Modal } from './components/Modal';
 import { APP_NAME, SYSTEM_PROMPT_AGENT_TUTOR, SYSTEM_PROMPT_AGENT_SUPPORT } from './agents';
 import { motion, AnimatePresence } from 'framer-motion';
 import { History, FolderOpen, Plus, X, Server, Terminal, Box, Shield, Cpu, PanelLeft, HelpCircle, Home, LogOut, MessageSquare, HardDrive, Clock, Save, Edit, Trash2, Settings, ArrowLeftRight } from 'lucide-react';
+import { FaApple, FaWindows, FaLinux } from 'react-icons/fa';
 
 const STORAGE_KEY = 'techsupport_ai_sessions';
 const HELP_STORAGE_KEY = 'techsupport_ai_help_sessions';
@@ -723,6 +724,17 @@ const App: React.FC = () => {
             >
                 <History size={20} />
             </button>
+
+            {!isHelpMode && (
+                <button 
+                    onClick={handleNewChat}
+                    className="flex items-center gap-2 px-3 py-1.5 text-[10px] font-black uppercase tracking-tighter transition-all active:scale-95 border border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 hover:text-slate-200 rounded-none"
+                    title="Nova Solicitação"
+                >
+                    <Plus size={14} />
+                    <span className="hidden sm:inline">Nova Solicitação</span>
+                </button>
+            )}
             
             {!isHelpMode && (
                 <button 
@@ -962,16 +974,16 @@ const App: React.FC = () => {
       >
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {[ 
-                  { id: 'macos', label: 'MACOS', icon: '🍎', description: 'Apple Ecosystem' },
-                  { id: 'windows', label: 'WINDOWS', icon: '🪟', description: 'Microsoft Ecosystem' },
-                  { id: 'linux', label: 'LINUX', icon: '🐧', description: 'Open Source Power' }
+                  { id: 'macos', label: 'MACOS', icon: <FaApple />, description: 'Apple Ecosystem' },
+                  { id: 'windows', label: 'WINDOWS', icon: <FaWindows />, description: 'Microsoft Ecosystem' },
+                  { id: 'linux', label: 'LINUX', icon: <FaLinux />, description: 'Open Source Power' }
               ].map(os => (
                   <button
                       key={os.id}
                       onClick={() => handleOSSelect(os.id)}
                       className="group flex flex-col items-center gap-3 p-6 bg-[#121214] border border-white/5 hover:border-blue-500/50 hover:bg-blue-500/5 transition-all duration-300"
                   >
-                      <span className="text-4xl filter grayscale group-hover:grayscale-0 transition-all duration-300 transform group-hover:scale-110">{os.icon}</span>
+                      <span className="text-4xl text-blue-500 transition-all duration-300 transform group-hover:scale-110">{os.icon}</span>
                       <div className="text-center">
                           <span className="block font-bold text-slate-200 group-hover:text-blue-400">{os.label}</span>
                           <span className="text-xs text-slate-500 mt-1">{os.description}</span>
