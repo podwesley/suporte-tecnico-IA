@@ -290,7 +290,7 @@ const RecursiveItem: React.FC<RecursiveItemProps> = ({
                       {favCommand.output ? (
                         <SyntaxHighlighter code={favCommand.output} />
                       ) : isExecuting ? (
-                        <span className="text-white animate-pulse italic">Aguardando saída...</span>
+                        <span className="text-white animate-pulse font-mono tracking-wider">Aguardando saída...</span>
                       ) : null}
                     </pre>
                   </div>
@@ -520,7 +520,7 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = React.memo(({
       <div className="h-14 px-4 flex items-center justify-between border-b border-border-main">
         <div className="flex items-center gap-2 text-sm font-medium text-slate-200">
           <Star size={16} className="text-yellow-500" />
-          <span class="">Favoritos</span>
+          <span className="font-bold font-mono tracking-wider text-slate-300 uppercase">Favoritos</span>
         </div>
         <div className="relative">
           <button type="button" onClick={() => setIsAddMenuOpen(!isAddMenuOpen)} className={clsx("p-1.5 transition-colors", isAddMenuOpen ? "text-white bg-white/10" : "text-slate-400 hover:text-white hover:bg-white/5")} title="Adicionar"><Plus size={16} /></button>
