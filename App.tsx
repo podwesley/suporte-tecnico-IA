@@ -617,9 +617,9 @@ const App: React.FC = () => {
                 </div>
                 <div className="flex flex-col">
                     <h1 className="text-sm font-bold tracking-tight text-white hidden sm:block">{isHelpMode ? "Modo Agente" : "Modo Suporte"}</h1>
-                    {isHelpMode && (
-                        <span className="text-[10px] font-black text-purple-400 leading-none tracking-widest uppercase">Modo Agente</span>
-                    )}
+                    <span className={`text-[10px] font-black leading-none tracking-widest uppercase ${isHelpMode ? 'text-purple-400' : 'text-blue-400'}`}>
+                        {isHelpMode ? "Modo Agente" : "Modo Suporte"}
+                    </span>
                 </div>
             </div>
 
