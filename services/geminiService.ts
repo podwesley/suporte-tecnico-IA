@@ -9,12 +9,18 @@ export class GeminiService {
 
   constructor() {
     const apiKey = process.env.API_KEY;
-    if (!apiKey) {
-      console.error("API_KEY está ausente nas variáveis de ambiente.");
-      throw new Error("API_KEY está ausente nas variáveis de ambiente.");
+    if (apiKey) {
+      this.ai = new GoogleGenAI({ apiKey });
+    } else {
+        // Placeholder, will wait for setApiKey or fail gracefully later
+        this.ai = new GoogleGenAI({ apiKey: 'PLACEHOLDER' });
     }
-    // Initialize with the API key from environment variables
-    this.ai = new GoogleGenAI({ apiKey: apiKey || '' });
+  }
+
+  public setApiKey(apiKey: string) {
+      if (apiKey) {
+          this.ai = new GoogleGenAI({ apiKey });
+      }
   }
 
   public initializeChat(systemPrompt: string = SYSTEM_PROMPT_AGENT_SUPPORT): void {

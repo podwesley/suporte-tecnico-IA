@@ -99,16 +99,25 @@ const App: React.FC = () => {
   const [activePromptTitle, setActivePromptTitle] = useState<string | null>(() => {
       return localStorage.getItem('techsupport_ai_active_prompt');
   });
+  const [activePromptContent, setActivePromptContent] = useState<string | null>(() => {
+      return localStorage.getItem('techsupport_ai_active_prompt_content');
+  });
   const [apiKey, setApiKey] = useState('');
 
-  // Persist active prompt title
+  // Persist active prompt title and content
   useEffect(() => {
       if (activePromptTitle) {
           localStorage.setItem('techsupport_ai_active_prompt', activePromptTitle);
       } else {
           localStorage.removeItem('techsupport_ai_active_prompt');
       }
-  }, [activePromptTitle]);
+      
+      if (activePromptContent) {
+          localStorage.setItem('techsupport_ai_active_prompt_content', activePromptContent);
+      } else {
+          localStorage.removeItem('techsupport_ai_active_prompt_content');
+      }
+  }, [activePromptTitle, activePromptContent]);
   
   const [currentTime, setCurrentTime] = useState<string>('');
   const [diskSpace, setDiskSpace] = useState<string>('');
@@ -200,6 +209,13 @@ const App: React.FC = () => {
     }
   }, []);
 
+  // Update API Key in Service
+  useEffect(() => {
+      if (apiKey) {
+          geminiService.setApiKey(apiKey);
+      }
+  }, [apiKey]);
+
   // Save favorites when changed
   useEffect(() => {
      if (!isFirstRender.current) {
@@ -276,7 +292,9 @@ const App: React.FC = () => {
     setIsLoading(false);
     setCommandQueue([]); // Clear queue
     setActivePromptTitle(null);
+    setActivePromptContent(null);
     localStorage.removeItem('techsupport_ai_active_prompt');
+    localStorage.removeItem('techsupport_ai_active_prompt_content');
     
     const targetPrompt = isHelpMode ? SYSTEM_PROMPT_AGENT_TUTOR : SYSTEM_PROMPT_AGENT_SUPPORT;
     geminiService.resetSession(targetPrompt);
@@ -294,6 +312,11 @@ const App: React.FC = () => {
       setIsLoading(false);
       setCommandQueue([]);
       // setActivePromptTitle(null); // Keep persistent
+      // setActivePromptContent(null); // Keep persistent for agent mode? Or clear? 
+      // User said: "funcionalidade do suporte nao deve ser impactada". Support uses default prompt.
+      // But if we switch back to Agent, we might want to resume. 
+      // However, handleHome resets to SUPPORT mode.
+      
       geminiService.resetSession(SYSTEM_PROMPT_AGENT_SUPPORT);
   };
 
@@ -303,7 +326,11 @@ const App: React.FC = () => {
     setCurrentSessionId(uuidv4());
     setIsLoading(false);
     setCommandQueue([]);
-    geminiService.resetSession(SYSTEM_PROMPT_AGENT_TUTOR);
+    
+    // Use active custom prompt if available
+    const targetPrompt = activePromptContent || SYSTEM_PROMPT_AGENT_TUTOR;
+    geminiService.resetSession(targetPrompt);
+    
     setIsSidebarOpen(false);
     setIsCommandSidebarVisible(false);
     setIsOSModalOpen(false); 
@@ -321,7 +348,13 @@ const App: React.FC = () => {
     setIsSidebarOpen(false);
     
     // Resume context in Gemini Service with correct prompt for current mode
-    const targetPrompt = isHelpMode ? SYSTEM_PROMPT_AGENT_TUTOR : SYSTEM_PROMPT_AGENT_SUPPORT;
+    let targetPrompt = isHelpMode ? SYSTEM_PROMPT_AGENT_TUTOR : SYSTEM_PROMPT_AGENT_SUPPORT;
+    
+    // If in Help Mode and we have an active custom prompt, use it
+    if (isHelpMode && activePromptContent) {
+        targetPrompt = activePromptContent;
+    }
+    
     await geminiService.resumeSession(session.messages, targetPrompt);
   };
 
@@ -575,9 +608,16 @@ const App: React.FC = () => {
   };
 
   const handleLoadPrompt = (prompt: SavedPrompt) => {
-      setInputValue(prompt.content);
+      // setInputValue(prompt.content); // No longer pasting into input
       setActivePromptTitle(prompt.title);
+      setActivePromptContent(prompt.content);
       setIsPromptLibraryOpen(false);
+      
+      // Immediately start a new session with this system prompt
+      setMessages([]);
+      setCurrentSessionId(uuidv4());
+      setIsLoading(false);
+      geminiService.resetSession(prompt.content);
   };
 
   const startResizing = React.useCallback(() => {
@@ -916,10 +956,7 @@ const App: React.FC = () => {
                                             initial={{ opacity: 0, y: 10 }}
                                             animate={{ opacity: 1, y: 0 }}
                                             transition={{ duration: 0.3 }}
-                                            onClick={() => {
-                                                setInputValue(prompt.content);
-                                                setActivePromptTitle(prompt.title);
-                                            }}
+                                            onClick={() => handleLoadPrompt(prompt)}
                                             className="group flex items-center gap-4 text-sm bg-bg-surface hover:bg-bg-surface/80 border border-border-main hover:border-purple-500/30 text-slate-300 p-4 rounded-xl text-left transition-all"
                                         >
                                             <div className="p-2 bg-purple-500/10 rounded-lg group-hover:scale-110 transition-transform">
