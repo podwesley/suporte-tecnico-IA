@@ -11,7 +11,7 @@ import { FavoritesSidebar } from './components/FavoritesSidebar';
 import { Modal } from './components/Modal';
 import { APP_NAME, SYSTEM_PROMPT_AGENT_TUTOR, SYSTEM_PROMPT_AGENT_SUPPORT } from './agents';
 import { motion, AnimatePresence } from 'framer-motion';
-import { History, FolderOpen, Plus, X, Server, Terminal, Box, Shield, Cpu, PanelLeft, HelpCircle, Home, LogOut, MessageSquare, HardDrive, Clock, Save, Edit, Trash2, Settings, ArrowLeftRight, Bot, Laptop } from 'lucide-react';
+import { History, FolderOpen, Plus, X, Server, Terminal, Box, Shield, Cpu, PanelLeft, HelpCircle, Home, LogOut, MessageSquare, HardDrive, Clock, Save, Edit, Trash2, Settings, ArrowLeftRight, Bot, Laptop, Upload, Download, FileJson } from 'lucide-react';
 import { FaApple, FaWindows, FaLinux, FaRobot, FaLaptopCode } from 'react-icons/fa';
 
 const STORAGE_KEY = 'techsupport_ai_sessions';
@@ -103,6 +103,7 @@ const App: React.FC = () => {
       return localStorage.getItem('techsupport_ai_active_prompt_content');
   });
   const [apiKey, setApiKey] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Persist active prompt title and content
   useEffect(() => {
@@ -118,6 +119,95 @@ const App: React.FC = () => {
           localStorage.removeItem('techsupport_ai_active_prompt_content');
       }
   }, [activePromptTitle, activePromptContent]);
+
+  const handleExportData = () => {
+    try {
+        const data = {
+            version: 1,
+            timestamp: Date.now(),
+            prompts: savedPrompts,
+            favorites: favorites,
+            sessions: {
+                support: supportSessions,
+                help: helpSessions
+            },
+            apiKey: apiKey // Optional: User might want to exclude this, but including for full backup
+        };
+        
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `techsupport-ai-backup-${new Date().toISOString().split('T')[0]}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+    } catch (e) {
+        console.error("Export failed:", e);
+        setErrorMessage("Falha ao exportar dados. Verifique o console.");
+        setErrorModalOpen(true);
+    }
+  };
+
+  const handleImportData = (event: React.ChangeEvent<HTMLInputElement>) => {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+          try {
+              const content = e.target?.result as string;
+              const data = JSON.parse(content);
+
+              // Basic validation
+              if (!data || typeof data !== 'object') throw new Error("Formato de arquivo inválido");
+
+              // Restore Prompts
+              if (Array.isArray(data.prompts)) {
+                  setSavedPrompts(data.prompts);
+                  localStorage.setItem(PROMPTS_KEY, JSON.stringify(data.prompts));
+              }
+
+              // Restore Favorites
+              if (Array.isArray(data.favorites)) {
+                  setFavorites(data.favorites);
+                  localStorage.setItem(FAVORITES_KEY, JSON.stringify(data.favorites));
+              }
+
+              // Restore Sessions
+              if (data.sessions) {
+                  if (Array.isArray(data.sessions.support)) {
+                      setSupportSessions(data.sessions.support);
+                      localStorage.setItem(STORAGE_KEY, JSON.stringify(data.sessions.support));
+                  }
+                  if (Array.isArray(data.sessions.help)) {
+                      setHelpSessions(data.sessions.help);
+                      localStorage.setItem(HELP_STORAGE_KEY, JSON.stringify(data.sessions.help));
+                  }
+              }
+
+              // Restore API Key (Optional)
+              if (data.apiKey && typeof data.apiKey === 'string') {
+                  setApiKey(data.apiKey);
+                  localStorage.setItem('techsupport_ai_api_key', data.apiKey);
+              }
+              
+              // Reset file input
+              if (fileInputRef.current) fileInputRef.current.value = '';
+              
+              // Close modal and show success (using prompt title temporarily or just close)
+              setIsPromptLibraryOpen(false);
+              alert("Dados importados com sucesso!");
+              
+          } catch (error) {
+              console.error("Import failed:", error);
+              setErrorMessage("Falha ao importar dados. O arquivo pode estar corrompido ou em formato inválido.");
+              setErrorModalOpen(true);
+          }
+      };
+      reader.readAsText(file);
+  };
   
   const [currentTime, setCurrentTime] = useState<string>('');
   const [diskSpace, setDiskSpace] = useState<string>('');
@@ -1137,7 +1227,7 @@ const App: React.FC = () => {
                       </button>
                   </div>
                   
-                  <div className="grid grid-cols-1 gap-2 max-h-[40vh] overflow-y-auto custom-scrollbar pr-1">
+                  <div className="grid grid-cols-1 gap-2 max-h-[40vh] overflow-y-auto custom-scrollbar pr-1 mb-6">
                       {savedPrompts.length === 0 ? (
                           <p className="text-center text-slate-500 text-xs py-8 italic bg-bg-main border border-white/5 rounded-lg">Nenhum prompt personalizado salvo.</p>
                       ) : (
@@ -1169,6 +1259,38 @@ const App: React.FC = () => {
                           ))
                       )}
                   </div>
+              </div>
+
+              {/* Data Management Section */}
+              <div className="bg-bg-main border border-white/5 p-4 rounded-lg">
+                  <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+                      <FileJson size={14} className="text-slate-400" />
+                      Backup & Restauração
+                  </h3>
+                  <div className="flex gap-2">
+                      <button 
+                          onClick={handleExportData}
+                          className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded transition-all"
+                      >
+                          <Download size={14} /> Exportar Dados
+                      </button>
+                      <button 
+                          onClick={() => fileInputRef.current?.click()}
+                          className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded transition-all"
+                      >
+                          <Upload size={14} /> Importar Dados
+                      </button>
+                      <input 
+                          ref={fileInputRef}
+                          type="file" 
+                          hidden 
+                          accept=".json"
+                          onChange={handleImportData}
+                      />
+                  </div>
+                  <p className="text-[10px] text-slate-500 mt-2 text-center">
+                      Exporte seus prompts, favoritos e configurações para um arquivo JSON.
+                  </p>
               </div>
           </div>
       </Modal>
