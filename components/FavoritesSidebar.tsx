@@ -186,7 +186,7 @@ const RecursiveItem: React.FC<RecursiveItemProps> = ({
                   className="bg-black/50 text-white text-xs px-1 py-0.5 w-full border border-blue-500 outline-none"
                 />
               ) : (
-                <span className={`text-xs font-medium truncate ${isHelpMode ? 'text-purple-300 group-hover:text-purple-200' : 'text-blue-300 group-hover:text-blue-200'}`} onDoubleClick={(e) => { e.stopPropagation(); onStartEditing(item); }}>
+                <span className={`text-xs font-bold font-mono tracking-wider uppercase ${isHelpMode ? 'text-purple-300 group-hover:text-purple-200' : 'text-blue-300 group-hover:text-blue-200'}`} onDoubleClick={(e) => { e.stopPropagation(); onStartEditing(item); }}>
                   {item.name}
                 </span>
               )}
@@ -256,7 +256,7 @@ const RecursiveItem: React.FC<RecursiveItemProps> = ({
       {dropIndicator === 'after' && indicatorLine('after')}
       <div className="p-3">
         <div className="flex justify-between items-start mb-1">
-            <span className={`text-xs font-medium truncate cursor-pointer hover:opacity-80 flex items-center gap-1.5 ${isHelpMode ? 'text-purple-400' : 'text-blue-400'}`} onDoubleClick={handleEditClick}>
+            <span className={`text-xs font-bold font-mono tracking-wider cursor-pointer hover:opacity-80 flex items-center gap-1.5 ${isHelpMode ? 'text-purple-400' : 'text-blue-400'}`} onDoubleClick={handleEditClick}>
               <Terminal size={10} className={isHelpMode ? 'text-purple-500' : 'text-blue-500'} />
               {item.label}
             </span>
