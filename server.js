@@ -1,6 +1,6 @@
 import express from 'express';
 import cors from 'cors';
-import { exec } from 'child_process';
+import { exec, spawn } from 'child_process';
 import { promisify } from 'util';
 import os from 'os';
 
@@ -13,6 +13,60 @@ app.use(express.json());
 
 app.get('/health', (req, res) => {
   res.json({ status: 'online' });
+});
+
+app.get('/api/execute-stream', (req, res) => {
+  const { command, cwd } = req.query;
+
+  if (!command) {
+    return res.status(400).json({ error: 'No command provided' });
+  }
+
+  const effectiveCwd = cwd || os.homedir();
+  
+  // SSE Headers
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache, no-transform');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('Access-Control-Allow-Origin', '*'); // Explicit for SSE
+  res.flushHeaders();
+
+  // Send initial keep-alive comment to open the stream immediately
+  res.write(': keep-alive\n\n');
+
+  console.log(`[Stream] # ${effectiveCwd} > ${command}`);
+
+  const child = spawn(command, { 
+    cwd: effectiveCwd,
+    shell: true 
+  });
+
+  const sendEvent = (event, data) => {
+    res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+  };
+
+  child.stdout.on('data', (data) => {
+    sendEvent('output', { text: data.toString() });
+  });
+
+  child.stderr.on('data', (data) => {
+    sendEvent('output', { text: data.toString(), isError: true });
+  });
+
+  child.on('error', (error) => {
+    sendEvent('error', { text: error.message });
+    res.end();
+  });
+
+  child.on('close', (code) => {
+    sendEvent('done', { exitCode: code });
+    res.end();
+  });
+
+  // If client closes connection, kill child process
+  req.on('close', () => {
+    child.kill();
+  });
 });
 
 app.post('/api/execute', async (req, res) => {

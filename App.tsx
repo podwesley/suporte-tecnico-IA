@@ -70,6 +70,7 @@ const App: React.FC = () => {
   const [selectedOS, setSelectedOS] = useState<string | null>(null);
   const [commandQueue, setCommandQueue] = useState<CommandHistoryItem[]>([]);
   const [favorites, setFavorites] = useState<FavoriteItem[]>([]);
+  const [executingFavoriteId, setExecutingFavoriteId] = useState<string | null>(null);
   const [favoritesWidth, setFavoritesWidth] = useState(() => {
     const saved = localStorage.getItem('techsupport_ai_favorites_width');
     return saved ? parseInt(saved, 10) : 450; // Default to ~35vw equivalent in px
@@ -343,8 +344,27 @@ const App: React.FC = () => {
   };
 
   const handleExecuteFavorite = async (item: FavoriteCommand) => {
-      const output = await handleRunCommand(item.command, false);
-      setFavorites(prev => updateCommandInTree(prev, item.id, output));
+      setExecutingFavoriteId(item.id);
+      
+      // Clear previous output and set initial timestamp
+      setFavorites(prev => updateCommandInTree(prev, item.id, ''));
+
+      let fullOutput = '';
+      try {
+          await commandExecutor.executeStream(
+              item.command,
+              (chunk) => {
+                  fullOutput += chunk;
+                  setFavorites(prev => updateCommandInTree(prev, item.id, fullOutput));
+              },
+              currentWorkingDirectory ?? defaultDirectory ?? null
+          );
+      } catch (e) {
+          const errorMsg = fullOutput + `\nErro ao executar: ${e}`;
+          setFavorites(prev => updateCommandInTree(prev, item.id, errorMsg));
+      } finally {
+          setExecutingFavoriteId(null);
+      }
   };
 
   const handleRemoveFavorite = (id: string) => {
@@ -649,6 +669,7 @@ const App: React.FC = () => {
             onAdd={handleManualAddFavorite}
             width={favoritesWidth}
             onResizeStart={startResizing}
+            executingFavoriteId={executingFavoriteId}
           />
       </div>
       
