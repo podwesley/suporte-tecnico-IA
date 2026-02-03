@@ -12,7 +12,7 @@ import { Modal } from './components/Modal';
 import { APP_NAME, SYSTEM_PROMPT_AGENT_TUTOR, SYSTEM_PROMPT_AGENT_SUPPORT } from './agents';
 import { motion, AnimatePresence } from 'framer-motion';
 import { History, FolderOpen, Plus, X, Server, Terminal, Box, Shield, Cpu, PanelLeft, HelpCircle, Home, LogOut, MessageSquare, HardDrive, Clock, Save, Edit, Trash2, Settings, ArrowLeftRight, Bot, Laptop, Upload, Download, FileJson } from 'lucide-react';
-import { FaApple, FaWindows, FaLinux, FaRobot, FaLaptopCode } from 'react-icons/fa';
+import { FaApple, FaWindows, FaLinux, FaRobot, FaLaptopCode, FaDocker } from 'react-icons/fa';
 
 const STORAGE_KEY = 'techsupport_ai_sessions';
 const HELP_STORAGE_KEY = 'techsupport_ai_help_sessions';
@@ -1157,14 +1157,15 @@ const App: React.FC = () => {
       <Modal 
           isOpen={isOSModalOpen} 
           onClose={() => setIsOSModalOpen(false)} 
-          title="Selecione o Sistema Operacional" 
+          title="Selecione o Ambiente de Trabalho" 
           type="info"
       >
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {[ 
                   { id: 'macos', label: 'MACOS', icon: <FaApple />, description: 'Apple Ecosystem' },
                   { id: 'windows', label: 'WINDOWS', icon: <FaWindows />, description: 'Microsoft Ecosystem' },
-                  { id: 'linux', label: 'LINUX', icon: <FaLinux />, description: 'Open Source Power' }
+                  { id: 'linux', label: 'LINUX', icon: <FaLinux />, description: 'Open Source Power' },
+                  { id: 'docker', label: 'DOCKER', icon: <FaDocker />, description: 'Containerized Environment' }
               ].map(os => (
                   <button
                       key={os.id}
