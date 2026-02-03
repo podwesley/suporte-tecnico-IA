@@ -44,8 +44,8 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
         transition={{ duration: 0.3, ease: "easeOut" }}
         className="flex w-full mb-8 justify-end"
       >
-        <div className="max-w-[85%] md:max-w-[75%] w-full flex justify-end">
-            <div className={`relative rounded-2xl shadow-sm border backdrop-blur-sm text-slate-200 rounded-tr-sm px-6 py-4 ${isHelpMode ? 'bg-purple-600/10 border-purple-500/30' : 'bg-blue-600/10 border-blue-500/30'}`}>
+        <div className="max-w-[90%] md:max-w-[75%] flex justify-end">
+            <div className={`relative rounded-2xl shadow-sm border backdrop-blur-sm text-slate-200 rounded-tr-sm px-4 md:px-6 py-3 md:py-4 break-words overflow-hidden ${isHelpMode ? 'bg-purple-600/10 border-purple-500/30' : 'bg-blue-600/10 border-blue-500/30'}`}>
                 <MarkdownRenderer 
                     content={message.text}
                     onRunCommand={onRunCommand}
@@ -66,30 +66,30 @@ export const ChatBubble: React.FC<ChatBubbleProps> = ({
       transition={{ duration: 0.3, ease: "easeOut" }}
       className="flex w-full mb-8 group justify-start"
     >
-      <div className="flex max-w-[85%] md:max-w-[75%] gap-4 flex-row">
+      <div className="flex max-w-[90%] md:max-w-[80%] gap-3 md:gap-4 flex-row">
         {/* Avatar */}
-        <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg mt-1 text-white ${isHelpMode ? 'bg-purple-600' : 'bg-emerald-600'}`}>
-          <Bot size={16} />
+        <div className={`w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center flex-shrink-0 shadow-lg mt-1 text-white ${isHelpMode ? 'bg-purple-600' : 'bg-emerald-600'}`}>
+          <Bot size={14} className="md:size-4" />
         </div>
 
         {/* Bubble Content */}
         <div className={clsx(
-            "relative rounded-2xl shadow-sm border backdrop-blur-sm text-slate-200 rounded-tl-sm px-6 py-4 bg-bg-surface/50",
+            "relative rounded-2xl shadow-sm border backdrop-blur-sm text-slate-200 rounded-tl-sm px-4 md:px-6 py-3 md:py-4 bg-bg-surface/50 break-words overflow-hidden",
             isHelpMode ? "border-purple-500/20" : "border-emerald-500/20"
         )}>
           {/* Header (Role Name) */}
-          <div className="flex items-center justify-between gap-2 opacity-50 text-[9px] font-bold tracking-widest uppercase mb-2">
+          <div className="flex items-center justify-between gap-2 opacity-50 text-[8px] md:text-[9px] font-bold tracking-widest uppercase mb-2">
             <span>{isHelpMode ? 'AI Agent Tutor' : 'Tech Support AI'}</span>
             <button 
               onClick={handleCopy}
               className="hover:opacity-100 transition-opacity cursor-pointer p-1 rounded hover:bg-white/10"
               title="Copiar markdown"
             >
-              {isCopied ? <Check size={12} /> : <Copy size={12} />}
+              {isCopied ? <Check size={10} className="md:size-3" /> : <Copy size={10} className="md:size-3" />}
             </button>
           </div>
           
-          <div className="leading-7 text-sm md:text-base text-slate-300">
+          <div className="leading-6 md:leading-7 text-xs md:text-sm lg:text-base text-slate-300">
               <MarkdownRenderer 
                   content={message.text} 
                   onRunCommand={onRunCommand}

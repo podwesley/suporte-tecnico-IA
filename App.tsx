@@ -850,11 +850,11 @@ const App: React.FC = () => {
             {/* Mode Button (Toggle) */}
             <button 
                 onClick={isHelpMode ? handleHome : handleHelpMode}
-                className="flex items-center gap-2 px-3 py-1.5 text-[10px] font-black uppercase tracking-tighter transition-all active:scale-95 border border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 hover:text-slate-200 rounded-none"
+                className="flex items-center gap-2 px-2 md:px-3 py-1.5 text-[10px] font-black uppercase tracking-tighter transition-all active:scale-95 border border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 hover:text-slate-200 rounded-none"
                 title={isHelpMode ? "Trocar para Modo Suporte" : "Trocar para Modo Agente"}
             >
                 <ArrowLeftRight size={12} className="text-slate-400" />
-                <span className="hidden sm:inline">
+                <span className="hidden lg:inline">
                     {isHelpMode ? "Mudar para Suporte" : "Mudar para Agente"}
                 </span>
             </button>
@@ -862,11 +862,11 @@ const App: React.FC = () => {
             {!isHelpMode && (
                 <button 
                     onClick={handleNewChat}
-                    className="flex items-center gap-2 px-3 py-1.5 text-[10px] font-black uppercase tracking-tighter transition-all active:scale-95 border border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 hover:text-slate-200 rounded-none"
+                    className="flex items-center gap-2 px-2 md:px-3 py-1.5 text-[10px] font-black uppercase tracking-tighter transition-all active:scale-95 border border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 hover:text-slate-200 rounded-none"
                     title="Nova Solicitação"
                 >
                     <Plus size={14} />
-                    <span className="hidden sm:inline">Nova Solicitação</span>
+                    <span className="hidden lg:inline">Nova Solicitação</span>
                 </button>
             )}
             
@@ -881,42 +881,42 @@ const App: React.FC = () => {
             )}
           </div>
           
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 md:gap-4">
             {isHelpMode && activePromptTitle && (
                 <button 
                     onClick={() => setIsPromptLibraryOpen(true)}
-                    className="flex items-center gap-2 px-3 py-1.5 text-[10px] font-black uppercase tracking-tighter transition-all active:scale-95 border border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 hover:text-slate-200 rounded-none animate-in fade-in slide-in-from-left-2"
+                    className="flex items-center gap-2 px-2 md:px-3 py-1.5 text-[10px] font-black uppercase tracking-tighter transition-all active:scale-95 border border-white/10 bg-white/5 text-slate-400 hover:bg-white/10 hover:text-slate-200 rounded-none animate-in fade-in slide-in-from-left-2"
                     title={`Prompt Ativo: ${activePromptTitle}`}
                 >
                     <MessageSquare size={14} className="text-purple-400" />
-                    <span className="hidden sm:inline max-w-[150px] truncate">{activePromptTitle}</span>
+                    <span className="hidden md:inline max-w-[100px] lg:max-w-[150px] truncate">{activePromptTitle}</span>
                 </button>
             )}
 
             <button 
                 onClick={handleOpenPromptLibrary} 
-                className="p-2 text-slate-400 hover:text-white hover:bg-white/5 transition-colors rounded-none"
+                className="p-1.5 md:p-2 text-slate-400 hover:text-white hover:bg-white/5 transition-colors rounded-none"
                 title="Configurações do Agente"
             >
-                <Settings size={20} />
+                <Settings size={18} className="md:size-5" />
             </button>
 
             <button 
                 onClick={() => setIsSidebarOpen(true)}
-                className="p-2 text-slate-400 hover:text-white hover:bg-white/5 transition-colors rounded-none"
+                className="p-1.5 md:p-2 text-slate-400 hover:text-white hover:bg-white/5 transition-colors rounded-none"
                 title="Histórico de Conversas"
             >
-                <History size={20} />
+                <History size={18} className="md:size-5" />
             </button>
 
             <div className="relative group">
                 <button
                     onClick={handleSelectDirectory}
-                    className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-slate-300 bg-bg-surface hover:bg-white/5 border border-border-main transition-all rounded-none"
+                    className="flex items-center gap-2 px-2 md:px-3 py-1.5 text-[10px] md:text-xs font-medium text-slate-300 bg-bg-surface hover:bg-white/5 border border-border-main transition-all rounded-none"
                     title={currentWorkingDirectory || defaultDirectory || "Selecionar pasta de trabalho"}
                 >
                     <FolderOpen size={14} className="text-yellow-500" />
-                    <span className="hidden sm:inline whitespace-nowrap max-w-[150px] truncate">
+                    <span className="hidden sm:inline whitespace-nowrap max-w-[80px] md:max-w-[150px] truncate">
                         {(currentWorkingDirectory || defaultDirectory) ? (
                             (currentWorkingDirectory || defaultDirectory) === '/' ? '/' : (currentWorkingDirectory || defaultDirectory)?.replace(/\/$/, '').split('/').pop()
                         ) : 'Abrir Pasta'}
@@ -999,7 +999,7 @@ const App: React.FC = () => {
                     animate={{ width: "auto", opacity: 1 }}
                     exit={{ width: 0, opacity: 0 }}
                     transition={{ duration: 0.3, ease: "easeInOut" }}
-                    className="overflow-hidden h-full flex-shrink-1"
+                    className="hidden lg:block overflow-hidden h-full flex-shrink-1"
                 >
                      <CommandSidebar 
                         commands={commandQueue} 
@@ -1012,10 +1012,10 @@ const App: React.FC = () => {
           </AnimatePresence>
 
           {/* Middle Column: Chat Area */}
-          <div className="flex-1 flex flex-col relative min-w-0 bg-gradient-to-b from-bg-main to-bg-surface/30">
-            <main className="flex-1 w-full mx-auto pb-40 px-6 overflow-y-auto custom-scrollbar pt-6">
+          <div className="flex-1 flex flex-col relative min-w-0 bg-gradient-to-b from-bg-main to-bg-surface/30 h-full">
+            <main className="flex-1 w-full mx-auto pb-40 px-4 md:px-6 overflow-y-auto custom-scrollbar pt-6">
                 {messages.length === 0 ? (
-                <div className="flex flex-col items-center justify-center mt-20 text-center opacity-0 animate-[fadeIn_0.8s_ease-out_forwards]">
+                <div className="flex flex-col items-center justify-center mt-20 text-center opacity-0 animate-[fadeIn_0.8s_ease-out_forwards] px-4">
                     
                     <motion.div 
                         initial={{ scale: 0.8, opacity: 0 }}
@@ -1029,15 +1029,15 @@ const App: React.FC = () => {
                         </div>
                     </motion.div>
 
-                    <h2 className="text-3xl font-bold text-white mb-3 tracking-tight">
+                    <h2 className="text-2xl md:text-3xl font-bold text-white mb-3 tracking-tight px-4">
                         {isHelpMode ? "Modo Tutor Ativado" : "Como posso ajudar?"}
                     </h2>
-                    <p className="text-slate-500 max-w-md text-sm leading-relaxed mb-12">
+                    <p className="text-slate-500 max-w-md text-sm leading-relaxed mb-12 px-4">
                         {isHelpMode ? "Estou aqui para tirar suas dúvidas e ensinar sobre o sistema. Pergunte o que quiser!" : "Especialista em Docker, Kubernetes, Linux e Debugging. Selecione uma opção abaixo ou descreva seu problema."}
                     </p>
                     
                     {isHelpMode && (
-                        <div className="w-full max-w-2xl mt-4">
+                        <div className="w-full max-w-2xl mt-4 px-4">
                             {savedPrompts.length > 0 ? (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                     {savedPrompts.map((prompt) => (
@@ -1073,7 +1073,7 @@ const App: React.FC = () => {
                     )}
                     
                     {!isHelpMode && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full max-w-2xl">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full max-w-2xl px-4">
                             {[ 
                                 { label: "Erro no Docker Container", icon: <Box size={18} className="text-blue-400" /> },
                                 { label: "Instalar MySQL no Ubuntu", icon: <Server size={18} className="text-emerald-400" /> },
@@ -1098,7 +1098,7 @@ const App: React.FC = () => {
                     )}
                 </div>
                 ) : (
-                <div className="space-y-2">
+                <div className="space-y-2 max-w-5xl mx-auto">
                     {messages.map((msg) => (
                     <ChatBubble 
                         key={msg.id} 
@@ -1131,18 +1131,20 @@ const App: React.FC = () => {
           </div>
           
           {/* Right Column: Favorites */}
-          <FavoritesSidebar 
-            favorites={favorites}
-            onExecute={handleExecuteFavorite}
-            onRemove={handleRemoveFavorite}
-            onUpdate={handleUpdateFavorite}
-            onReorder={handleReorderFavorites}
-            onAdd={handleManualAddFavorite}
-            width={favoritesWidth}
-            onResizeStart={startResizing}
-            executingFavoriteId={executingFavoriteId}
-            isHelpMode={isHelpMode}
-          />
+          <div className="hidden xl:block h-full flex-shrink-0">
+              <FavoritesSidebar 
+                favorites={favorites}
+                onExecute={handleExecuteFavorite}
+                onRemove={handleRemoveFavorite}
+                onUpdate={handleUpdateFavorite}
+                onReorder={handleReorderFavorites}
+                onAdd={handleManualAddFavorite}
+                width={favoritesWidth}
+                onResizeStart={startResizing}
+                executingFavoriteId={executingFavoriteId}
+                isHelpMode={isHelpMode}
+              />
+          </div>
       </div>
       
       <Modal 
