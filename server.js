@@ -100,13 +100,41 @@ app.post('/api/execute', async (req, res) => {
 
 app.post('/api/select-directory', async (req, res) => {
   try {
-    // Uses AppleScript to open a native folder picker on macOS
-    // This will only work if the server is running on a mac (which is the case here)
-    const { stdout } = await execAsync("osascript -e 'POSIX path of (choose folder)'");
-    res.json({ success: true, path: stdout.trim() });
+    const platform = process.platform;
+
+    if (platform === 'darwin') {
+      // macOS: AppleScript folder picker
+      const { stdout } = await execAsync(`osascript -e 'POSIX path of (choose folder)'`);
+      return res.json({ success: true, path: stdout.trim() });
+    }
+
+    if (platform === 'win32') {
+      // Windows: PowerShell folder picker (requires STA)
+      // Returns a filesystem path like C:\Users\...
+      const psCommand =
+          'Add-Type -AssemblyName System.Windows.Forms; ' +
+          '$f = New-Object System.Windows.Forms.FolderBrowserDialog; ' +
+          '$f.Description = "Selecione uma pasta"; ' +
+          '$f.ShowNewFolderButton = $true; ' +
+          'if ($f.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) { $f.SelectedPath }';
+
+      const { stdout } = await execAsync(
+          `powershell -NoProfile -STA -Command "${psCommand}"`,
+          { windowsHide: true }
+      );
+
+      const selected = stdout.trim();
+      if (!selected) return res.json({ success: false, path: null });
+      return res.json({ success: true, path: selected });
+    }
+
+    // Linux/others: try zenity (GNOME). If missing, this will fail and we return success:false.
+    const { stdout } = await execAsync(`sh -lc 'zenity --file-selection --directory 2>/dev/null || true'`);
+    const selected = stdout.trim();
+    if (!selected) return res.json({ success: false, path: null });
+    return res.json({ success: true, path: selected });
   } catch (error) {
-    // Likely user cancelled the dialog
-    console.log("Directory selection cancelled or failed");
+    console.log('Directory selection cancelled or failed', error?.message || error);
     res.json({ success: false, path: null });
   }
 });
