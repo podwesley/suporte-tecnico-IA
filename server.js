@@ -114,16 +114,37 @@ app.post('/api/select-directory', async (req, res) => {
       const psCommand =
           'Add-Type -AssemblyName System.Windows.Forms; ' +
           '$f = New-Object System.Windows.Forms.FolderBrowserDialog; ' +
-          '$f.Description = "Selecione uma pasta"; ' +
+          '$f.Description = \'Selecione uma pasta\'; ' +
           '$f.ShowNewFolderButton = $true; ' +
           'if ($f.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) { $f.SelectedPath }';
 
-      const { stdout } = await execAsync(
-          `powershell -NoProfile -STA -Command "${psCommand}"`,
-          { windowsHide: true }
-      );
+      // Try powershell.exe, pwsh.exe or absolute path
+      let stdout;
+      try {
+        const result = await execAsync(
+            `powershell.exe -NoProfile -STA -Command "${psCommand}"`,
+            { windowsHide: true }
+        );
+        stdout = result.stdout;
+      } catch (e) {
+        try {
+          console.log('powershell.exe failed, trying pwsh.exe...', e.message);
+          const result = await execAsync(
+              `pwsh.exe -NoProfile -STA -Command "${psCommand}"`,
+              { windowsHide: true }
+          );
+          stdout = result.stdout;
+        } catch (e2) {
+          console.log('pwsh.exe failed, trying absolute path...', e2.message);
+          const result = await execAsync(
+              `C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe -NoProfile -STA -Command "${psCommand}"`,
+              { windowsHide: true }
+          );
+          stdout = result.stdout;
+        }
+      }
 
-      const selected = stdout.trim();
+      const selected = (stdout || '').trim();
       if (!selected) return res.json({ success: false, path: null });
       return res.json({ success: true, path: selected });
     }
