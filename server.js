@@ -36,7 +36,13 @@ app.get('/api/execute-stream', (req, res) => {
 
   console.log(`[Stream] # ${effectiveCwd} > ${command}`);
 
-  const child = spawn(command, { 
+  let finalCommand = command;
+  if (process.platform === 'win32') {
+    // Force UTF-8 encoding for Windows output
+    finalCommand = `chcp 65001 >nul && ${command}`;
+  }
+
+  const child = spawn(finalCommand, { 
     cwd: effectiveCwd,
     shell: true 
   });
@@ -79,10 +85,16 @@ app.post('/api/execute', async (req, res) => {
   const effectiveCwd = cwd || os.homedir();
   console.log(`# ${effectiveCwd}${command}`);
 
+  let finalCommand = command;
+  if (process.platform === 'win32') {
+    // Force UTF-8 encoding for Windows output
+    finalCommand = `chcp 65001 >nul && ${command}`;
+  }
+
   try {
     // Executa o comando. Note que isso executa no host onde o node está rodando.
     // CUIDADO: Isso permite execução arbitrária de código.
-    const { stdout, stderr } = await execAsync(command, { cwd: effectiveCwd });
+    const { stdout, stderr } = await execAsync(finalCommand, { cwd: effectiveCwd });
     
     // Combina stdout e stderr para o output
     const output = stdout + (stderr ? `\nSTDERR:\n${stderr}` : '');
@@ -112,36 +124,44 @@ app.post('/api/select-directory', async (req, res) => {
       // Windows: PowerShell folder picker (requires STA)
       // Returns a filesystem path like C:\Users\...
       const psCommand =
+          '[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; ' +
           'Add-Type -AssemblyName System.Windows.Forms; ' +
           '$f = New-Object System.Windows.Forms.FolderBrowserDialog; ' +
           '$f.Description = \'Selecione uma pasta\'; ' +
           '$f.ShowNewFolderButton = $true; ' +
           'if ($f.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) { $f.SelectedPath }';
 
-      // Try powershell.exe, pwsh.exe or absolute path
-      let stdout;
-      try {
-        const result = await execAsync(
-            `powershell.exe -NoProfile -STA -Command "${psCommand}"`,
-            { windowsHide: true }
-        );
-        stdout = result.stdout;
-      } catch (e) {
-        try {
-          console.log('powershell.exe failed, trying pwsh.exe...', e.message);
-          const result = await execAsync(
-              `pwsh.exe -NoProfile -STA -Command "${psCommand}"`,
-              { windowsHide: true }
-          );
-          stdout = result.stdout;
-        } catch (e2) {
-          console.log('pwsh.exe failed, trying absolute path...', e2.message);
-          const result = await execAsync(
-              `C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe -NoProfile -STA -Command "${psCommand}"`,
-              { windowsHide: true }
-          );
-          stdout = result.stdout;
-        }
+      // Try different ways to invoke PowerShell
+      const sysRoot = process.env.SystemRoot || 'C:\\Windows';
+      const winPS = `${sysRoot}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe`;
+      
+      const commandsToTry = [
+          'powershell.exe',
+          'pwsh.exe',
+          winPS
+      ];
+
+      let stdout = '';
+      let lastError = null;
+
+      for (const psExe of commandsToTry) {
+          try {
+              const result = await execAsync(
+                  `chcp 65001 >nul && "${psExe}" -NoProfile -NonInteractive -STA -Command "${psCommand}"`,
+                  { windowsHide: true }
+              );
+              stdout = result.stdout;
+              lastError = null;
+              break; // Success!
+          } catch (e) {
+              lastError = e;
+              // Continue to next option
+          }
+      }
+
+      if (lastError) {
+          console.error('All PowerShell attempts failed:', lastError.message);
+          return res.json({ success: false, path: null });
       }
 
       const selected = (stdout || '').trim();
