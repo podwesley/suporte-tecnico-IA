@@ -27,10 +27,12 @@ interface RecursiveItemProps {
   level: number;
   editingId: string | null;
   editLabelValue: string;
+  editCommandValue: string;
   draggedItemId: string | null;
   onStartEditing: (item: FavoriteItem) => void;
   onSaveEditing: () => void;
   setEditLabelValue: (val: string) => void;
+  setEditCommandValue: (val: string) => void;
   onDragStart: (e: React.DragEvent, id: string) => void;
   onToggleFolder: (id: string) => void;
   onRemove: (id: string) => void;
@@ -47,10 +49,12 @@ const RecursiveItem: React.FC<RecursiveItemProps> = ({
   level,
   editingId,
   editLabelValue,
+  editCommandValue,
   draggedItemId,
   onStartEditing,
   onSaveEditing,
   setEditLabelValue,
+  setEditCommandValue,
   onDragStart,
   onToggleFolder,
   onRemove,
@@ -68,34 +72,9 @@ const RecursiveItem: React.FC<RecursiveItemProps> = ({
   const [dropIndicator, setDropIndicator] = useState<DropPosition>(null);
   const outputRef = useRef<HTMLDivElement>(null);
 
-  // Edit State for Commands
-  const [editCommandValue, setEditCommandValue] = useState('');
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-
-  // Initialize edit values when modal opens
-  useEffect(() => {
-      if (isEditModalOpen && !isFolder) {
-          setEditLabelValue((item as FavoriteCommand).label || '');
-          setEditCommandValue((item as FavoriteCommand).command || '');
-      }
-  }, [isEditModalOpen, item, isFolder, setEditLabelValue]);
-
   const handleEditClick = (e: React.MouseEvent) => {
       e.stopPropagation();
-      if (isFolder) {
-          onStartEditing(item);
-      } else {
-          setIsEditModalOpen(true);
-      }
-  };
-
-  const handleSaveCommandEdit = (e: React.FormEvent) => {
-      e.preventDefault();
-      onUpdate(item.id, { 
-          label: editLabelValue,
-          command: editCommandValue 
-      } as Partial<FavoriteCommand>);
-      setIsEditModalOpen(false);
+      onStartEditing(item);
   };
 
   // Auto-scroll output
@@ -255,15 +234,50 @@ const RecursiveItem: React.FC<RecursiveItemProps> = ({
       {dropIndicator === 'before' && indicatorLine('before')}
       {dropIndicator === 'after' && indicatorLine('after')}
       <div className="p-3">
-        <div className="flex justify-between items-start mb-1">
-            <span className={`text-xs font-bold font-mono tracking-wider cursor-pointer hover:opacity-80 flex items-center gap-1.5 ${isHelpMode ? 'text-purple-400' : 'text-blue-400'}`} onDoubleClick={handleEditClick}>
-              <Terminal size={10} className={isHelpMode ? 'text-purple-500' : 'text-blue-500'} />
-              {item.label}
-            </span>
-        </div>
-        <div className="mb-2 border border-border-main overflow-hidden bg-bg-main/50">
-          <code className="block text-[0.75rem] font-mono p-1.5 break-all text-emerald-300">{item.command}</code>
-        </div>
+        {isEditing ? (
+          <div className="space-y-2" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center gap-2">
+               <Terminal size={10} className={isHelpMode ? 'text-purple-500' : 'text-blue-500'} />
+               <input
+                 autoFocus
+                 type="text"
+                 value={editLabelValue}
+                 onChange={(e) => setEditLabelValue(e.target.value)}
+                 onKeyDown={(e) => e.key === 'Enter' && onSaveEditing()}
+                 className="bg-black/50 text-white text-xs px-2 py-1 w-full border border-blue-500 outline-none font-mono"
+                 placeholder="Nome do comando"
+               />
+            </div>
+            <textarea
+              value={editCommandValue}
+              onChange={(e) => setEditCommandValue(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && e.ctrlKey && onSaveEditing()}
+              className="bg-black/50 text-emerald-300 text-[0.75rem] p-2 w-full border border-blue-500 outline-none font-mono resize-none"
+              rows={3}
+              placeholder="Comando"
+            />
+            <div className="flex justify-end">
+               <button 
+                 onClick={(e) => { e.stopPropagation(); onSaveEditing(); }}
+                 className="p-1 px-2 bg-blue-600 hover:bg-blue-500 text-white text-[10px] font-bold font-mono uppercase flex items-center gap-1"
+               >
+                 <Save size={10} /> Salvar
+               </button>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="flex justify-between items-start mb-1">
+                <span className={`text-xs font-bold font-mono tracking-wider cursor-pointer hover:opacity-80 flex items-center gap-1.5 ${isHelpMode ? 'text-purple-400' : 'text-blue-400'}`} onClick={handleEditClick}>
+                  <Terminal size={10} className={isHelpMode ? 'text-purple-500' : 'text-blue-500'} />
+                  {item.label}
+                </span>
+            </div>
+            <div className="mb-2 border border-border-main overflow-hidden bg-bg-main/50 cursor-pointer hover:border-blue-500/50 transition-colors" onClick={handleEditClick}>
+              <code className="block text-[0.75rem] font-mono p-1.5 break-all text-emerald-300">{item.command}</code>
+            </div>
+          </>
+        )}
         {(hasOutput || isExecuting) && (
           <div className="mt-2">
             <div className="flex items-center justify-between mb-1">
@@ -322,24 +336,6 @@ const RecursiveItem: React.FC<RecursiveItemProps> = ({
         </div>
       </div>
     </motion.div>
-    
-    <Modal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} title="Editar Favorito">
-        <form onSubmit={handleSaveCommandEdit} className="space-y-4">
-          <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1">Nome/Label</label>
-            <input type="text" value={editLabelValue} onChange={(e) => setEditLabelValue(e.target.value)} className="w-full bg-bg-main border border-border-main p-2 text-sm text-white focus:border-blue-500 outline-none" />
-          </div>
-          <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1">Comando</label>
-            <textarea value={editCommandValue} onChange={(e) => setEditCommandValue(e.target.value)} className="w-full bg-bg-main border border-border-main p-2 text-sm text-white focus:border-blue-500 outline-none font-mono" rows={3} required />
-          </div>
-          <div className="flex justify-end pt-2">
-            <button type="submit" className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium text-sm flex items-center gap-2">
-                <Save size={14} /> Salvar
-            </button>
-          </div>
-        </form>
-    </Modal>
     </>
   );
 };
@@ -363,6 +359,7 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = React.memo(({
   const [newFolderName, setNewFolderName] = useState('');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editLabelValue, setEditLabelValue] = useState('');
+  const [editCommandValue, setEditCommandValue] = useState('');
   const [draggedItemId, setDraggedItemId] = useState<string | null>(null);
   const [isAddMenuOpen, setIsAddMenuOpen] = useState(false);
   const [targetFolderId, setTargetFolderId] = useState<string | null>(null);
@@ -504,12 +501,34 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = React.memo(({
 
   const startEditing = (item: FavoriteItem) => {
     setEditingId(item.id);
-    setEditLabelValue(item.type === 'folder' ? item.name : item.label);
+    if (item.type === 'folder') {
+        setEditLabelValue(item.name);
+        setEditCommandValue('');
+    } else {
+        setEditLabelValue((item as FavoriteCommand).label || '');
+        setEditCommandValue((item as FavoriteCommand).command || '');
+    }
   };
 
   const saveEditing = () => {
-    if (editingId && editLabelValue.trim()) onReorder(updateItemLabel(favorites, editingId, editLabelValue.trim()));
-    setEditingId(null); setEditLabelValue('');
+    if (editingId) {
+        const item = findItem(favorites, editingId);
+        if (item) {
+            if (item.type === 'folder') {
+                if (editLabelValue.trim()) {
+                    onReorder(updateItemLabel(favorites, editingId, editLabelValue.trim()));
+                }
+            } else {
+                onUpdate(editingId, { 
+                    label: editLabelValue.trim(), 
+                    command: editCommandValue.trim() 
+                } as Partial<FavoriteCommand>);
+            }
+        }
+    }
+    setEditingId(null);
+    setEditLabelValue('');
+    setEditCommandValue('');
   };
 
   const handleToggleFolder = (id: string) => onReorder(toggleFolderOpen(favorites, id));
@@ -550,7 +569,7 @@ export const FavoritesSidebar: React.FC<FavoritesSidebarProps> = React.memo(({
             </motion.div>
           ) : (
             favorites.map((fav) => (
-              <RecursiveItem key={fav.id} item={fav} level={0} editingId={editingId} editLabelValue={editLabelValue} draggedItemId={draggedItemId} onStartEditing={startEditing} onSaveEditing={saveEditing} setEditLabelValue={setEditLabelValue} onDragStart={onDragStartHandler} onToggleFolder={handleToggleFolder} onRemove={onRemove} onExecute={onExecute} onUpdate={onUpdate} onAddChild={handleAddChild} onDropAtPosition={onDropAtPositionHandler} executingFavoriteId={executingFavoriteId} isHelpMode={isHelpMode} />
+              <RecursiveItem key={fav.id} item={fav} level={0} editingId={editingId} editLabelValue={editLabelValue} editCommandValue={editCommandValue} draggedItemId={draggedItemId} onStartEditing={startEditing} onSaveEditing={saveEditing} setEditLabelValue={setEditLabelValue} setEditCommandValue={setEditCommandValue} onDragStart={onDragStartHandler} onToggleFolder={handleToggleFolder} onRemove={onRemove} onExecute={onExecute} onUpdate={onUpdate} onAddChild={handleAddChild} onDropAtPosition={onDropAtPositionHandler} executingFavoriteId={executingFavoriteId} isHelpMode={isHelpMode} />
             ))
           )}
         </AnimatePresence>
