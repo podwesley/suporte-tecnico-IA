@@ -8,6 +8,30 @@ const execAsync = promisify(exec);
 const app = express();
 const PORT = 8509;
 
+const sysRoot = process.env.SystemRoot || 'C:\\Windows';
+const winPS = `${sysRoot}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe`;
+
+async function getWindowsShell() {
+  const commandsToTry = ['pwsh.exe', 'powershell.exe', winPS];
+  for (const shell of commandsToTry) {
+    try {
+      await execAsync(`"${shell}" -Command "echo 1"`);
+      return shell;
+    } catch (e) {
+      continue;
+    }
+  }
+  return true; // Fallback to default shell
+}
+
+let cachedWindowsShell = null;
+async function getShell() {
+  if (process.platform !== 'win32') return true;
+  if (cachedWindowsShell) return cachedWindowsShell;
+  cachedWindowsShell = await getWindowsShell();
+  return cachedWindowsShell;
+}
+
 app.use(cors());
 app.use(express.json());
 
@@ -15,7 +39,7 @@ app.get('/health', (req, res) => {
   res.json({ status: 'online' });
 });
 
-app.get('/api/execute-stream', (req, res) => {
+app.get('/api/execute-stream', async (req, res) => {
   const { command, cwd } = req.query;
 
   if (!command) {
@@ -36,15 +60,22 @@ app.get('/api/execute-stream', (req, res) => {
 
   console.log(`[Stream] # ${effectiveCwd} > ${command}`);
 
+  const shell = await getShell();
   let finalCommand = command;
+  
   if (process.platform === 'win32') {
-    // Force UTF-8 encoding for Windows output
-    finalCommand = `chcp 65001 >nul && ${command}`;
+    // No Windows, usamos o PowerShell para suportar separadores como ';'
+    // e forçamos UTF-8.
+    if (shell !== true) {
+      finalCommand = `chcp 65001 >$null; ${command}`;
+    } else {
+      finalCommand = `chcp 65001 >nul && ${command}`;
+    }
   }
 
   const child = spawn(finalCommand, { 
     cwd: effectiveCwd,
-    shell: true 
+    shell: shell 
   });
 
   const sendEvent = (event, data) => {
@@ -85,16 +116,21 @@ app.post('/api/execute', async (req, res) => {
   const effectiveCwd = cwd || os.homedir();
   console.log(`# ${effectiveCwd}${command}`);
 
+  const shell = await getShell();
   let finalCommand = command;
+  
   if (process.platform === 'win32') {
-    // Force UTF-8 encoding for Windows output
-    finalCommand = `chcp 65001 >nul && ${command}`;
+    if (shell !== true) {
+      finalCommand = `chcp 65001 >$null; ${command}`;
+    } else {
+      finalCommand = `chcp 65001 >nul && ${command}`;
+    }
   }
 
   try {
     // Executa o comando. Note que isso executa no host onde o node está rodando.
     // CUIDADO: Isso permite execução arbitrária de código.
-    const { stdout, stderr } = await execAsync(finalCommand, { cwd: effectiveCwd });
+    const { stdout, stderr } = await execAsync(finalCommand, { cwd: effectiveCwd, shell: shell });
     
     // Combina stdout e stderr para o output
     const output = stdout + (stderr ? `\nSTDERR:\n${stderr}` : '');
@@ -136,8 +172,8 @@ app.post('/api/select-directory', async (req, res) => {
       const winPS = `${sysRoot}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe`;
       
       const commandsToTry = [
-          'powershell.exe',
           'pwsh.exe',
+          'powershell.exe',
           winPS
       ];
 
