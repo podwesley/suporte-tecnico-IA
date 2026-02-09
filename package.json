@@ -24,6 +24,7 @@
     "uuid": "^13.0.0"
   },
   "devDependencies": {
+    "@rollup/rollup-win32-x64-msvc": "^4.57.1",
     "@tailwindcss/postcss": "^4.0.0",
     "@types/node": "^22.14.0",
     "@types/prismjs": "^1.26.5",
@@ -32,5 +33,8 @@
     "tailwindcss": "^4.0.0",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"
+  },
+  "optionalDependencies": {
+    "@rollup/rollup-win32-x64-msvc": "^4.57.1"
   }
 }

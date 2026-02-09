@@ -13,6 +13,8 @@ import 'prismjs/components/prism-jsx';
 import 'prismjs/components/prism-tsx';
 import 'prismjs/components/prism-yaml';
 import 'prismjs/components/prism-markdown';
+import 'prismjs/components/prism-powershell';
+import 'prismjs/components/prism-batch';
 
 interface MarkdownRendererProps {
   content: string;
@@ -63,8 +65,8 @@ export const CodeBlock: React.FC<{
     }
   };
 
-  const isExecutable = ['bash', 'sh', 'shell', 'zsh', 'docker'].includes(language.toLowerCase()) || 
-                       (language === 'text' && (code.trim().startsWith('docker') || code.trim().startsWith('npm')));
+  const isExecutable = ['bash', 'sh', 'shell', 'zsh', 'docker', 'powershell', 'pwsh', 'cmd', 'batch', 'dos'].includes(language.toLowerCase()) || 
+                       (language === 'text' && (code.trim().startsWith('docker') || code.trim().startsWith('npm') || code.trim().startsWith('git')));
 
   const highlightedCode = useMemo(() => {
     const grammar = Prism.languages[language] || Prism.languages.text || Prism.languages.javascript;
@@ -203,10 +205,15 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, onRunComma
           // Heuristic to detect bash/shell if language is text
           if (language === 'text') {
              const trimmed = code.trim();
-             const commonShellCommands = ['git', 'docker', 'npm', 'yarn', 'pnpm', 'ls', 'cd', 'cat', 'grep', 'sudo', 'echo', 'brew', 'apt', 'curl', 'wget', 'ssh'];
-             const firstWord = trimmed.split(' ')[0];
-             if (commonShellCommands.includes(firstWord)) {
+             const bashCmds = ['git', 'docker', 'npm', 'yarn', 'pnpm', 'ls', 'cd', 'cat', 'grep', 'sudo', 'echo', 'brew', 'apt', 'curl', 'wget', 'ssh'];
+             const winCmds = ['dir', 'cls', 'ipconfig', 'netstat', 'systeminfo', 'wmic', 'powershell', 'pwsh', 'cmd', 'ver', 'whoami', 'findstr', 'sc', 'tasklist', 'taskkill'];
+             
+             const firstWord = trimmed.split(/\s+/)[0].replace('.exe', '').toLowerCase();
+             
+             if (bashCmds.includes(firstWord)) {
                 language = 'bash';
+             } else if (winCmds.includes(firstWord)) {
+                language = 'powershell';
              }
           }
 

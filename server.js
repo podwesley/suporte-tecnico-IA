@@ -8,6 +8,30 @@ const execAsync = promisify(exec);
 const app = express();
 const PORT = 8509;
 
+const sysRoot = process.env.SystemRoot || 'C:\\Windows';
+const winPS = `${sysRoot}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe`;
+
+async function getWindowsShell() {
+  const commandsToTry = ['pwsh.exe', 'powershell.exe', winPS];
+  for (const shell of commandsToTry) {
+    try {
+      await execAsync(`"${shell}" -Command "echo 1"`);
+      return shell;
+    } catch (e) {
+      continue;
+    }
+  }
+  return true; // Fallback to default shell
+}
+
+let cachedWindowsShell = null;
+async function getShell() {
+  if (process.platform !== 'win32') return true;
+  if (cachedWindowsShell) return cachedWindowsShell;
+  cachedWindowsShell = await getWindowsShell();
+  return cachedWindowsShell;
+}
+
 app.use(cors());
 app.use(express.json());
 
@@ -15,7 +39,7 @@ app.get('/health', (req, res) => {
   res.json({ status: 'online' });
 });
 
-app.get('/api/execute-stream', (req, res) => {
+app.get('/api/execute-stream', async (req, res) => {
   const { command, cwd } = req.query;
 
   if (!command) {
@@ -36,9 +60,22 @@ app.get('/api/execute-stream', (req, res) => {
 
   console.log(`[Stream] # ${effectiveCwd} > ${command}`);
 
-  const child = spawn(command, { 
+  const shell = await getShell();
+  let finalCommand = command;
+  
+  if (process.platform === 'win32') {
+    // No Windows, usamos o PowerShell para suportar separadores como ';'
+    // e forçamos UTF-8.
+    if (shell !== true) {
+      finalCommand = `chcp 65001 >$null; ${command}`;
+    } else {
+      finalCommand = `chcp 65001 >nul && ${command}`;
+    }
+  }
+
+  const child = spawn(finalCommand, { 
     cwd: effectiveCwd,
-    shell: true 
+    shell: shell 
   });
 
   const sendEvent = (event, data) => {
@@ -79,10 +116,21 @@ app.post('/api/execute', async (req, res) => {
   const effectiveCwd = cwd || os.homedir();
   console.log(`# ${effectiveCwd}${command}`);
 
+  const shell = await getShell();
+  let finalCommand = command;
+  
+  if (process.platform === 'win32') {
+    if (shell !== true) {
+      finalCommand = `chcp 65001 >$null; ${command}`;
+    } else {
+      finalCommand = `chcp 65001 >nul && ${command}`;
+    }
+  }
+
   try {
     // Executa o comando. Note que isso executa no host onde o node está rodando.
     // CUIDADO: Isso permite execução arbitrária de código.
-    const { stdout, stderr } = await execAsync(command, { cwd: effectiveCwd });
+    const { stdout, stderr } = await execAsync(finalCommand, { cwd: effectiveCwd, shell: shell });
     
     // Combina stdout e stderr para o output
     const output = stdout + (stderr ? `\nSTDERR:\n${stderr}` : '');
@@ -100,13 +148,70 @@ app.post('/api/execute', async (req, res) => {
 
 app.post('/api/select-directory', async (req, res) => {
   try {
-    // Uses AppleScript to open a native folder picker on macOS
-    // This will only work if the server is running on a mac (which is the case here)
-    const { stdout } = await execAsync("osascript -e 'POSIX path of (choose folder)'");
-    res.json({ success: true, path: stdout.trim() });
+    const platform = process.platform;
+
+    if (platform === 'darwin') {
+      // macOS: AppleScript folder picker
+      const { stdout } = await execAsync(`osascript -e 'POSIX path of (choose folder)'`);
+      return res.json({ success: true, path: stdout.trim() });
+    }
+
+    if (platform === 'win32') {
+      // Windows: PowerShell folder picker (requires STA)
+      // Returns a filesystem path like C:\Users\...
+      const psCommand =
+          '[Console]::OutputEncoding = [System.Text.Encoding]::UTF8; ' +
+          'Add-Type -AssemblyName System.Windows.Forms; ' +
+          '$f = New-Object System.Windows.Forms.FolderBrowserDialog; ' +
+          '$f.Description = \'Selecione uma pasta\'; ' +
+          '$f.ShowNewFolderButton = $true; ' +
+          'if ($f.ShowDialog() -eq [System.Windows.Forms.DialogResult]::OK) { $f.SelectedPath }';
+
+      // Try different ways to invoke PowerShell
+      const sysRoot = process.env.SystemRoot || 'C:\\Windows';
+      const winPS = `${sysRoot}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe`;
+      
+      const commandsToTry = [
+          'pwsh.exe',
+          'powershell.exe',
+          winPS
+      ];
+
+      let stdout = '';
+      let lastError = null;
+
+      for (const psExe of commandsToTry) {
+          try {
+              const result = await execAsync(
+                  `chcp 65001 >nul && "${psExe}" -NoProfile -NonInteractive -STA -Command "${psCommand}"`,
+                  { windowsHide: true }
+              );
+              stdout = result.stdout;
+              lastError = null;
+              break; // Success!
+          } catch (e) {
+              lastError = e;
+              // Continue to next option
+          }
+      }
+
+      if (lastError) {
+          console.error('All PowerShell attempts failed:', lastError.message);
+          return res.json({ success: false, path: null });
+      }
+
+      const selected = (stdout || '').trim();
+      if (!selected) return res.json({ success: false, path: null });
+      return res.json({ success: true, path: selected });
+    }
+
+    // Linux/others: try zenity (GNOME). If missing, this will fail and we return success:false.
+    const { stdout } = await execAsync(`sh -lc 'zenity --file-selection --directory 2>/dev/null || true'`);
+    const selected = stdout.trim();
+    if (!selected) return res.json({ success: false, path: null });
+    return res.json({ success: true, path: selected });
   } catch (error) {
-    // Likely user cancelled the dialog
-    console.log("Directory selection cancelled or failed");
+    console.log('Directory selection cancelled or failed', error?.message || error);
     res.json({ success: false, path: null });
   }
 });
